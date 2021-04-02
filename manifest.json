@@ -1,0 +1,28 @@
+{
+    "manifest_version": 2,
+    "name": "2FA Automation",
+    "version": "0.1",
+    "background": {
+        "scripts": ["background.js"]
+    },
+    "content_scripts": [{
+        "matches": [
+            "*://reddit.com/*",
+            "*://www.reddit.com/*",
+            "*://google.com/",
+            "*://twitter.com/",
+            "*://pinterest.com/",
+            "*://github.com/"
+        ],
+        "js": [
+            "content.js"
+        ]
+    }],
+    "browser_action": {
+        "default_popup": "popup.html",
+        "default_title": "Automate 2FA activation of deactivation"
+    },
+    "permissions": [
+        "*://*/*", "tabs", "webNavigation"
+    ]
+}
