@@ -1,0 +1,19 @@
+.box {
+    padding: 5px;
+}
+
+.gray {
+    background: #ddd;
+    padding: 5px;
+    position: relative;
+}
+
+.gray>img {
+    padding: 10px;
+}
+
+.gray>.checkbox {
+    position: absolute;
+    right: 5px;
+    top: 5px;
+}
