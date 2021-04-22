@@ -1,25 +1,24 @@
 $(document).ready(() => {
     // Get settings if any
-    chrome.runtime.sendMessage({ get_settings: true }, (response) => {
-        console.log("Got response", response);
-        if (response.auto_detect_setting) {
+    chrome.storage.sync.get(['auto_detect_setting', 'remember_accounts_setting'], (result) => {
+        if (result.auto_detect_setting) {
             $("#auto_detect_setting").click();
         }
-        if (response.remember_accounts_setting) {
+        if (result.remember_accounts_setting) {
             $("#remember_accounts_setting").click();
         }
     });
     $("#auto_detect_setting").click(() => {
         // Change auto detection setting in storage
-        chrome.runtime.sendMessage({ auto_detect_setting: true, set_to: $("#auto_detect_setting").is(":checked") }, (response) => {
-            console.log(response);
+        chrome.storage.sync.set({ auto_detect_setting: $("#auto_detect_setting").is(":checked") }, function() {
+            console.log('Auto detect setting is set to ' + $("#auto_detect_setting").is(":checked"));
         });
     });
 
     $("#remember_accounts_setting").click(() => {
         // Change remember accounts setting in storage
-        chrome.runtime.sendMessage({ remember_accounts_setting: true, set_to: $("#remember_accounts_setting").is(":checked") }, (response) => {
-            console.log(response);
+        chrome.storage.sync.set({ remember_accounts_setting: $("#remember_accounts_setting").is(":checked") }, function() {
+            console.log('Remember accounts setting is set to ' + $("#remember_accounts_setting").is(":checked"));
         });
     });
-})
+});

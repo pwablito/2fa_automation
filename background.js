@@ -31,31 +31,5 @@ chrome.runtime.onMessage.addListener(
         if (request.reddit_finished) {
             confirm("Finished setting up 2FA");
         }
-        if (request.auto_detect_setting) {
-            sendResponse({ success: true });
-            chrome.storage.sync.set({ auto_detect_setting: request.set_to }, function() {
-                console.log('Auto detect setting is set to ' + request.set_to);
-                sendResponse({ success: true });
-            });
-        }
-        if (request.remember_accounts_setting) {
-            chrome.storage.sync.set({ remember_accounts_setting: request.set_to }, function() {
-                console.log('Remember accounts setting is set to ' + request.set_to);
-                sendResponse({ success: true });
-            });
-        }
-        if (request.get_settings) {
-            console.log("Getting settings");
-            let auto_detect_setting = false;
-            let remember_accounts_setting = false;
-            await chrome.storage.sync.get(['auto_detect_setting', 'remember_accounts_setting'], (result) => {
-                auto_detect_setting = result.auto_detect_setting;
-                remember_accounts_setting = result.remember_accounts_setting;
-            });
-            sendResponse({
-                auto_detect_setting: auto_detect_setting != null ? auto_detect_setting : false,
-                remember_accounts_setting: remember_accounts_setting != null ? remember_accounts_setting : false
-            });
-        }
     }
 );
