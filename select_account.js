@@ -7,8 +7,8 @@ $(".checkbox").click(() => {
         }
     });
     if (checked) {
-        $("#select_accounts").removeClass("disabled");
+        $(".select_accounts").removeClass("disabled");
     } else {
-        $("#select_accounts").addClass("disabled");
+        $(".select_accounts").addClass("disabled");
     }
 });

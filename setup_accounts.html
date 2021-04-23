@@ -1,1 +1,72 @@
-Setup Accounts Page
+<html>
+<head>
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+
+    <!-- Custom styles and scripts -->
+    <link rel="stylesheet" href="slider.css">
+    <link rel="stylesheet" href="popup.css">
+    <link rel="stylesheet" href="logos.css">
+    <link rel="stylesheet" href="account_list.css">
+    <script src="popup.js"></script>
+    <script src="select_account.js"></script>
+
+    <title>2FA Setup</title>
+</head>
+
+<body>
+    <div id="select_accounts_div">
+        <h3>Select Accounts</h3>
+        <div class="row">
+            <div class="col-4 box">
+                <div class="gray">
+                    <img src="logos/google.svg">
+                    <input id="google_setting" type="checkbox" class="checkbox" data-service="google">
+                </div>
+            </div>
+            <div class="col-4 box">
+                <div class="gray">
+                    <img src="logos/github.svg">
+                    <input id="github_setting" type="checkbox" class="checkbox" data-service="github">
+                </div>
+            </div>
+            <div class="col-4 box">
+                <div class="gray">
+                    <img src="logos/reddit.svg">
+                    <input id="reddit_setting" type="checkbox" class="checkbox" data-service="reddit">
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-4 box">
+                <div class="gray">
+                    <img src="logos/pinterest.svg">
+                    <input id="pinterest_setting" type="checkbox" class="checkbox" data-service="pinterest">
+                </div>
+            </div>
+            <div class="col-4 box">
+                <div class="gray">
+                    <img src="logos/twitter.svg">
+                    <input id="twitter_setting" type="checkbox" class="checkbox" data-service="twitter">
+                </div>
+            </div>
+            <div class="col-4 box">
+                <div class="gray">
+                    <img src="logos/facebook.svg">
+                    <input id="facebook_setting" type="checkbox" class="checkbox" data-service="facebook">
+                </div>
+            </div>
+        </div>
+        <button class="btn btn-outline-success disabled select_accounts" id="setup_accounts_button">Enable 2FA</button>
+        <script src="select_account.js"></script>
+        <script src="setup_accounts.js"></script>
+    </div>
+    <div id="setup_accounts_div" style="display: none;">
+        <h3>Set Up accounts</h3>
+        <ul id="setup_processes_list"></ul>
+    </div>
+</body>
+</html>
