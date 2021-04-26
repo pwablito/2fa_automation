@@ -1,4 +1,5 @@
 <html>
+
 <head>
     <!-- Bootstrap -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
@@ -7,8 +8,7 @@
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
 
     <!-- Custom styles and scripts -->
-    <link rel="stylesheet" href="slider.css">
-    <link rel="stylesheet" href="popup.css">
+    <link rel="stylesheet" href="main.css">
     <link rel="stylesheet" href="logos.css">
     <link rel="stylesheet" href="account_list.css">
     <script src="popup.js"></script>
@@ -62,11 +62,16 @@
         </div>
         <button class="btn btn-outline-success disabled select_accounts" id="setup_accounts_button">Enable 2FA</button>
         <script src="select_account.js"></script>
-        <script src="setup_accounts.js"></script>
     </div>
     <div id="setup_accounts_div" style="display: none;">
         <h3>Set Up accounts</h3>
-        <ul id="setup_processes_list"></ul>
+        <div class="text-align: left;">
+            <div id="setup_processes_list">
+
+            </div>
+            <script src="setup_accounts.js"></script>
+        </div>
     </div>
 </body>
+
 </html>
