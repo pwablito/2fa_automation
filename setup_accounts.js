@@ -75,23 +75,31 @@ function initiate_github_setup() {
             $("#github_setup_div").empty();
             $("#github_setup_div").append(
                 `
-                <input type=text id="github_code_input" placeholder="Code from SMS">
-                <button class="btn btn-success" id="github_code_button">Submit</button>
+                Now enter the code sent to your phone
                 `
             );
-            $("#github_code_button").click(function() {
+            setTimeout(function() { // 4 second delay
+                $("#github_setup_div").empty();
+                $("#github_setup_div").append(
+                    `
+                    <input type=text id="github_code_input" placeholder="Code from SMS">
+                    <button class="btn btn-success" id="github_code_button">Submit</button>
+                    `
+                );
+                $("#github_code_button").click(function() {
 
-                let code = $("#github_code_input").val();
-                if (code) {
-                    // send to backend, proceed
-                    $("#github_setup_div").empty();
-                    $("#github_setup_div").append(
-                        `
-                        Finished!
-                        `
-                    );
-                }
-            });
+                    let code = $("#github_code_input").val();
+                    if (code) {
+                        // send to backend, proceed
+                        $("#github_setup_div").empty();
+                        $("#github_setup_div").append(
+                            `
+                            Finished!
+                            `
+                        );
+                    }
+                });
+            }, 4000);
         }
     });
 }
