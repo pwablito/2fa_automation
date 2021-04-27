@@ -40,7 +40,7 @@ if (document.querySelector("#two-factor > div > div.border-top.pt-6.mt-6.clearfi
     document.querySelector("#js-pjax-container > div > div > div.recovery-codes-saving-options > form > button").click();
     document.querySelector("#js-pjax-container > div > form:nth-child(3) > button").click();
 } else {
-    // Check if signed in
+    // Check if signed in, this starts the automation
     chrome.runtime.sendMessage({
         github_logged_in: document.querySelector("#login_field") === null
     });
