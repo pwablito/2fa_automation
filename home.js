@@ -8,6 +8,9 @@ $(document).ready(() => {
             $("#remember_accounts_setting").click();
         }
     });
+
+    // Setup click handlers for settings storage
+
     $("#auto_detect_setting").click(() => {
         // Change auto detection setting in storage
         chrome.storage.sync.set({ auto_detect_setting: $("#auto_detect_setting").is(":checked") }, function() {
@@ -16,7 +19,8 @@ $(document).ready(() => {
     });
 
     $("#remember_accounts_setting").click(() => {
-        // Change remember accounts setting in storage
+        console.log("Remember accounts setting")
+            // Change remember accounts setting in storage
         chrome.storage.sync.set({ remember_accounts_setting: $("#remember_accounts_setting").is(":checked") }, function() {
             console.log('Remember accounts setting is set to ' + $("#remember_accounts_setting").is(":checked"));
         });

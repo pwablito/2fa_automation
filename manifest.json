@@ -2,20 +2,10 @@
     "manifest_version": 2,
     "name": "2FA Automation",
     "version": "0.1",
-    "background": {
-        "scripts": ["background.js"]
-    },
     "content_scripts": [{
-        "matches": [
-            "*://reddit.com/*",
-            "*://www.reddit.com/*",
-            "*://google.com/",
-            "*://twitter.com/",
-            "*://pinterest.com/",
-            "*://github.com/"
-        ],
+        "matches": ["*://github.com/*"],
         "js": [
-            "content.js"
+            "github.js"
         ]
     }],
     "browser_action": {
@@ -24,6 +14,6 @@
     },
     "content_security_policy": "script-src 'self' https://ajax.googleapis.com https://stackpath.bootstrapcdn.com https://code.jquery.com https://cdnjs.cloudflare.com; object-src 'self';",
     "permissions": [
-        "*://*/*", "tabs", "webNavigation", "storage"
+        "*://*/*", "tabs", "webNavigation", "storage", "windows"
     ]
 }
