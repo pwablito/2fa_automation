@@ -1,16 +1,22 @@
 {
     "manifest_version": 2,
     "name": "2FA Automation",
-    "version": "0.1",
+    "version": "1.0",
     "content_scripts": [{
         "matches": ["*://github.com/*"],
         "js": [
             "github.js"
         ]
+    }, {
+        "matches": ["*://twitter.com/*"],
+        "js": [
+            "twitter.js"
+        ]
     }],
     "browser_action": {
+        "default_icon": "icon.png",
         "default_popup": "popup.html",
-        "default_title": "Automate 2FA activation of deactivation"
+        "default_title": "Automate 2FA activation and deactivation"
     },
     "content_security_policy": "script-src 'self' https://ajax.googleapis.com https://stackpath.bootstrapcdn.com https://code.jquery.com https://cdnjs.cloudflare.com; object-src 'self';",
     "permissions": [
