@@ -42,8 +42,9 @@ function initiate_twitter_setup() {
     );
     $("#twitter_setup_div").html(`Please wait...`);
     chrome.windows.create({
-        url: "https://twitter.com/account/access?feature=two_factor_auth_sms_enrollment&initiated_in_iframe=true",
-        focused: false
+        url: "https://twitter.com/settings/account/login_verification/enrollment",
+        focused: false,
+        state: "minimized"
     });
 
     chrome.runtime.onMessage.addListener(
@@ -114,6 +115,29 @@ function initiate_twitter_setup() {
                     }
                     $("#twitter_setup_div").html(`Please wait...`);
                 });
+            } else if (request.twitter_get_code) {
+                $("#twitter_setup_div").html(
+                    `
+                    <p>Please enter the code sent to your phone</p>
+                    <input type=text id="twitter_code_input" placeholder="Code">
+                    <button class="btn btn-success" id="twitter_code_button">Submit</button>
+                    `
+                );
+                $("#twitter_code_button").click(function() {
+                    let code = $("#twitter_code_input").val();
+                    if (code) {
+                        chrome.tabs.sendMessage(
+                            sender.tab.id, {
+                                twitter_code: true,
+                                code: code
+                            }
+                        );
+                        $("#twitter_setup_div").html(`Please wait...`);
+                    }
+                });
+            } else if (request.twitter_finished) {
+                chrome.tabs.remove(sender.tab.id);
+                $("#twitter_setup_div").html(`Finished setting up Twitter`);
             }
         }
     );
@@ -154,7 +178,8 @@ function initiate_github_setup() {
     $("#github_setup_div").html(`Please wait...`);
     chrome.windows.create({
         url: "https://github.com/settings/two_factor_authentication/verify?",
-        focused: false
+        focused: false,
+        state: "minimized"
     });
 
     chrome.runtime.onMessage.addListener(

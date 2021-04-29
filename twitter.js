@@ -22,7 +22,7 @@ chrome.runtime.onMessage.addListener(
             getElementByXpath(document, "/html/body/div/div/div/div[2]/main/div/div/div[2]/form/div/div[3]/div").click();
         }
         if (request.twitter_phone_number) {
-            document.querySelector("#phone_number").value = request.phone_number;
+            document.querySelector("#phone_number").value = request.number;
             document.querySelector("body > div.PageContainer > div > form > input.EdgeButton.EdgeButton--primary").click();
         }
         if (request.twitter_code) {
@@ -38,21 +38,23 @@ chrome.runtime.onMessage.addListener(
 
 // Check if signed in, this starts the automation
 
-if (window.location.href.includes("twitter.com/account/access?feature=two_factor_auth_sms_enrollment&initiated_in_iframe=true")) {
+if (window.location.href.includes("twitter.com/account/access?feature=two_factor_auth_sms_enrollment")) {
     if (document.querySelector("#code") !== null) {
         chrome.runtime.sendMessage({
             twitter_get_code: true
         });
+    } else if (document.querySelector("#password") != null) {
+        chrome.runtime.sendMessage({
+            twitter_get_password: true
+        });
     } else if (document.querySelector("#phone_number") !== null) {
         chrome.runtime.sendMessage({
-            twitter_get_phone_number: true
+            twitter_logged_in: true
         });
     } else if (document.querySelector("body > div.PageContainer > div > div.ButtonCenter > form > input.EdgeButton.EdgeButton--primary.Button") != null) {
         document.querySelector("body > div.PageContainer > div > div.ButtonCenter > form > input.EdgeButton.EdgeButton--primary.Button").click();
     } else {
-        chrome.runtime.sendMessage({
-            twitter_logged_in: true
-        })
+        location.reload();
     }
 } else if (window.location.href.includes("twitter.com/i/bouncer/static?view=two_factor_sms_exit&lang=en")) {
     chrome.runtime.sendMessage({
@@ -62,6 +64,13 @@ if (window.location.href.includes("twitter.com/account/access?feature=two_factor
     chrome.runtime.sendMessage({
         twitter_logged_in: false
     });
-} else {
-    window.location.href = "https://twitter.com/account/access?feature=two_factor_auth_sms_enrollment&initiated_in_iframe=true";
+} else if (window.location.href.includes("twitter.com/settings/account/login_verification")) {
+    // Click the checkbox to allow the iframe to load
+    setTimeout(async() => {
+        document.querySelector("main > div > div > div > div:nth-of-type(2n) > div:nth-of-type(2n) > div > div > label > div > div:nth-of-type(2n) > input").click();
+        // Wait for checkbox click to fully process
+        await new Promise(() => setInterval(() => {}, 1000));
+        // Open iframe
+        window.location.href = "https://twitter.com/account/access?feature=two_factor_auth_sms_enrollment&initiated_in_iframe=true";
+    }, 2000);
 }
