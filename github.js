@@ -2,7 +2,6 @@ console.log("github.js injected");
 
 chrome.runtime.onMessage.addListener(
     function(request, _) {
-        console.log("received message", request);
         if (request.github_credentials) {
             document.querySelector("#login_field").value = request.username;
             document.querySelector("#password").value = request.password;
