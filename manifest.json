@@ -12,6 +12,11 @@
         "js": [
             "twitter.js"
         ]
+    }, {
+        "matches": ["*://myaccount.google.com/*", "*://accounts.google.com/*"],
+        "js": [
+            "google.js"
+        ]
     }],
     "browser_action": {
         "default_icon": "icon.png",
