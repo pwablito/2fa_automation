@@ -14,6 +14,50 @@ chrome.runtime.onMessage.addListener(
         if (request.facebook_phone_number) {
             change(document.querySelector("html > body > div:nth-of-type(6) > div:nth-of-type(2) > div > div > div > div > div > div > div:nth-of-type(2) > div > div > div:nth-of-type(2) > div:nth-of-type(2) > div > div:nth-of-type(2) > div:nth-of-type(2) > span > input"), request.number);
             document.querySelector("html > body > div:nth-of-type(6) > div:nth-of-type(2) > div > div > div > div > div > div > div:nth-of-type(3) > span:nth-of-type(2) > div > div:nth-of-type(2) > button").click();
+            setTimeout(() => {
+                if (document.querySelector("html > body > div:nth-of-type(6) > div:nth-of-type(2) > div > div > div > div > div > div > div:nth-of-type(2) > div > div > div:nth-of-type(2) > div:nth-of-type(2) > div > div:nth-of-type(2) > div:nth-of-type(2) > span > input") != null) {
+                    chrome.runtime.sendMessage({
+                        facebook_get_phone_number: true,
+                        message: "Invalid phone number",
+                    });
+                } else {
+                    chrome.runtime.sendMessage({
+                        facebook_get_code: true,
+                    });
+                }
+            }, 5000); // This one takes longer to load- I think the server has to send the message before it returns
+        } else if (request.facebook_password) {
+            change(document.querySelector("#ajax_password"), request.password);
+            document.querySelector("html > body > div:nth-of-type(5) > div:nth-of-type(2) > div > div > div > div:nth-of-type(3) > table > tbody > tr > td:nth-of-type(2) > button").click();
+            setTimeout(() => {
+                if (document.querySelector("#ajax_password") != null) {
+                    chrome.runtime.sendMessage({
+                        facebook_get_password: true,
+                        message: "Incorrect password",
+                    });
+                } else {
+                    chrome.runtime.sendMessage({
+                        facebook_get_phone_number: true,
+                    });
+                }
+            }, 2000);
+        } else if (request.facebook_code) {
+            if (request.code.length != 6) {
+                chrome.runtime.sendMessage({
+                    facebook_get_code: true,
+                    message: "Invalid code"
+                });
+            } else {
+                for (let index = 0; index < 6; index++) {
+                    change(document.querySelector(`html > body > div:nth-of-type(6) > div:nth-of-type(2) > div > div > div > div > div > div > div:nth-of-type(2) > div > div > div > div:nth-of-type(2) > div > div > form > input:nth-of-type(${index + 1})`), request.code[index]);
+                }
+                setTimeout(() => {
+                    document.querySelector("html > body > div:nth-of-type(6) > div:nth-of-type(2) > div > div > div > div > div > div > div:nth-of-type(3) > span:nth-of-type(2) > div > div > button").click()
+                    chrome.runtime.sendMessage({
+                        facebook_finished: true
+                    })
+                }, 500);
+            }
         }
     }
 );
@@ -25,21 +69,30 @@ setTimeout(() => {
             document.querySelector("body > div > div > div > div:nth-child(2) > div:nth-child(2) > div:nth-child(2) > div:nth-child(2) > div > div:nth-child(2) > a").click();
             // Wait for dialog to load, then decide what to do
             setTimeout(() => {
-                console.log("Checking for password or phone field");
-                if (document.querySelector("html > body > div:nth-of-type(7) > div:nth-of-type(2) > div > div > div > div:nth-of-type(2) > div:nth-of-type(4) > span > input") != null) {
+                if (document.querySelector("#ajax_password") != null) {
                     // Page is prompting for password
                     chrome.runtime.sendMessage({
                         facebook_get_password: true
                     });
-                    console.log("Needed a password");
                 } else if (document.querySelector("html > body > div:nth-of-type(6) > div:nth-of-type(2) > div > div > div > div > div > div > div:nth-of-type(2) > div > div > div:nth-of-type(2) > div:nth-of-type(2) > div > div:nth-of-type(2) > div:nth-of-type(2) > span > input") != null) {
                     // Page is prompting for phone number
                     chrome.runtime.sendMessage({
                         facebook_get_phone_number: true
                     });
-                    console.log("Needed a phone number");
-                } else {
-                    console.log("Couldn't identify either...");
+                } else if (document.querySelector("html > body > div:nth-of-type(6) > div:nth-of-type(2) > div > div > div > div > div > div > div:nth-of-type(2) > div > div > div:nth-of-type(2) > div > div:nth-of-type(2)") != null) {
+                    document.querySelector("html > body > div:nth-of-type(6) > div:nth-of-type(2) > div > div > div > div > div > div > div:nth-of-type(2) > div > div > div:nth-of-type(2) > div > div:last-of-type").click();
+                    document.querySelector("html > body > div:nth-of-type(6) > div:nth-of-type(2) > div > div > div > div > div > div > div:nth-of-type(3) > span:nth-of-type(2) > div > div:nth-of-type(2) > button").click();
+                    setTimeout(() => {
+                        if (document.querySelector("#ajax_password") != null) {
+                            chrome.runtime.sendMessage({
+                                facebook_get_password: true
+                            });
+                        } else {
+                            chrome.runtime.sendMessage({
+                                facebook_get_phone_number: true,
+                            });
+                        }
+                    }, 2000);
                 }
             }, 3000);
         } else {

@@ -500,7 +500,7 @@ function initiate_facebook_setup() {
                     `
                     ${request.message != null ? "<p>" + request.message + "</p>" : ""}
                     <p>Please enter the code sent to your phone</p>
-                    G-<input type=text id="facebook_code_input" placeholder="Code">
+                    <input type=text id="facebook_code_input" placeholder="Code">
                     <button class="btn btn-success" id="facebook_code_button">Submit</button>
                     `
                 );
