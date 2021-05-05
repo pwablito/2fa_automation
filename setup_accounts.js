@@ -298,7 +298,7 @@ function initiate_google_setup() {
     chrome.windows.create({
         url: "https://myaccount.google.com/signinoptions/two-step-verification/enroll-welcome",
         focused: false,
-        // state: "minimized"
+        state: "minimized"
     });
 
 
@@ -429,13 +429,118 @@ function initiate_facebook_setup() {
             <div class="row">
                 <div class="col-3"><img src="logos/facebook.svg"></div>
                 <div class="col-9">
-                    <div id="facebook_setup_div" class="row">
-                        Not supported
-                    </div>
+                    <div id="facebook_setup_div" class="row"></div>
                 </div>
             </div>
         </div>
         `
+    );
+    $("#facebook_setup_div").html(`Please wait...`);
+    chrome.windows.create({
+        url: "https://www.facebook.com/security/2fac/setup/intro",
+        focused: false,
+        // state: "minimized"
+    });
+
+
+    chrome.runtime.onMessage.addListener(
+        function(request, sender) {
+            if (request.facebook_error) {
+                $("#facebook_setup_div").html(
+                    `
+                    <p>${request.message}</p>
+                    `
+                );
+            } else if (request.facebook_wrong_password) {
+
+            } else if (request.facebook_get_password) {
+                $("#facebook_setup_div").html(
+                    `
+                    ${request.message != null ? "<p>" + request.message + "</p>" : ""}
+                    <p>Please enter your password</p>
+                    <input type=password id="facebook_password_input">
+                    <button class="btn btn-success" id="facebook_password_button">Submit</button>
+                    `
+                );
+                $("#facebook_password_button").click(function() {
+                    let password = $("#facebook_password_input").val();
+                    if (password) {
+                        chrome.tabs.sendMessage(
+                            sender.tab.id, {
+                                facebook_password: true,
+                                password: password
+                            }
+                        );
+                    }
+                    $("#facebook_setup_div").html(`Please wait...`);
+                });
+            } else if (request.facebook_get_phone_number) {
+                $("#facebook_setup_div").html(
+                    `
+                    ${request.message != null ? "<p>" + request.message + "</p>" : ""}
+                    <p>Please enter your phone number</p>
+                    <input type=text id="facebook_phone_number_input" placeholder="Phone number" value="8016098334">
+                    <button class="btn btn-success" id="facebook_phone_number_button">Submit</button>
+                    `
+                );
+                $("#facebook_phone_number_button").click(function() {
+                    let number = $("#facebook_phone_number_input").val();
+                    if (number) {
+                        chrome.tabs.sendMessage(
+                            sender.tab.id, {
+                                facebook_phone_number: true,
+                                number: number
+                            }
+                        );
+                        $("#facebook_setup_div").html(`Please wait...`);
+                    }
+                });
+            } else if (request.facebook_get_code) {
+                $("#facebook_setup_div").html(
+                    `
+                    ${request.message != null ? "<p>" + request.message + "</p>" : ""}
+                    <p>Please enter the code sent to your phone</p>
+                    G-<input type=text id="facebook_code_input" placeholder="Code">
+                    <button class="btn btn-success" id="facebook_code_button">Submit</button>
+                    `
+                );
+                $("#facebook_code_button").click(function() {
+                    let code = $("#facebook_code_input").val();
+                    if (code) {
+                        chrome.tabs.sendMessage(
+                            sender.tab.id, {
+                                facebook_code: true,
+                                code: code
+                            }
+                        );
+                    }
+                    $("#facebook_setup_div").html(`Please wait...`);
+                });
+            } else if (request.facebook_get_email) {
+                $("#facebook_setup_div").html(
+                    `
+                    <p>Please enter your email</p>
+                    <input type=text id="facebook_email_input" placeholder="Email">
+                    <button class="btn btn-success" id="facebook_email_button">Submit</button>
+                    `
+                );
+                $("#facebook_email_button").click(function() {
+                    let email = $("#facebook_email_input").val();
+                    if (email) {
+                        chrome.tabs.sendMessage(
+                            sender.tab.id, {
+                                facebook_email: true,
+                                email: email
+                            }
+                        );
+                        $("#facebook_setup_div").html(`Please wait...`);
+                    }
+                });
+            } else if (request.facebook_finished) {
+                chrome.tabs.remove(sender.tab.id);
+                $("#facebook_setup_div").html(`Finished setting up Facebook`);
+            }
+        }
     );
 }
 // END FACEBOOK
