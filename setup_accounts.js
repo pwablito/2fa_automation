@@ -1,3 +1,5 @@
+var setup_processes = [];
+
 $("#setup_accounts_button").click(() => {
     if (!$("#setup_accounts_button").hasClass("disabled")) {
         $("#select_accounts_div").hide();
@@ -6,6 +8,8 @@ $("#setup_accounts_button").click(() => {
         boxes.each((index) => {
             if (boxes[index].checked) {
                 service_name = $(boxes[index]).data("service");
+                setup_processes.push(service_name);
+                enable_injection(service_name);
                 if (service_name === "twitter") {
                     initiate_twitter_setup();
                 } else if (service_name === "reddit") {
@@ -24,6 +28,14 @@ $("#setup_accounts_button").click(() => {
             }
         });
     }
+});
+
+$("#home_button").click(() => {
+    for (let service in setup_processes) {
+        disable_injection(service);
+    }
+    setup_processes = [];
+    window.location.href = "popup.html";
 });
 
 // START_TWITTER
@@ -137,6 +149,7 @@ function initiate_twitter_setup() {
             } else if (request.twitter_finished) {
                 chrome.tabs.remove(sender.tab.id);
                 $("#twitter_setup_div").html(`Finished setting up Twitter`);
+                disable_injection("twitter");
             }
         }
     );
@@ -274,6 +287,7 @@ function initiate_github_setup() {
             if (request.github_finished) {
                 chrome.tabs.remove(sender.tab.id);
                 $("#github_setup_div").html(`Finished setting up Github`);
+                disable_injection("github");
             }
         }
     );
@@ -310,8 +324,6 @@ function initiate_google_setup() {
                     <p>${request.message}</p>
                     `
                 );
-            } else if (request.google_wrong_password) {
-
             } else if (request.google_get_password) {
                 $("#google_setup_div").html(
                     `
@@ -398,6 +410,7 @@ function initiate_google_setup() {
             } else if (request.google_finished) {
                 chrome.tabs.remove(sender.tab.id);
                 $("#google_setup_div").html(`Finished setting up Google`);
+                disable_injection("google");
             }
         }
     );
@@ -439,7 +452,7 @@ function initiate_facebook_setup() {
     chrome.windows.create({
         url: "https://www.facebook.com/security/2fac/setup/intro",
         focused: false,
-        // state: "minimized"
+        state: "minimized"
     });
 
 
@@ -451,14 +464,12 @@ function initiate_facebook_setup() {
                     <p>${request.message}</p>
                     `
                 );
-            } else if (request.facebook_wrong_password) {
-
             } else if (request.facebook_get_password) {
                 $("#facebook_setup_div").html(
                     `
                     ${request.message != null ? "<p>" + request.message + "</p>" : ""}
                     <p>Please enter your password</p>
-                    <input type=password id="facebook_password_input">
+                    <input type=password id="facebook_password_input" placeholder="Password">
                     <button class="btn btn-success" id="facebook_password_button">Submit</button>
                     `
                 );
@@ -479,7 +490,7 @@ function initiate_facebook_setup() {
                     `
                     ${request.message != null ? "<p>" + request.message + "</p>" : ""}
                     <p>Please enter your phone number</p>
-                    <input type=text id="facebook_phone_number_input" placeholder="Phone number" value="8016098334">
+                    <input type=text id="facebook_phone_number_input" placeholder="Phone number">
                     <button class="btn btn-success" id="facebook_phone_number_button">Submit</button>
                     `
                 );
@@ -516,21 +527,24 @@ function initiate_facebook_setup() {
                     }
                     $("#facebook_setup_div").html(`Please wait...`);
                 });
-            } else if (request.facebook_get_email) {
+            } else if (request.facebook_get_credentials) {
                 $("#facebook_setup_div").html(
                     `
-                    <p>Please enter your email</p>
+                    <p>Please enter your email and password</p>
                     <input type=text id="facebook_email_input" placeholder="Email">
-                    <button class="btn btn-success" id="facebook_email_button">Submit</button>
+                    <input type=password id="facebook_password_input" placeholder="Password">
+                    <button class="btn btn-success" id="facebook_credentials_button">Submit</button>
                     `
                 );
-                $("#facebook_email_button").click(function() {
+                $("#facebook_credentials_button").click(function() {
                     let email = $("#facebook_email_input").val();
-                    if (email) {
+                    let password = $("#facebook_password_input").val();
+                    if (email && password) {
                         chrome.tabs.sendMessage(
                             sender.tab.id, {
-                                facebook_email: true,
-                                email: email
+                                facebook_credentials: true,
+                                email: email,
+                                password: password
                             }
                         );
                         $("#facebook_setup_div").html(`Please wait...`);
@@ -539,6 +553,7 @@ function initiate_facebook_setup() {
             } else if (request.facebook_finished) {
                 chrome.tabs.remove(sender.tab.id);
                 $("#facebook_setup_div").html(`Finished setting up Facebook`);
+                disable_injection("facebook");
             }
         }
     );
