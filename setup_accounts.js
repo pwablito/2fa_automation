@@ -56,7 +56,7 @@ function initiate_twitter_setup() {
     chrome.windows.create({
         url: "https://twitter.com/settings/account/login_verification/enrollment",
         focused: false,
-        state: "minimized"
+        // state: "minimized"
     });
 
     chrome.runtime.onMessage.addListener(
