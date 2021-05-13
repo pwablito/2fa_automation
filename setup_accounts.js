@@ -580,7 +580,7 @@ function initiate_amazon_setup() {
     chrome.windows.create({
         url: "https://www.amazon.com/a/settings/approval/setup/register",
         focused: false,
-        state: "minimized"
+        // state: "minimized"
     });
 
 
@@ -613,12 +613,19 @@ function initiate_amazon_setup() {
                     }
                     $("#amazon_setup_div").html(`Please wait...`);
                 });
+            } else if (request.amazon_approve_login) {
+                $("#amazon_setup_div").html(
+                    `
+                    ${request.message != null ? "<p>" + request.message + "</p>" : ""}
+                    <p>Please approve the request sent to your email and/or phone</p>
+                    `
+                );
             } else if (request.amazon_get_phone_number) {
                 $("#amazon_setup_div").html(
                     `
                     ${request.message != null ? "<p>" + request.message + "</p>" : ""}
                     <p>Please enter your phone number</p>
-                    <input type=text id="amazon_phone_number_input" placeholder="Email">
+                    <input type=text id="amazon_phone_number_input" placeholder="Phone number">
                     <button class="btn btn-success" id="amazon_phone_number_button">Submit</button>
                     `
                 );
