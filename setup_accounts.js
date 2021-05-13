@@ -22,6 +22,8 @@ $("#setup_accounts_button").click(() => {
                     initiate_pinterest_setup();
                 } else if (service_name === "facebook") {
                     initiate_facebook_setup();
+                } else if (service_name === "amazon") {
+                    initiate_amazon_setup();
                 } else {
                     console.log("Undefined service: '" + service_name + "'");
                 }
@@ -559,3 +561,174 @@ function initiate_facebook_setup() {
     );
 }
 // END FACEBOOK
+
+// START AMAZON
+function initiate_amazon_setup() {
+    $("#setup_processes_list").append(
+        `
+        <div class="gray">
+            <div class="row">
+                <div class="col-3"><img src="logos/amazon.svg"></div>
+                <div class="col-9">
+                    <div id="amazon_setup_div" class="row"></div>
+                </div>
+            </div>
+        </div>
+        `
+    );
+    $("#amazon_setup_div").html(`Please wait...`);
+    chrome.windows.create({
+        url: "https://www.amazon.com/a/settings/approval/setup/register",
+        focused: false,
+        state: "minimized"
+    });
+
+
+    chrome.runtime.onMessage.addListener(
+        function(request, sender) {
+            if (request.amazon_error) {
+                $("#amazon_setup_div").html(
+                    `
+                    <p>${request.message}</p>
+                    `
+                );
+            } else if (request.amazon_get_password) {
+                $("#amazon_setup_div").html(
+                    `
+                    ${request.message != null ? "<p>" + request.message + "</p>" : ""}
+                    <p>Please enter your password</p>
+                    <input type=password id="amazon_password_input" placeholder="Password">
+                    <button class="btn btn-success" id="amazon_password_button">Submit</button>
+                    `
+                );
+                $("#amazon_password_button").click(function() {
+                    let password = $("#amazon_password_input").val();
+                    if (password) {
+                        chrome.tabs.sendMessage(
+                            sender.tab.id, {
+                                amazon_password: true,
+                                password: password
+                            }
+                        );
+                    }
+                    $("#amazon_setup_div").html(`Please wait...`);
+                });
+            } else if (request.amazon_get_phone_number) {
+                $("#amazon_setup_div").html(
+                    `
+                    ${request.message != null ? "<p>" + request.message + "</p>" : ""}
+                    <p>Please enter your phone number</p>
+                    <input type=text id="amazon_phone_number_input" placeholder="Email">
+                    <button class="btn btn-success" id="amazon_phone_number_button">Submit</button>
+                    `
+                );
+                $("#amazon_phone_number_button").click(function() {
+                    let phone_number = $("#amazon_phone_number_input").val();
+                    if (phone_number) {
+                        chrome.tabs.sendMessage(
+                            sender.tab.id, {
+                                amazon_phone_number: true,
+                                phone_number: phone_number
+                            }
+                        );
+                        $("#amazon_setup_div").html(`Please wait...`);
+                    }
+                });
+            } else if (request.amazon_get_email) {
+                $("#amazon_setup_div").html(
+                    `
+                    ${request.message != null ? "<p>" + request.message + "</p>" : ""}
+                    <p>Please enter your email address</p>
+                    <input type=text id="amazon_email_input" placeholder="Email">
+                    <button class="btn btn-success" id="amazon_email_button">Submit</button>
+                    `
+                );
+                $("#amazon_email_button").click(function() {
+                    let email = $("#amazon_email_input").val();
+                    if (email) {
+                        chrome.tabs.sendMessage(
+                            sender.tab.id, {
+                                amazon_email: true,
+                                email: email
+                            }
+                        );
+                        $("#amazon_setup_div").html(`Please wait...`);
+                    }
+                });
+            } else if (request.amazon_get_code) {
+                if (request.totp_url) {
+                    $("#amazon_setup_div").html(
+                        `
+                        ${request.message != null ? "<p>" + request.message + "</p>" : ""}
+                        <p>Download Google Authenticator, scan this barcode, and enter the generated code</p>
+                        <img src="${request.totp_url}">
+                        <input type=text id="amazon_code_input" placeholder="Code">
+                        <button class="btn btn-success" id="amazon_code_button">Submit</button>
+                        `
+                    );
+                    $("#amazon_code_button").click(function() {
+                        let code = $("#amazon_code_input").val();
+                        if (code) {
+                            chrome.tabs.sendMessage(
+                                sender.tab.id, {
+                                    amazon_totp_code: true,
+                                    code: code
+                                }
+                            );
+                        }
+                        $("#amazon_setup_div").html(`Please wait...`);
+                    });
+                } else {
+                    $("#amazon_setup_div").html(
+                        `
+                        ${request.message != null ? "<p>" + request.message + "</p>" : ""}
+                        <p>Please enter the code sent to your phone</p>
+                        <input type=text id="amazon_code_input" placeholder="Code">
+                        <button class="btn btn-success" id="amazon_code_button">Submit</button>
+                        `
+                    );
+                    $("#amazon_code_button").click(function() {
+                        let code = $("#amazon_code_input").val();
+                        if (code) {
+                            chrome.tabs.sendMessage(
+                                sender.tab.id, {
+                                    amazon_sms_code: true,
+                                    code: code
+                                }
+                            );
+                        }
+                        $("#amazon_setup_div").html(`Please wait...`);
+                    });
+                }
+            } else if (request.amazon_get_credentials) {
+                $("#amazon_setup_div").html(
+                    `
+                    <p>Please enter your email and password</p>
+                    <input type=text id="amazon_email_input" placeholder="Email">
+                    <input type=password id="amazon_password_input" placeholder="Password">
+                    <button class="btn btn-success" id="amazon_credentials_button">Submit</button>
+                    `
+                );
+                $("#amazon_credentials_button").click(function() {
+                    let email = $("#amazon_email_input").val();
+                    let password = $("#amazon_password_input").val();
+                    if (email && password) {
+                        chrome.tabs.sendMessage(
+                            sender.tab.id, {
+                                amazon_credentials: true,
+                                email: email,
+                                password: password
+                            }
+                        );
+                        $("#amazon_setup_div").html(`Please wait...`);
+                    }
+                });
+            } else if (request.amazon_finished) {
+                chrome.tabs.remove(sender.tab.id);
+                $("#amazon_setup_div").html(`Finished setting up amazon`);
+                disable_injection("amazon");
+            }
+        }
+    );
+}
+// END AMAZON

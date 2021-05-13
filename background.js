@@ -3,6 +3,7 @@ let injection_statuses = {
     "twitter": false,
     "google": false,
     "facebook": false,
+    "amazon": false
 }
 
 chrome.tabs.onUpdated.addListener(function(tabId, info, tab) {
@@ -26,6 +27,11 @@ chrome.tabs.onUpdated.addListener(function(tabId, info, tab) {
         if (injection_statuses.facebook) {
             if (tab.url.includes("facebook.com")) {
                 chrome.tabs.executeScript(tabId, { file: "facebook.js" });
+            }
+        }
+        if (injection_statuses.amazon) {
+            if (tab.url.includes("amazon.com")) {
+                chrome.tabs.executeScript(tabId, { file: "amazon.js" });
             }
         }
     }
