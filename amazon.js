@@ -54,6 +54,19 @@ chrome.runtime.onMessage.addListener(
                 document.querySelector("#mfa-cvf-embedded-content > div > div > div > div:first-of-type > div:nth-of-type(5) > input").value = request.code;
                 document.querySelector("#mfa-cvf-embedded-content > div > div > div > div:first-of-type > span > span > input").click();
             }
+        } else if (request.amazon_totp_code) {
+            document.querySelector("#ch-auth-app-code-input").value = request.code;
+            document.querySelector("#ch-auth-app-submit").click();
+        } else if (request.amazon_start_sms) {
+            chrome.runtime.sendMessage({
+                amazon_get_phone_number: true,
+            });
+        } else if (request.amazon_start_totp) {
+            document.querySelector("html > body > div:first-of-type > div > div:first-of-type > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(2) > div > div:first-of-type > a > i").click();
+            chrome.runtime.sendMessage({
+                amazon_get_code: true,
+                totp_url: document.querySelector("html > body > div:first-of-type > div > div:first-of-type > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(2) > div > div:nth-of-type(2) > div > ol > li:nth-of-type(2) > span > div > div:first-of-type > img").src
+            });
         }
     }
 );
@@ -70,7 +83,7 @@ if (window.location.href.includes("amazon.com/ap/signin")) {
     }
 } else if (window.location.href.includes("amazon.com/a/settings/approval/setup/register") || window.location.href.includes("amazon.com/ap/profile/mobilephone?openid.assoc_handle")) {
     chrome.runtime.sendMessage({
-        amazon_get_phone_number: true
+        amazon_get_type: true
     });
 } else if (window.location.href.includes("amazon.com/a/settings/approval/setup/howto")) {
     chrome.runtime.sendMessage({

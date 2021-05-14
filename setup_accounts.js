@@ -592,6 +592,38 @@ function initiate_amazon_setup() {
                     <p>${request.message}</p>
                     `
                 );
+            } else if (request.amazon_get_type) {
+                $("#amazon_setup_div").html(
+                    `
+                    ${request.message != null ? "<p>" + request.message + "</p>" : ""}
+                    <div class="row">
+                        <div class="col-6">
+                            <p>Please choose a type of 2FA to set up</p>
+                        </div>
+                        <div class="col-6">
+                            <button class="btn btn-success" id="amazon_totp_button">TOTP</button>
+                            <br><br>
+                            <button class="btn btn-success" id="amazon_sms_button">SMS</button>
+                        </div>
+                    </div>
+                    `
+                );
+                $("#amazon_totp_button").click(function() {
+                    chrome.tabs.sendMessage(
+                        sender.tab.id, {
+                            amazon_start_totp: true
+                        }
+                    );
+                    $("#amazon_setup_div").html(`Please wait...`);
+                });
+                $("#amazon_sms_button").click(function() {
+                    chrome.tabs.sendMessage(
+                        sender.tab.id, {
+                            amazon_start_sms: true
+                        }
+                    );
+                    $("#amazon_setup_div").html(`Please wait...`);
+                });
             } else if (request.amazon_get_password) {
                 $("#amazon_setup_div").html(
                     `
@@ -667,10 +699,17 @@ function initiate_amazon_setup() {
                     $("#amazon_setup_div").html(
                         `
                         ${request.message != null ? "<p>" + request.message + "</p>" : ""}
+                        
                         <p>Download Google Authenticator, scan this barcode, and enter the generated code</p>
-                        <img src="${request.totp_url}">
-                        <input type=text id="amazon_code_input" placeholder="Code">
-                        <button class="btn btn-success" id="amazon_code_button">Submit</button>
+                        <div class="row">
+                            <div class="col-6">
+                                <input type=text id="amazon_code_input" placeholder="Code">
+                                <button class="btn btn-success" id="amazon_code_button">Submit</button>
+                            </div>
+                            <div class="col-6">
+                                <img src="${request.totp_url}" style="width: 100%;">
+                            </div>
+                        </div>
                         `
                     );
                     $("#amazon_code_button").click(function() {
