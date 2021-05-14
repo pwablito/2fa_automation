@@ -580,7 +580,7 @@ function initiate_amazon_setup() {
     chrome.windows.create({
         url: "https://www.amazon.com/a/settings/approval/setup/register",
         focused: false,
-        // state: "minimized"
+        state: "minimized"
     });
 
 
