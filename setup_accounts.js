@@ -326,6 +326,7 @@ function initiate_google_setup() {
                     <p>${request.message}</p>
                     `
                 );
+                disable_injection("google");
             } else if (request.google_get_password) {
                 $("#google_setup_div").html(
                     `
@@ -466,6 +467,7 @@ function initiate_facebook_setup() {
                     <p>${request.message}</p>
                     `
                 );
+                disable_injection("facebook");
             } else if (request.facebook_get_password) {
                 $("#facebook_setup_div").html(
                     `
@@ -592,6 +594,7 @@ function initiate_amazon_setup() {
                     <p>${request.message}</p>
                     `
                 );
+                disable_injection("amazon");
             } else if (request.amazon_get_type) {
                 $("#amazon_setup_div").html(
                     `

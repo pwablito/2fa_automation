@@ -66,12 +66,10 @@ if (window.location.href.includes("twitter.com/account/access?feature=two_factor
 } else if (window.location.href.includes("twitter.com/settings/account/login_verification")) {
     // Click the checkbox to allow the iframe to load
     setTimeout(async() => {
-        if (document.querySelector("html > body > div > div > div > div:nth-of-type(2) > main > div > div > div > section:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(2) > div > div > label > div > div:nth-of-type(2) > input") != null) {
-            document.querySelector("html > body > div > div > div > div:nth-of-type(2) > main > div > div > div > section:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(2) > div > div > label > div > div:nth-of-type(2) > input").click();
-            // Wait for checkbox click to fully process
-            await new Promise(() => setInterval(() => {}, 1000));
-            // Open iframe
+        document.querySelector("html > body > div > div > div > div:nth-of-type(2) > main > div > div > div > section:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(2) > div > div > label > div > div:nth-of-type(2) > input").click();
+        // Wait for checkbox click to fully process
+        setInterval(() => {
             window.location.href = "https://twitter.com/account/access?feature=two_factor_auth_sms_enrollment&initiated_in_iframe=true";
-        }
+        }, 2000);
     }, 2000);
 }
