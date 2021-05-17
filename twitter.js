@@ -72,4 +72,6 @@ if (window.location.href.includes("twitter.com/account/access?feature=two_factor
             window.location.href = "https://twitter.com/account/access?feature=two_factor_auth_sms_enrollment&initiated_in_iframe=true";
         }, 2000);
     }, 2000);
+} else if (window.location.href.includes("twitter.com/home")) {
+    window.location.href = "https://twitter.com/settings/account/login_verification/enrollment";
 }

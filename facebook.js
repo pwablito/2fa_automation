@@ -27,6 +27,10 @@ chrome.runtime.onMessage.addListener(
                 }
             }, 5000); // This one takes longer to load- I think the server has to send the message before it returns
         } else if (request.facebook_password) {
+            if (document.querySelector("html > body > div:first-of-type > div:first-of-type > div:first-of-type > div > form > div > div:nth-of-type(2) > table > tbody > tr:first-of-type > td > input") != null) {
+                document.querySelector("html > body > div:first-of-type > div:first-of-type > div:first-of-type > div > form > div > div:nth-of-type(2) > table > tbody > tr:first-of-type > td > input").value = request.password;
+                document.querySelector("html > body > div:first-of-type > div:first-of-type > div:first-of-type > div > form > div > div:nth-of-type(3) > div > div:first-of-type > label > input").click();
+            }
             change(document.querySelector("#ajax_password"), request.password);
             let item = document.querySelector("html > body > div:nth-of-type(5) > div:nth-of-type(2) > div > div > div > div:nth-of-type(3) > table > tbody > tr > td:nth-of-type(2) > button").click();
             if (item == null) item = document.querySelector("html > body > div:nth-of-type(7) > div:nth-of-type(2) > div > div > div > div:nth-of-type(3) > table > tbody > tr > td:nth-of-type(2) > button").click();
@@ -118,6 +122,14 @@ setTimeout(() => {
                 window.location = document.querySelector("body > div > div > div > div > div:nth-child(6) > div > div > div > div > iframe").src;
                 console.log("Logged in, opening iframe");
             } else {}
+        }
+    } else if (window.location.href.includes("facebook.com/login/reauth.php")) {
+        if (document.querySelector("html > body > div:first-of-type > div:first-of-type > div:first-of-type > div > form > div > div:nth-of-type(2) > table > tbody > tr:first-of-type > td > input") != null) {
+            chrome.runtime.sendMessage({
+                facebook_get_password: true
+            });
+        } else {
+            window.location.href = document.querySelector("html > body > div:first-of-type > div > div:first-of-type > div > div:nth-of-type(3) > div > div > div:first-of-type > div:first-of-type > iframe").src;
         }
     }
 }, 1000);

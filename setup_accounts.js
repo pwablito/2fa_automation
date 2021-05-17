@@ -59,6 +59,8 @@ function initiate_twitter_setup() {
         url: "https://twitter.com/settings/account/login_verification/enrollment",
         focused: false,
         state: "minimized"
+    }, (window) => {
+        chrome.windows.update(window.id, { state: 'minimized' });
     });
 
     chrome.runtime.onMessage.addListener(
@@ -112,7 +114,7 @@ function initiate_twitter_setup() {
                 $("#twitter_setup_div").html(
                     `
                     <p>Please enter your password</p>
-                    <input type=password id="twitter_password_input">
+                    <input type=password id="twitter_password_input" placeholder="Password">
                     <button class="btn btn-success" id="twitter_password_button">Submit</button>
                     `
                 );
@@ -172,16 +174,19 @@ function initiate_reddit_setup() {
         </div>
         `
     );
-    $("reddit_setup_div").html("Please wait...");
+    $("#reddit_setup_div").html("Please wait...");
     chrome.windows.create({
         url: "https://www.reddit.com/2fa/enable",
         focused: false,
         state: "minimized"
+    }, (window) => {
+        chrome.windows.update(window.id, { state: 'minimized' });
     });
+
     chrome.runtime.onMessage.addListener(
         function(request, sender) {
             if (request.reddit_error) {
-
+                $('#reddit_setup_div').html(request.message);
             } else if (request.reddit_get_credentials) {
                 $("#reddit_setup_div").html(
                     `
@@ -284,6 +289,8 @@ function initiate_github_setup() {
         url: "https://github.com/settings/two_factor_authentication/verify?",
         focused: false,
         state: "minimized"
+    }, (window) => {
+        chrome.windows.update(window.id, { state: 'minimized' });
     });
 
     chrome.runtime.onMessage.addListener(
@@ -405,8 +412,9 @@ function initiate_google_setup() {
         url: "https://myaccount.google.com/signinoptions/two-step-verification/enroll-welcome",
         focused: false,
         state: "minimized"
+    }, (window) => {
+        chrome.windows.update(window.id, { state: 'minimized' });
     });
-
 
     chrome.runtime.onMessage.addListener(
         function(request, sender) {
@@ -422,7 +430,7 @@ function initiate_google_setup() {
                     `
                     ${request.message != null ? "<p>" + request.message + "</p>" : ""}
                     <p>Please enter your password</p>
-                    <input type=password id="google_password_input">
+                    <input type=password id="google_password_input" placeholder="Password">
                     <button class="btn btn-success" id="google_password_button">Submit</button>
                     `
                 );
@@ -546,8 +554,9 @@ function initiate_facebook_setup() {
         url: "https://www.facebook.com/security/2fac/setup/intro",
         focused: false,
         state: "minimized"
+    }, (window) => {
+        chrome.windows.update(window.id, { state: 'minimized' });
     });
-
 
     chrome.runtime.onMessage.addListener(
         function(request, sender) {
@@ -673,8 +682,9 @@ function initiate_amazon_setup() {
         url: "https://www.amazon.com/a/settings/approval/setup/register",
         focused: false,
         state: "minimized"
+    }, (window) => {
+        chrome.windows.update(window.id, { state: 'minimized' });
     });
-
 
     chrome.runtime.onMessage.addListener(
         function(request, sender) {
