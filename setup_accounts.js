@@ -176,7 +176,7 @@ function initiate_reddit_setup() {
     chrome.windows.create({
         url: "https://www.reddit.com/2fa/enable",
         focused: false,
-        // state: "minimized"
+        state: "minimized"
     });
     chrome.runtime.onMessage.addListener(
         function(request, sender) {
