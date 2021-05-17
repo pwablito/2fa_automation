@@ -3,7 +3,8 @@ let injection_statuses = {
     "twitter": false,
     "google": false,
     "facebook": false,
-    "amazon": false
+    "amazon": false,
+    "reddit": false
 }
 
 chrome.tabs.onUpdated.addListener(function(tabId, info, tab) {
@@ -32,6 +33,11 @@ chrome.tabs.onUpdated.addListener(function(tabId, info, tab) {
         if (injection_statuses.amazon) {
             if (tab.url.includes("amazon.com")) {
                 chrome.tabs.executeScript(tabId, { file: "amazon.js" });
+            }
+        }
+        if (injection_statuses.reddit) {
+            if (tab.url.includes("reddit.com")) {
+                chrome.tabs.executeScript(tabId, { file: "reddit.js" });
             }
         }
     }

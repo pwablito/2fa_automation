@@ -58,7 +58,7 @@ function initiate_twitter_setup() {
     chrome.windows.create({
         url: "https://twitter.com/settings/account/login_verification/enrollment",
         focused: false,
-        // state: "minimized"
+        state: "minimized"
     });
 
     chrome.runtime.onMessage.addListener(
@@ -172,6 +172,96 @@ function initiate_reddit_setup() {
         </div>
         `
     );
+    $("reddit_setup_div").html("Please wait...");
+    chrome.windows.create({
+        url: "https://www.reddit.com/2fa/enable",
+        focused: false,
+        // state: "minimized"
+    });
+    chrome.runtime.onMessage.addListener(
+        function(request, sender) {
+            if (request.reddit_error) {
+
+            } else if (request.reddit_get_credentials) {
+                $("#reddit_setup_div").html(
+                    `
+                    ${request.message != null ? "<p>" + request.message + "</p>" : ""}
+                    <p>Please enter your username and password</p>
+                    <input type=text id="reddit_username_input" placeholder="Username">
+                    <input type=password id="reddit_password_input" placeholder="Password">
+                    <button class="btn btn-success" id="reddit_credentials_button">Submit</button>
+                    `
+                );
+                $("#reddit_credentials_button").click(function() {
+                    let username = $("#reddit_username_input").val();
+                    let password = $("#reddit_password_input").val();
+                    if (username && password) {
+                        chrome.tabs.sendMessage(
+                            sender.tab.id, {
+                                reddit_credentials: true,
+                                username: username,
+                                password: password
+                            }
+                        );
+                        $("#reddit_setup_div").html(`Please wait...`);
+                    }
+                });
+            } else if (request.reddit_get_password) {
+                $("#reddit_setup_div").html(
+                    `
+                    ${request.message != null ? "<p>" + request.message + "</p>" : ""}
+                    <p>Please enter your password</p>
+                    <input type=password id="reddit_password_input">
+                    <button class="btn btn-success" id="reddit_password_button">Submit</button>
+                    `
+                );
+                $("#reddit_password_button").click(function() {
+                    let password = $("#reddit_password_input").val();
+                    if (password) {
+                        chrome.tabs.sendMessage(
+                            sender.tab.id, {
+                                reddit_password: true,
+                                password: password
+                            }
+                        );
+                    }
+                    $("#reddit_setup_div").html(`Please wait...`);
+                });
+            } else if (request.reddit_get_code) {
+                $("#reddit_setup_div").html(
+                    `
+                    ${request.message != null ? "<p>" + request.message + "</p>" : ""}
+                    <p>Download Google Authenticator, scan this barcode, and enter the generated code</p>
+                    <div class="row">
+                        <div class="col-6">
+                            <input type=text id="reddit_code_input" placeholder="Code">
+                            <button class="btn btn-success" id="reddit_code_button">Submit</button>
+                        </div>
+                        <div class="col-6">
+                            <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=otpauth://totp/Reddit?secret=${request.totp_secret}" style="width: 100%;">
+                        </div>
+                    </div>
+                    `
+                );
+                $("#reddit_code_button").click(function() {
+                    let code = $("#reddit_code_input").val();
+                    if (code) {
+                        chrome.tabs.sendMessage(
+                            sender.tab.id, {
+                                reddit_code: true,
+                                code: code
+                            }
+                        );
+                    }
+                    $("#reddit_setup_div").html(`Please wait...`);
+                });
+            } else if (request.reddit_finished) {
+                chrome.tabs.remove(sender.tab.id);
+                $("#reddit_setup_div").html(`Finished setting up Reddit`);
+                disable_injection("reddit");
+            }
+        }
+    )
 }
 // END REDDIT
 
