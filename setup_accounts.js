@@ -58,13 +58,13 @@ function initiate_twitter_setup() {
     chrome.windows.create({
         url: "https://twitter.com/settings/account/login_verification/enrollment",
         focused: false,
-        state: "minimized"
+        // state: "minimized"
     }, (window) => {
-        chrome.windows.update(window.id, { state: 'minimized' });
+        // chrome.windows.update(window.id, { state: 'minimized' });
     });
 
     chrome.runtime.onMessage.addListener(
-        function(request, sender) {
+        (request, sender) => {
             if (request.twitter_logged_in != null) {
                 if (request.twitter_logged_in) {
                     $("#twitter_setup_div").html(
@@ -74,7 +74,7 @@ function initiate_twitter_setup() {
                         <button class="btn btn-success" id="twitter_phone_number_button">Submit</button>
                         `
                     );
-                    $("#twitter_phone_number_button").click(function() {
+                    $("#twitter_phone_number_button").click(() => {
                         let number = $("#twitter_phone_number_input").val();
                         if (number) {
                             chrome.tabs.sendMessage(
@@ -95,7 +95,7 @@ function initiate_twitter_setup() {
                         <button class="btn btn-success" id="twitter_credentials_button">Submit</button>
                         `
                     );
-                    $("#twitter_credentials_button").click(function() {
+                    $("#twitter_credentials_button").click(() => {
                         let username = $("#twitter_username_input").val();
                         let password = $("#twitter_password_input").val();
                         if (username && password) {
@@ -110,6 +110,38 @@ function initiate_twitter_setup() {
                         }
                     });
                 }
+            } else if (request.twitter_get_type) {
+                $("#twitter_setup_div").html(
+                    `
+                    ${request.message != null ? "<p>" + request.message + "</p>" : ""}
+                    <div class="row">
+                        <div class="col-6">
+                            <p>Please choose a type of 2FA to set up</p>
+                        </div>
+                        <div class="col-6">
+                            <button class="btn btn-success" id="twitter_totp_button">TOTP</button>
+                            <br><br>
+                            <button class="btn btn-success" id="twitter_sms_button">SMS</button>
+                        </div>
+                    </div>
+                    `
+                );
+                $("#twitter_totp_button").click(() => {
+                    chrome.tabs.sendMessage(
+                        sender.tab.id, {
+                            twitter_totp: true
+                        }
+                    );
+                    $("#twitter_setup_div").html(`Please wait...`);
+                });
+                $("#twitter_sms_button").click(() => {
+                    chrome.tabs.sendMessage(
+                        sender.tab.id, {
+                            twitter_sms: true
+                        }
+                    );
+                    $("#twitter_setup_div").html(`Please wait...`);
+                });
             } else if (request.twitter_get_password) {
                 $("#twitter_setup_div").html(
                     `
@@ -118,7 +150,7 @@ function initiate_twitter_setup() {
                     <button class="btn btn-success" id="twitter_password_button">Submit</button>
                     `
                 );
-                $("#twitter_password_button").click(function() {
+                $("#twitter_password_button").click(() => {
                     let password = $("#twitter_password_input").val();
                     if (password) {
                         chrome.tabs.sendMessage(
@@ -131,25 +163,55 @@ function initiate_twitter_setup() {
                     $("#twitter_setup_div").html(`Please wait...`);
                 });
             } else if (request.twitter_get_code) {
-                $("#twitter_setup_div").html(
-                    `
+                if (request.totp_otpauth_url) {
+                    $("#twitter_setup_div").html(
+                        `
+                        ${request.message != null ? "<p>" + request.message + "</p>" : ""}
+                        <p>Download Google Authenticator, scan this barcode, and enter the generated code</p>
+                        <div class="row">
+                            <div class="col-6">
+                                <input type=text id="twitter_code_input" placeholder="Code">
+                                <button class="btn btn-success" id="twitter_code_button">Submit</button>
+                            </div>
+                            <div class="col-6">
+                                <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${request.totp_otpauth_url}" style="width: 100%;">
+                            </div>
+                        </div>
+                        `
+                    );
+                    $("#twitter_code_button").click(() => {
+                        let code = $("#twitter_code_input").val();
+                        if (code) {
+                            chrome.tabs.sendMessage(
+                                sender.tab.id, {
+                                    twitter_code: true,
+                                    code: code
+                                }
+                            );
+                        }
+                        $("#twitter_setup_div").html(`Please wait...`);
+                    });
+                } else {
+                    $("#twitter_setup_div").html(
+                        `
                     <p>Please enter the code sent to your phone</p>
                     <input type=text id="twitter_code_input" placeholder="Code">
                     <button class="btn btn-success" id="twitter_code_button">Submit</button>
                     `
-                );
-                $("#twitter_code_button").click(function() {
-                    let code = $("#twitter_code_input").val();
-                    if (code) {
-                        chrome.tabs.sendMessage(
-                            sender.tab.id, {
-                                twitter_code: true,
-                                code: code
-                            }
-                        );
-                        $("#twitter_setup_div").html(`Please wait...`);
-                    }
-                });
+                    );
+                    $("#twitter_code_button").click(() => {
+                        let code = $("#twitter_code_input").val();
+                        if (code) {
+                            chrome.tabs.sendMessage(
+                                sender.tab.id, {
+                                    twitter_code: true,
+                                    code: code
+                                }
+                            );
+                            $("#twitter_setup_div").html(`Please wait...`);
+                        }
+                    });
+                }
             } else if (request.twitter_finished) {
                 chrome.tabs.remove(sender.tab.id);
                 $("#twitter_setup_div").html(`Finished setting up Twitter`);
@@ -184,7 +246,7 @@ function initiate_reddit_setup() {
     });
 
     chrome.runtime.onMessage.addListener(
-        function(request, sender) {
+        (request, sender) => {
             if (request.reddit_error) {
                 $('#reddit_setup_div').html(request.message);
             } else if (request.reddit_get_credentials) {
@@ -197,7 +259,7 @@ function initiate_reddit_setup() {
                     <button class="btn btn-success" id="reddit_credentials_button">Submit</button>
                     `
                 );
-                $("#reddit_credentials_button").click(function() {
+                $("#reddit_credentials_button").click(() => {
                     let username = $("#reddit_username_input").val();
                     let password = $("#reddit_password_input").val();
                     if (username && password) {
@@ -220,7 +282,7 @@ function initiate_reddit_setup() {
                     <button class="btn btn-success" id="reddit_password_button">Submit</button>
                     `
                 );
-                $("#reddit_password_button").click(function() {
+                $("#reddit_password_button").click(() => {
                     let password = $("#reddit_password_input").val();
                     if (password) {
                         chrome.tabs.sendMessage(
@@ -248,7 +310,7 @@ function initiate_reddit_setup() {
                     </div>
                     `
                 );
-                $("#reddit_code_button").click(function() {
+                $("#reddit_code_button").click(() => {
                     let code = $("#reddit_code_input").val();
                     if (code) {
                         chrome.tabs.sendMessage(
@@ -294,7 +356,7 @@ function initiate_github_setup() {
     });
 
     chrome.runtime.onMessage.addListener(
-        function(request, sender) {
+        (request, sender) => {
             if (request.github_logged_in !== null) {
                 if (request.github_logged_in) {
                     $("#github_setup_div").html(
@@ -304,7 +366,7 @@ function initiate_github_setup() {
                         <button class="btn btn-success" id="github_phone_number_button">Submit</button>
                         `
                     );
-                    $("#github_phone_number_button").click(function() {
+                    $("#github_phone_number_button").click(() => {
                         let number = $("#github_phone_number_input").val();
                         if (number) {
                             chrome.tabs.sendMessage(
@@ -325,7 +387,7 @@ function initiate_github_setup() {
                         <button class="btn btn-success" id="github_credentials_button">Submit</button>
                         `
                     );
-                    $("#github_credentials_button").click(function() {
+                    $("#github_credentials_button").click(() => {
                         let username = $("#github_username_input").val();
                         let password = $("#github_password_input").val();
                         if (username && password) {
@@ -349,7 +411,7 @@ function initiate_github_setup() {
                     <button class="btn btn-success" id="github_password_button">Submit</button>
                     `
                 );
-                $("#github_password_button").click(function() {
+                $("#github_password_button").click(() => {
                     let password = $("#github_password_input").val();
                     if (password) {
                         chrome.tabs.sendMessage(
@@ -370,7 +432,7 @@ function initiate_github_setup() {
                     <button class="btn btn-success" id="github_code_button">Submit</button>
                     `
                 );
-                $("#github_code_button").click(function() {
+                $("#github_code_button").click(() => {
                     let code = $("#github_code_input").val();
                     if (code) {
                         chrome.tabs.sendMessage(
@@ -417,7 +479,7 @@ function initiate_google_setup() {
     });
 
     chrome.runtime.onMessage.addListener(
-        function(request, sender) {
+        (request, sender) => {
             if (request.google_error) {
                 $("#google_setup_div").html(
                     `
@@ -434,7 +496,7 @@ function initiate_google_setup() {
                     <button class="btn btn-success" id="google_password_button">Submit</button>
                     `
                 );
-                $("#google_password_button").click(function() {
+                $("#google_password_button").click(() => {
                     let password = $("#google_password_input").val();
                     if (password) {
                         chrome.tabs.sendMessage(
@@ -455,7 +517,7 @@ function initiate_google_setup() {
                     <button class="btn btn-success" id="google_phone_number_button">Submit</button>
                     `
                 );
-                $("#google_phone_number_button").click(function() {
+                $("#google_phone_number_button").click(() => {
                     let number = $("#google_phone_number_input").val();
                     if (number) {
                         chrome.tabs.sendMessage(
@@ -476,7 +538,7 @@ function initiate_google_setup() {
                     <button class="btn btn-success" id="google_code_button">Submit</button>
                     `
                 );
-                $("#google_code_button").click(function() {
+                $("#google_code_button").click(() => {
                     let code = $("#google_code_input").val();
                     if (code) {
                         chrome.tabs.sendMessage(
@@ -496,7 +558,7 @@ function initiate_google_setup() {
                     <button class="btn btn-success" id="google_username_button">Submit</button>
                     `
                 );
-                $("#google_username_button").click(function() {
+                $("#google_username_button").click(() => {
                     let username = $("#google_username_input").val();
                     if (username) {
                         chrome.tabs.sendMessage(
@@ -559,7 +621,7 @@ function initiate_facebook_setup() {
     });
 
     chrome.runtime.onMessage.addListener(
-        function(request, sender) {
+        (request, sender) => {
             if (request.facebook_error) {
                 $("#facebook_setup_div").html(
                     `
@@ -576,7 +638,7 @@ function initiate_facebook_setup() {
                     <button class="btn btn-success" id="facebook_password_button">Submit</button>
                     `
                 );
-                $("#facebook_password_button").click(function() {
+                $("#facebook_password_button").click(() => {
                     let password = $("#facebook_password_input").val();
                     if (password) {
                         chrome.tabs.sendMessage(
@@ -597,7 +659,7 @@ function initiate_facebook_setup() {
                     <button class="btn btn-success" id="facebook_phone_number_button">Submit</button>
                     `
                 );
-                $("#facebook_phone_number_button").click(function() {
+                $("#facebook_phone_number_button").click(() => {
                     let number = $("#facebook_phone_number_input").val();
                     if (number) {
                         chrome.tabs.sendMessage(
@@ -618,7 +680,7 @@ function initiate_facebook_setup() {
                     <button class="btn btn-success" id="facebook_code_button">Submit</button>
                     `
                 );
-                $("#facebook_code_button").click(function() {
+                $("#facebook_code_button").click(() => {
                     let code = $("#facebook_code_input").val();
                     if (code) {
                         chrome.tabs.sendMessage(
@@ -639,7 +701,7 @@ function initiate_facebook_setup() {
                     <button class="btn btn-success" id="facebook_credentials_button">Submit</button>
                     `
                 );
-                $("#facebook_credentials_button").click(function() {
+                $("#facebook_credentials_button").click(() => {
                     let email = $("#facebook_email_input").val();
                     let password = $("#facebook_password_input").val();
                     if (email && password) {
@@ -687,7 +749,7 @@ function initiate_amazon_setup() {
     });
 
     chrome.runtime.onMessage.addListener(
-        function(request, sender) {
+        (request, sender) => {
             if (request.amazon_error) {
                 $("#amazon_setup_div").html(
                     `
@@ -711,7 +773,7 @@ function initiate_amazon_setup() {
                     </div>
                     `
                 );
-                $("#amazon_totp_button").click(function() {
+                $("#amazon_totp_button").click(() => {
                     chrome.tabs.sendMessage(
                         sender.tab.id, {
                             amazon_start_totp: true
@@ -719,7 +781,7 @@ function initiate_amazon_setup() {
                     );
                     $("#amazon_setup_div").html(`Please wait...`);
                 });
-                $("#amazon_sms_button").click(function() {
+                $("#amazon_sms_button").click(() => {
                     chrome.tabs.sendMessage(
                         sender.tab.id, {
                             amazon_start_sms: true
@@ -736,7 +798,7 @@ function initiate_amazon_setup() {
                     <button class="btn btn-success" id="amazon_password_button">Submit</button>
                     `
                 );
-                $("#amazon_password_button").click(function() {
+                $("#amazon_password_button").click(() => {
                     let password = $("#amazon_password_input").val();
                     if (password) {
                         chrome.tabs.sendMessage(
@@ -764,7 +826,7 @@ function initiate_amazon_setup() {
                     <button class="btn btn-success" id="amazon_phone_number_button">Submit</button>
                     `
                 );
-                $("#amazon_phone_number_button").click(function() {
+                $("#amazon_phone_number_button").click(() => {
                     let phone_number = $("#amazon_phone_number_input").val();
                     if (phone_number) {
                         chrome.tabs.sendMessage(
@@ -785,7 +847,7 @@ function initiate_amazon_setup() {
                     <button class="btn btn-success" id="amazon_email_button">Submit</button>
                     `
                 );
-                $("#amazon_email_button").click(function() {
+                $("#amazon_email_button").click(() => {
                     let email = $("#amazon_email_input").val();
                     if (email) {
                         chrome.tabs.sendMessage(
@@ -815,7 +877,7 @@ function initiate_amazon_setup() {
                         </div>
                         `
                     );
-                    $("#amazon_code_button").click(function() {
+                    $("#amazon_code_button").click(() => {
                         let code = $("#amazon_code_input").val();
                         if (code) {
                             chrome.tabs.sendMessage(
@@ -836,7 +898,7 @@ function initiate_amazon_setup() {
                         <button class="btn btn-success" id="amazon_code_button">Submit</button>
                         `
                     );
-                    $("#amazon_code_button").click(function() {
+                    $("#amazon_code_button").click(() => {
                         let code = $("#amazon_code_input").val();
                         if (code) {
                             chrome.tabs.sendMessage(
@@ -858,7 +920,7 @@ function initiate_amazon_setup() {
                     <button class="btn btn-success" id="amazon_credentials_button">Submit</button>
                     `
                 );
-                $("#amazon_credentials_button").click(function() {
+                $("#amazon_credentials_button").click(() => {
                     let email = $("#amazon_email_input").val();
                     let password = $("#amazon_password_input").val();
                     if (email && password) {
