@@ -78,10 +78,8 @@ if (window.location.href.includes("twitter.com/account/access?feature=two_factor
     } else {
         location.reload();
     }
-} else if (window.location.href.includes("twitter.com/account/access?feature=two_factor_auth_totp_enrollment&initiated_in_iframe=true")) {
-    if (document.querySelector("html > body > div:nth-of-type(2) > div > form > input:nth-of-type(6)") != null) {
-        document.querySelector("html > body > div:nth-of-type(2) > div > form > input:nth-of-type(6)").click();
-    } else if (document.querySelector("#password") != null) {
+} else if (window.location.href.includes("twitter.com/account/access?feature=two_factor_auth_totp_enrollment")) {
+    if (document.querySelector("#password") != null) {
         chrome.runtime.sendMessage({
             twitter_get_password: true
         });
@@ -100,9 +98,10 @@ if (window.location.href.includes("twitter.com/account/access?feature=two_factor
     chrome.runtime.sendMessage({
         twitter_logged_in: false
     });
-} else if (window.location.href.includes("twitter.com/settings/account/login_verification")) {
+} else if (window.location.href.includes("twitter.com/settings/account/login_verification") && !window.location.href.includes("enrollment")) {
+    console.log(window.location.href);
     chrome.runtime.sendMessage({
-        twitter_get_type: true,
+        twitter_get_type: true
     });
 } else if (window.location.href.includes("twitter.com/home")) {
     window.location.href = "https://twitter.com/settings/account/login_verification/enrollment";
