@@ -32,8 +32,8 @@ chrome.runtime.onMessage.addListener(
                 document.querySelector("html > body > div:first-of-type > div:first-of-type > div:first-of-type > div > form > div > div:nth-of-type(3) > div > div:first-of-type > label > input").click();
             }
             change(document.querySelector("#ajax_password"), request.password);
-            let item = document.querySelector("html > body > div:nth-of-type(5) > div:nth-of-type(2) > div > div > div > div:nth-of-type(3) > table > tbody > tr > td:nth-of-type(2) > button").click();
-            if (item == null) item = document.querySelector("html > body > div:nth-of-type(7) > div:nth-of-type(2) > div > div > div > div:nth-of-type(3) > table > tbody > tr > td:nth-of-type(2) > button").click();
+            let item = document.querySelector("html > body > div:nth-of-type(5) > div:nth-of-type(2) > div > div > div > div:nth-of-type(3) > table > tbody > tr > td:nth-of-type(2) > button");
+            item = document.querySelector("html > body > div:nth-of-type(7) > div:nth-of-type(2) > div > div > div > div:nth-of-type(3) > table > tbody > tr > td:nth-of-type(2) > button");
             item.click();
             setTimeout(() => {
                 if (document.querySelector("#ajax_password") != null) {
@@ -47,7 +47,7 @@ chrome.runtime.onMessage.addListener(
                     });
                 }
             }, 2000);
-        } else if (request.facebook_code) {
+        } else if (request.facebook_sms_code) {
             if (request.code.length != 6) {
                 chrome.runtime.sendMessage({
                     facebook_get_code: true,
@@ -64,29 +64,39 @@ chrome.runtime.onMessage.addListener(
                     });
                 }, 500);
             }
+        } else if (request.facebook_totp_code) {
+            document.querySelector("html > body > div:nth-of-type(6) > div:nth-of-type(2) > div > div > div > div > div > div > div:nth-of-type(3) > span:nth-of-type(2) > div > div:nth-of-type(2) > button").click();
+            setTimeout(() => {
+                if (request.code.length != 6) {
+                    chrome.runtime.sendMessage({
+                        facebook_get_code: true,
+                        message: "Invalid code"
+                    });
+                } else {
+                    for (let index = 0; index < 6; index++) {
+                        change(document.querySelector(`html > body > div:nth-of-type(6) > div:nth-of-type(2) > div > div > div > div > div > div > div:nth-of-type(2) > div > div > div > div:nth-of-type(2) > div > div > form > input:nth-of-type(${index + 1})`), request.code[index]);
+                    }
+                    setTimeout(() => {
+                        document.querySelector("html > body > div:nth-of-type(6) > div:nth-of-type(2) > div > div > div > div > div > div > div:nth-of-type(3) > span:nth-of-type(2) > div > div > button").click()
+                        chrome.runtime.sendMessage({
+                            facebook_finished: true
+                        });
+                    }, 500);
+                }
+            }, 2000);
         } else if (request.facebook_credentials) {
             document.querySelector("#email").value = request.email;
             document.querySelector("#pass").value = request.password;
             document.querySelector("html > body > div:first-of-type > div:nth-of-type(2) > div:first-of-type > div > div > div > div:nth-of-type(2) > div > div:first-of-type > form > div:nth-of-type(2) > button").click();
-        }
-    }
-);
-
-setTimeout(() => {
-    if (window.location.href === "https://www.facebook.com/") {
-        // Sign in, then redirect to the security page
-        chrome.runtime.sendMessage({
-            facebook_get_credentials: true
-        });
-    } else if (window.location.href === "https://www.facebook.com/?sk=welcome") {
-        window.location.href = "https://www.facebook.com/security/2fac/setup/intro";
-    } else if (window.location.href.includes("facebook.com/security/2fac/setup/intro")) {
-        if (document.querySelector("html > body > div:nth-of-type(2) > h1")) {
-            if (document.querySelector("html > body > div:nth-of-type(2) > h1").textContent === "Sorry, something went wrong.") {
-                window.location.href = "https://www.facebook.com"; // Go to sign in page
-            }
-        } else if (window.location.href.includes("?cquick=")) {
-            // Inside iframe
+        } else if (request.facebook_start_totp) {
+            document.querySelector("html > body > div:first-of-type > div:first-of-type > div:first-of-type > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(2) > div:first-of-type > div > div:nth-of-type(2) > a").click();
+            setTimeout(() => {
+                chrome.runtime.sendMessage({
+                    facebook_get_code: true,
+                    totp_url: document.querySelector("html > body > div:nth-of-type(6) > div:nth-of-type(2) > div > div > div > div > div > div > div:nth-of-type(2) > div > div > div:nth-of-type(2) > div:first-of-type > img").src
+                });
+            }, 4000);
+        } else if (request.facebook_start_sms) {
             document.querySelector("body > div > div > div > div:nth-child(2) > div:nth-child(2) > div:nth-child(2) > div:nth-child(2) > div > div:nth-child(2) > a").click();
             // Wait for dialog to load, then decide what to do
             setTimeout(() => {
@@ -116,6 +126,28 @@ setTimeout(() => {
                     }, 2000);
                 }
             }, 3000);
+        }
+    }
+);
+
+setTimeout(() => {
+    if (window.location.href === "https://www.facebook.com/") {
+        // Sign in, then redirect to the security page
+        chrome.runtime.sendMessage({
+            facebook_get_credentials: true
+        });
+    } else if (window.location.href === "https://www.facebook.com/?sk=welcome") {
+        window.location.href = "https://www.facebook.com/security/2fac/setup/intro";
+    } else if (window.location.href.includes("facebook.com/security/2fac/setup/intro")) {
+        if (document.querySelector("html > body > div:nth-of-type(2) > h1")) {
+            if (document.querySelector("html > body > div:nth-of-type(2) > h1").textContent === "Sorry, something went wrong.") {
+                window.location.href = "https://www.facebook.com"; // Go to sign in page
+            }
+        } else if (window.location.href.includes("?cquick=")) {
+            // Inside iframe
+            chrome.runtime.sendMessage({
+                facebook_get_type: true,
+            });
         } else {
             if (document.querySelector("body > div > div > div > div > div:nth-child(6) > div > div > div > div > iframe") != null) {
                 // logged in- open iframe

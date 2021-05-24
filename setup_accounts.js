@@ -629,6 +629,38 @@ function initiate_facebook_setup() {
                     `
                 );
                 disable_injection("facebook");
+            } else if (request.facebook_get_type) {
+                $("#facebook_setup_div").html(
+                    `
+                    ${request.message != null ? "<p>" + request.message + "</p>" : ""}
+                    <div class="row">
+                        <div class="col-6">
+                            <p>Please choose a type of 2FA to set up</p>
+                        </div>
+                        <div class="col-6">
+                            <button class="btn btn-success" id="facebook_totp_button">TOTP</button>
+                            <br><br>
+                            <button class="btn btn-success" id="facebook_sms_button">SMS</button>
+                        </div>
+                    </div>
+                    `
+                );
+                $("#facebook_totp_button").click(() => {
+                    chrome.tabs.sendMessage(
+                        sender.tab.id, {
+                            facebook_start_totp: true
+                        }
+                    );
+                    $("#facebook_setup_div").html(`Please wait...`);
+                });
+                $("#facebook_sms_button").click(() => {
+                    chrome.tabs.sendMessage(
+                        sender.tab.id, {
+                            facebook_start_sms: true
+                        }
+                    );
+                    $("#facebook_setup_div").html(`Please wait...`);
+                });
             } else if (request.facebook_get_password) {
                 $("#facebook_setup_div").html(
                     `
@@ -672,26 +704,57 @@ function initiate_facebook_setup() {
                     }
                 });
             } else if (request.facebook_get_code) {
-                $("#facebook_setup_div").html(
-                    `
-                    ${request.message != null ? "<p>" + request.message + "</p>" : ""}
-                    <p>Please enter the code sent to your phone</p>
-                    <input type=text id="facebook_code_input" placeholder="Code">
-                    <button class="btn btn-success" id="facebook_code_button">Submit</button>
-                    `
-                );
-                $("#facebook_code_button").click(() => {
-                    let code = $("#facebook_code_input").val();
-                    if (code) {
-                        chrome.tabs.sendMessage(
-                            sender.tab.id, {
-                                facebook_code: true,
-                                code: code
-                            }
-                        );
-                    }
-                    $("#facebook_setup_div").html(`Please wait...`);
-                });
+                if (request.totp_url) {
+                    $("#facebook_setup_div").html(
+                        `
+                        ${request.message != null ? "<p>" + request.message + "</p>" : ""}
+                        
+                        <p>Download Google Authenticator, scan this barcode, and enter the generated code</p>
+                        <div class="row">
+                            <div class="col-6">
+                                <input type=text id="facebook_code_input" placeholder="Code">
+                                <button class="btn btn-success" id="facebook_code_button">Submit</button>
+                            </div>
+                            <div class="col-6">
+                                <img src="${request.totp_url}" style="width: 100%;">
+                            </div>
+                        </div>
+                        `
+                    );
+                    $("#facebook_code_button").click(() => {
+                        let code = $("#facebook_code_input").val();
+                        if (code) {
+                            chrome.tabs.sendMessage(
+                                sender.tab.id, {
+                                    facebook_totp_code: true,
+                                    code: code
+                                }
+                            );
+                        }
+                        $("#facebook_setup_div").html(`Please wait...`);
+                    });
+                } else {
+                    $("#facebook_setup_div").html(
+                        `
+                        ${request.message != null ? "<p>" + request.message + "</p>" : ""}
+                        <p>Please enter the code sent to your phone</p>
+                        <input type=text id="facebook_code_input" placeholder="Code">
+                        <button class="btn btn-success" id="facebook_code_button">Submit</button>
+                        `
+                    );
+                    $("#facebook_code_button").click(() => {
+                        let code = $("#facebook_code_input").val();
+                        if (code) {
+                            chrome.tabs.sendMessage(
+                                sender.tab.id, {
+                                    facebook_sms_code: true,
+                                    code: code
+                                }
+                            );
+                        }
+                        $("#facebook_setup_div").html(`Please wait...`);
+                    });
+                }
             } else if (request.facebook_get_credentials) {
                 $("#facebook_setup_div").html(
                     `
