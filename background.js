@@ -4,7 +4,10 @@ let injection_statuses = {
     "google": false,
     "facebook": false,
     "amazon": false,
-    "reddit": false
+    "reddit": false,
+    "yahoo": false,
+    "dropbox": false,
+    "zoom": false
 }
 
 chrome.tabs.onUpdated.addListener(function(tabId, info, tab) {
@@ -38,6 +41,21 @@ chrome.tabs.onUpdated.addListener(function(tabId, info, tab) {
         if (injection_statuses.reddit) {
             if (tab.url.includes("reddit.com")) {
                 chrome.tabs.executeScript(tabId, { file: "reddit.js" });
+            }
+        }
+        if (injection_statuses.yahoo) {
+            if (tab.url.includes("yahoo.com")) {
+                chrome.tabs.executeScript(tabId, { file: "yahoo.js" });
+            }
+        }
+        if (injection_statuses.dropbox) {
+            if (tab.url.includes("dropbox.com")) {
+                chrome.tabs.executeScript(tabId, { file: "dropbox.js" })
+            }
+        }
+        if (injection_statuses.zoom) {
+            if (tab.url.includes("zoom.com")) {
+                chrome.tabs.executeScript(tabId, { file: "zoom.js" })
             }
         }
     }

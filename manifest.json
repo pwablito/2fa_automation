@@ -1,6 +1,6 @@
 {
     "manifest_version": 2,
-    "name": "2FA Automation",
+    "name": "2FA Automator",
     "version": "1.0",
     "browser_action": {
         "default_icon": "icon.png",

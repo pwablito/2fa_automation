@@ -24,6 +24,12 @@ $("#setup_accounts_button").click(() => {
                     initiate_facebook_setup();
                 } else if (service_name === "amazon") {
                     initiate_amazon_setup();
+                } else if (service_name === "yahoo") {
+                    initiate_yahoo_setup();
+                } else if (service_name === "dropbox") {
+                    initiate_dropbox_setup();
+                } else if (service_name === "zoom") {
+                    initiate_zoom_setup();
                 } else {
                     console.log("Undefined service: '" + service_name + "'");
                 }
@@ -999,10 +1005,393 @@ function initiate_amazon_setup() {
                 });
             } else if (request.amazon_finished) {
                 chrome.tabs.remove(sender.tab.id);
-                $("#amazon_setup_div").html(`Finished setting up amazon`);
+                $("#amazon_setup_div").html(`Finished setting up Amazon`);
                 disable_injection("amazon");
             }
         }
     );
 }
 // END AMAZON
+
+// START YAHOO
+function initiate_yahoo_setup() {
+    $("#setup_processes_list").append(
+        `
+        <div class="gray">
+            <div class="row">
+                <div class="col-3"><img src="logos/yahoo.svg"></div>
+                <div class="col-9">
+                    <div id="yahoo_setup_div" class="row"></div>
+                </div>
+            </div>
+        </div>
+        `
+    );
+    $("#yahoo_setup_div").html(`Please wait...`);
+    chrome.windows.create({
+        url: "https://login.yahoo.com/myaccount/security/two-step-verification",
+        focused: false,
+        state: "minimized"
+    }, (window) => {
+        chrome.windows.update(window.id, { state: 'minimized' });
+    });
+
+    chrome.runtime.onMessage.addListener(
+        (request, sender) => {
+            if (request.yahoo_error) {
+                $("#yahoo_setup_div").html(
+                    `
+                    <p>${request.message}</p>
+                    `
+                );
+                chrome.tabs.remove(sender.tab.id);
+                disable_injection("yahoo");
+            } else if (request.yahoo_get_email) {
+                $("#yahoo_setup_div").html(
+                    `
+                    ${request.message != null ? "<p>" + request.message + "</p>" : ""}
+                    <p>Please enter your email address</p>
+                    <input type=text id="yahoo_email_input" placeholder="Email">
+                    <button class="btn btn-success" id="yahoo_email_button">Submit</button>
+                    `
+                );
+                $("#yahoo_email_button").click(() => {
+                    let email = $("#yahoo_email_input").val();
+                    if (email) {
+                        chrome.tabs.sendMessage(
+                            sender.tab.id, {
+                                yahoo_email: true,
+                                email: email
+                            }
+                        );
+                        $("#yahoo_setup_div").html(`Please wait...`);
+                    }
+                });
+            } else if (request.yahoo_get_password) {
+                $("#yahoo_setup_div").html(
+                    `
+                    ${request.message != null ? "<p>" + request.message + "</p>" : ""}
+                    <p>Please enter your password</p>
+                    <input type=password id="yahoo_password_input" placeholder="Password">
+                    <button class="btn btn-success" id="yahoo_password_button">Submit</button>
+                    `
+                );
+                $("#yahoo_password_button").click(() => {
+                    let password = $("#yahoo_password_input").val();
+                    if (password) {
+                        chrome.tabs.sendMessage(
+                            sender.tab.id, {
+                                yahoo_password: true,
+                                password: password
+                            }
+                        );
+                    }
+                    $("#yahoo_setup_div").html(`Please wait...`);
+                });
+            } else if (request.yahoo_get_phone_number) {
+                $("#yahoo_setup_div").html(
+                    `
+                    ${request.message != null ? "<p>" + request.message + "</p>" : ""}
+                    <p>Please enter your phone number</p>
+                    <input type=text id="yahoo_phone_number_input" placeholder="Phone number">
+                    <button class="btn btn-success" id="yahoo_phone_number_button">Submit</button>
+                    `
+                );
+                $("#yahoo_phone_number_button").click(() => {
+                    let number = $("#yahoo_phone_number_input").val();
+                    if (number) {
+                        chrome.tabs.sendMessage(
+                            sender.tab.id, {
+                                yahoo_phone_number: true,
+                                number: number
+                            }
+                        );
+                        $("#yahoo_setup_div").html(`Please wait...`);
+                    }
+                });
+            } else if (request.yahoo_get_code) {
+                $("#yahoo_setup_div").html(
+                    `
+                    ${request.message != null ? "<p>" + request.message + "</p>" : ""}
+                    <p>Please enter the code sent to your phone</p>
+                    <input type=text id="yahoo_code_input" placeholder="Code">
+                    <button class="btn btn-success" id="yahoo_code_button">Submit</button>
+                    `
+                );
+                $("#yahoo_code_button").click(() => {
+                    let code = $("#yahoo_code_input").val();
+                    if (code) {
+                        chrome.tabs.sendMessage(
+                            sender.tab.id, {
+                                yahoo_code: true,
+                                code: code
+                            }
+                        );
+                    }
+                    $("#yahoo_setup_div").html(`Please wait...`);
+                });
+            } else if (request.yahoo_finished) {
+                chrome.tabs.remove(sender.tab.id);
+                $("#yahoo_setup_div").html(`Finished setting up Yahoo`);
+                disable_injection("yahoo");
+            }
+        }
+    );
+}
+// END YAHOO
+
+
+// START DROPBOX
+function initiate_dropbox_setup() {
+    $("#setup_processes_list").append(
+        `
+        <div class="gray">
+            <div class="row">
+                <div class="col-3"><img src="logos/dropbox.svg"></div>
+                <div class="col-9">
+                    <div id="dropbox_setup_div" class="row"></div>
+                </div>
+            </div>
+        </div>
+        `
+    );
+    $("#dropbox_setup_div").html(`Please wait...`);
+    chrome.windows.create({
+        url: "https://login.dropbox.com/myaccount/security/two-step-verification",
+        focused: false,
+        state: "minimized"
+    }, (window) => {
+        chrome.windows.update(window.id, { state: 'minimized' });
+    });
+
+    chrome.runtime.onMessage.addListener(
+        (request, sender) => {
+            if (request.dropbox_error) {
+                $("#dropbox_setup_div").html(
+                    `
+                    <p>${request.message}</p>
+                    `
+                );
+                chrome.tabs.remove(sender.tab.id);
+                disable_injection("dropbox");
+            } else if (request.dropbox_get_email) {
+                $("#dropbox_setup_div").html(
+                    `
+                    ${request.message != null ? "<p>" + request.message + "</p>" : ""}
+                    <p>Please enter your email address</p>
+                    <input type=text id="dropbox_email_input" placeholder="Email">
+                    <button class="btn btn-success" id="dropbox_email_button">Submit</button>
+                    `
+                );
+                $("#dropbox_email_button").click(() => {
+                    let email = $("#dropbox_email_input").val();
+                    if (email) {
+                        chrome.tabs.sendMessage(
+                            sender.tab.id, {
+                                dropbox_email: true,
+                                email: email
+                            }
+                        );
+                        $("#dropbox_setup_div").html(`Please wait...`);
+                    }
+                });
+            } else if (request.dropbox_get_password) {
+                $("#dropbox_setup_div").html(
+                    `
+                    ${request.message != null ? "<p>" + request.message + "</p>" : ""}
+                    <p>Please enter your password</p>
+                    <input type=password id="dropbox_password_input" placeholder="Password">
+                    <button class="btn btn-success" id="dropbox_password_button">Submit</button>
+                    `
+                );
+                $("#dropbox_password_button").click(() => {
+                    let password = $("#dropbox_password_input").val();
+                    if (password) {
+                        chrome.tabs.sendMessage(
+                            sender.tab.id, {
+                                dropbox_password: true,
+                                password: password
+                            }
+                        );
+                    }
+                    $("#dropbox_setup_div").html(`Please wait...`);
+                });
+            } else if (request.dropbox_get_phone_number) {
+                $("#dropbox_setup_div").html(
+                    `
+                    ${request.message != null ? "<p>" + request.message + "</p>" : ""}
+                    <p>Please enter your phone number</p>
+                    <input type=text id="dropbox_phone_number_input" placeholder="Phone number">
+                    <button class="btn btn-success" id="dropbox_phone_number_button">Submit</button>
+                    `
+                );
+                $("#dropbox_phone_number_button").click(() => {
+                    let number = $("#dropbox_phone_number_input").val();
+                    if (number) {
+                        chrome.tabs.sendMessage(
+                            sender.tab.id, {
+                                dropbox_phone_number: true,
+                                number: number
+                            }
+                        );
+                        $("#dropbox_setup_div").html(`Please wait...`);
+                    }
+                });
+            } else if (request.dropbox_get_code) {
+                $("#dropbox_setup_div").html(
+                    `
+                    ${request.message != null ? "<p>" + request.message + "</p>" : ""}
+                    <p>Please enter the code sent to your phone</p>
+                    <input type=text id="dropbox_code_input" placeholder="Code">
+                    <button class="btn btn-success" id="dropbox_code_button">Submit</button>
+                    `
+                );
+                $("#dropbox_code_button").click(() => {
+                    let code = $("#dropbox_code_input").val();
+                    if (code) {
+                        chrome.tabs.sendMessage(
+                            sender.tab.id, {
+                                dropbox_code: true,
+                                code: code
+                            }
+                        );
+                    }
+                    $("#dropbox_setup_div").html(`Please wait...`);
+                });
+            } else if (request.dropbox_finished) {
+                chrome.tabs.remove(sender.tab.id);
+                $("#dropbox_setup_div").html(`Finished setting up Dropbox`);
+                disable_injection("dropbox");
+            }
+        }
+    );
+}
+// END DROPBOX
+
+
+// START ZOOM
+function initiate_zoom_setup() {
+    $("#setup_processes_list").append(
+        `
+        <div class="gray">
+            <div class="row">
+                <div class="col-3"><img src="logos/zoom.svg"></div>
+                <div class="col-9">
+                    <div id="zoom_setup_div" class="row"></div>
+                </div>
+            </div>
+        </div>
+        `
+    );
+    $("#zoom_setup_div").html(`Please wait...`);
+    chrome.windows.create({
+        url: "https://login.zoom.com/myaccount/security/two-step-verification",
+        focused: false,
+        state: "minimized"
+    }, (window) => {
+        chrome.windows.update(window.id, { state: 'minimized' });
+    });
+
+    chrome.runtime.onMessage.addListener(
+        (request, sender) => {
+            if (request.zoom_error) {
+                $("#zoom_setup_div").html(
+                    `
+                    <p>${request.message}</p>
+                    `
+                );
+                chrome.tabs.remove(sender.tab.id);
+                disable_injection("zoom");
+            } else if (request.zoom_get_email) {
+                $("#zoom_setup_div").html(
+                    `
+                    ${request.message != null ? "<p>" + request.message + "</p>" : ""}
+                    <p>Please enter your email address</p>
+                    <input type=text id="zoom_email_input" placeholder="Email">
+                    <button class="btn btn-success" id="zoom_email_button">Submit</button>
+                    `
+                );
+                $("#zoom_email_button").click(() => {
+                    let email = $("#zoom_email_input").val();
+                    if (email) {
+                        chrome.tabs.sendMessage(
+                            sender.tab.id, {
+                                zoom_email: true,
+                                email: email
+                            }
+                        );
+                        $("#zoom_setup_div").html(`Please wait...`);
+                    }
+                });
+            } else if (request.zoom_get_password) {
+                $("#zoom_setup_div").html(
+                    `
+                    ${request.message != null ? "<p>" + request.message + "</p>" : ""}
+                    <p>Please enter your password</p>
+                    <input type=password id="zoom_password_input" placeholder="Password">
+                    <button class="btn btn-success" id="zoom_password_button">Submit</button>
+                    `
+                );
+                $("#zoom_password_button").click(() => {
+                    let password = $("#zoom_password_input").val();
+                    if (password) {
+                        chrome.tabs.sendMessage(
+                            sender.tab.id, {
+                                zoom_password: true,
+                                password: password
+                            }
+                        );
+                    }
+                    $("#zoom_setup_div").html(`Please wait...`);
+                });
+            } else if (request.zoom_get_phone_number) {
+                $("#zoom_setup_div").html(
+                    `
+                    ${request.message != null ? "<p>" + request.message + "</p>" : ""}
+                    <p>Please enter your phone number</p>
+                    <input type=text id="zoom_phone_number_input" placeholder="Phone number">
+                    <button class="btn btn-success" id="zoom_phone_number_button">Submit</button>
+                    `
+                );
+                $("#zoom_phone_number_button").click(() => {
+                    let number = $("#zoom_phone_number_input").val();
+                    if (number) {
+                        chrome.tabs.sendMessage(
+                            sender.tab.id, {
+                                zoom_phone_number: true,
+                                number: number
+                            }
+                        );
+                        $("#zoom_setup_div").html(`Please wait...`);
+                    }
+                });
+            } else if (request.zoom_get_code) {
+                $("#zoom_setup_div").html(
+                    `
+                    ${request.message != null ? "<p>" + request.message + "</p>" : ""}
+                    <p>Please enter the code sent to your phone</p>
+                    <input type=text id="zoom_code_input" placeholder="Code">
+                    <button class="btn btn-success" id="zoom_code_button">Submit</button>
+                    `
+                );
+                $("#zoom_code_button").click(() => {
+                    let code = $("#zoom_code_input").val();
+                    if (code) {
+                        chrome.tabs.sendMessage(
+                            sender.tab.id, {
+                                zoom_code: true,
+                                code: code
+                            }
+                        );
+                    }
+                    $("#zoom_setup_div").html(`Please wait...`);
+                });
+            } else if (request.zoom_finished) {
+                chrome.tabs.remove(sender.tab.id);
+                $("#zoom_setup_div").html(`Finished setting up Zoom`);
+                disable_injection("zoom");
+            }
+        }
+    );
+}
+// END ZOOM
