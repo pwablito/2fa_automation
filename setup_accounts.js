@@ -1157,7 +1157,7 @@ function initiate_dropbox_setup() {
     );
     $("#dropbox_setup_div").html(`Please wait...`);
     chrome.windows.create({
-        url: "https://login.dropbox.com/myaccount/security/two-step-verification",
+        url: "https://www.dropbox.com/account/security",
         focused: false,
         state: "minimized"
     }, (window) => {
@@ -1258,6 +1258,38 @@ function initiate_dropbox_setup() {
                     }
                     $("#dropbox_setup_div").html(`Please wait...`);
                 });
+            } else if (request.dropbox_get_type) {
+                $("#dropbox_setup_div").html(
+                    `
+                    ${request.message != null ? "<p>" + request.message + "</p>" : ""}
+                    <div class="row">
+                        <div class="col-6">
+                            <p>Please choose a type of 2FA to set up</p>
+                        </div>
+                        <div class="col-6">
+                            <button class="btn btn-success" id="dropbox_totp_button">TOTP</button>
+                            <br><br>
+                            <button class="btn btn-success" id="dropbox_sms_button">SMS</button>
+                        </div>
+                    </div>
+                    `
+                );
+                $("#dropbox_totp_button").click(() => {
+                    chrome.tabs.sendMessage(
+                        sender.tab.id, {
+                            dropbox_start_totp: true
+                        }
+                    );
+                    $("#dropbox_setup_div").html(`Please wait...`);
+                });
+                $("#dropbox_sms_button").click(() => {
+                    chrome.tabs.sendMessage(
+                        sender.tab.id, {
+                            dropbox_start_sms: true
+                        }
+                    );
+                    $("#dropbox_setup_div").html(`Please wait...`);
+                });
             } else if (request.dropbox_finished) {
                 chrome.tabs.remove(sender.tab.id);
                 $("#dropbox_setup_div").html(`Finished setting up Dropbox`);
@@ -1267,7 +1299,6 @@ function initiate_dropbox_setup() {
     );
 }
 // END DROPBOX
-
 
 // START ZOOM
 function initiate_zoom_setup() {
@@ -1285,7 +1316,7 @@ function initiate_zoom_setup() {
     );
     $("#zoom_setup_div").html(`Please wait...`);
     chrome.windows.create({
-        url: "https://login.zoom.com/myaccount/security/two-step-verification",
+        url: "https://zoom.us/profile",
         focused: false,
         state: "minimized"
     }, (window) => {
