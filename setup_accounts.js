@@ -1386,6 +1386,38 @@ function initiate_zoom_setup() {
                     }
                     $("#zoom_setup_div").html(`Please wait...`);
                 });
+            } else if (request.zoom_get_type) {
+                $("#zoom_setup_div").html(
+                    `
+                    ${request.message != null ? "<p>" + request.message + "</p>" : ""}
+                    <div class="row">
+                        <div class="col-6">
+                            <p>Please choose a type of 2FA to set up</p>
+                        </div>
+                        <div class="col-6">
+                            <button class="btn btn-success" id="zoom_totp_button">TOTP</button>
+                            <br><br>
+                            <button class="btn btn-success" id="zoom_sms_button">SMS</button>
+                        </div>
+                    </div>
+                    `
+                );
+                $("#zoom_totp_button").click(() => {
+                    chrome.tabs.sendMessage(
+                        sender.tab.id, {
+                            zoom_start_totp: true
+                        }
+                    );
+                    $("#zoom_setup_div").html(`Please wait...`);
+                });
+                $("#zoom_sms_button").click(() => {
+                    chrome.tabs.sendMessage(
+                        sender.tab.id, {
+                            zoom_start_sms: true
+                        }
+                    );
+                    $("#zoom_setup_div").html(`Please wait...`);
+                });
             } else if (request.zoom_finished) {
                 chrome.tabs.remove(sender.tab.id);
                 $("#zoom_setup_div").html(`Finished setting up Zoom`);
