@@ -54,7 +54,7 @@ chrome.tabs.onUpdated.addListener(function(tabId, info, tab) {
             }
         }
         if (injection_statuses.zoom) {
-            if (tab.url.includes("zoom.com")) {
+            if (tab.url.includes("zoom.us")) {
                 chrome.tabs.executeScript(tabId, { file: "zoom.js" })
             }
         }

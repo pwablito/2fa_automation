@@ -1285,7 +1285,7 @@ function initiate_dropbox_setup() {
                 $("#dropbox_sms_button").click(() => {
                     chrome.tabs.sendMessage(
                         sender.tab.id, {
-                            dropbox_start_sms: true
+                            dropbox_start_sms: true,
                         }
                     );
                     $("#dropbox_setup_div").html(`Please wait...`);
@@ -1390,7 +1390,7 @@ function initiate_zoom_setup() {
                         chrome.tabs.sendMessage(
                             sender.tab.id, {
                                 zoom_phone_number: true,
-                                number: number
+                                number: number,
                             }
                         );
                         $("#zoom_setup_div").html(`Please wait...`);
