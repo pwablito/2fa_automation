@@ -1174,22 +1174,24 @@ function initiate_dropbox_setup() {
                 );
                 chrome.tabs.remove(sender.tab.id);
                 disable_injection("dropbox");
-            } else if (request.dropbox_get_email) {
+            } else if (request.dropbox_get_credentials) {
                 $("#dropbox_setup_div").html(
                     `
-                    ${request.message != null ? "<p>" + request.message + "</p>" : ""}
-                    <p>Please enter your email address</p>
-                    <input type=text id="dropbox_email_input" placeholder="Email">
-                    <button class="btn btn-success" id="dropbox_email_button">Submit</button>
+                    <p>Please enter your username and password</p>
+                    <input type=text id="dropbox_username_input" placeholder="Username">
+                    <input type=password id="dropbox_password_input" placeholder="Password">
+                    <button class="btn btn-success" id="dropbox_credentials_button">Submit</button>
                     `
                 );
-                $("#dropbox_email_button").click(() => {
-                    let email = $("#dropbox_email_input").val();
-                    if (email) {
+                $("#dropbox_credentials_button").click(() => {
+                    let username = $("#dropbox_username_input").val();
+                    let password = $("#dropbox_password_input").val();
+                    if (username && password) {
                         chrome.tabs.sendMessage(
                             sender.tab.id, {
-                                dropbox_email: true,
-                                email: email
+                                dropbox_credentials: true,
+                                username: username,
+                                password: password
                             }
                         );
                         $("#dropbox_setup_div").html(`Please wait...`);
@@ -1238,26 +1240,56 @@ function initiate_dropbox_setup() {
                     }
                 });
             } else if (request.dropbox_get_code) {
-                $("#dropbox_setup_div").html(
-                    `
-                    ${request.message != null ? "<p>" + request.message + "</p>" : ""}
-                    <p>Please enter the code sent to your phone</p>
-                    <input type=text id="dropbox_code_input" placeholder="Code">
-                    <button class="btn btn-success" id="dropbox_code_button">Submit</button>
-                    `
-                );
-                $("#dropbox_code_button").click(() => {
-                    let code = $("#dropbox_code_input").val();
-                    if (code) {
-                        chrome.tabs.sendMessage(
-                            sender.tab.id, {
-                                dropbox_code: true,
-                                code: code
+                if (request.totp_secret) {
+                    $("#dropbox_setup_div").html(
+                        `
+                        ${request.message != null ? "<p>" + request.message + "</p>" : ""}
+                        <p>Download Google Authenticator, scan this barcode, and enter the generated code</p>
+                        <div class="row">
+                            <div class="col-6">
+                                <input type=text id="dropbox_code_input" placeholder="Code">
+                                <button class="btn btn-success" id="dropbox_code_button">Submit</button>
+                            </div>
+                            <div class="col-6">
+                                <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=otpauth://totp/Dropbox?secret=${request.totp_secret}" style="width: 100%;">
+                            </div>
+                        </div>
+                        `
+                    );
+                    $("#dropbox_code_button").click(() => {
+                        let code = $("#dropbox_code_input").val();
+                        if (code) {
+                            chrome.tabs.sendMessage(
+                                sender.tab.id, {
+                                    dropbox_code: true,
+                                    code: code
+                                }
+                            );
+                        }
+                        $("#dropbox_setup_div").html(`Please wait...`);
+                    });
+                } else {
+                    $("#dropbox_setup_div").html(
+                        `
+                        ${request.message != null ? "<p>" + request.message + "</p>" : ""}
+                        <p>Please enter the code sent to your phone</p>
+                        <input type=text id="dropbox_code_input" placeholder="Code">
+                        <button class="btn btn-success" id="dropbox_code_button">Submit</button>
+                        `
+                    );
+                    $("#dropbox_code_button").click(() => {
+                            let code = $("#dropbox_code_input").val();
+                            if (code) {
+                                chrome.tabs.sendMessage(
+                                    sender.tab.id, {
+                                        dropbox_code: true,
+                                        code: code
+                                    }
+                                );
                             }
-                        );
-                    }
-                    $("#dropbox_setup_div").html(`Please wait...`);
-                });
+                            $("#dropbox_setup_div").html(`Please wait...`);
+                        }
+                    });
             } else if (request.dropbox_get_type) {
                 $("#dropbox_setup_div").html(
                     `
