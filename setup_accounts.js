@@ -1278,18 +1278,18 @@ function initiate_dropbox_setup() {
                         `
                     );
                     $("#dropbox_code_button").click(() => {
-                            let code = $("#dropbox_code_input").val();
-                            if (code) {
-                                chrome.tabs.sendMessage(
-                                    sender.tab.id, {
-                                        dropbox_code: true,
-                                        code: code
-                                    }
-                                );
-                            }
-                            $("#dropbox_setup_div").html(`Please wait...`);
+                        let code = $("#dropbox_code_input").val();
+                        if (code) {
+                            chrome.tabs.sendMessage(
+                                sender.tab.id, {
+                                    dropbox_code: true,
+                                    code: code
+                                }
+                            );
                         }
+                        $("#dropbox_setup_div").html(`Please wait...`);
                     });
+                };
             } else if (request.dropbox_get_type) {
                 $("#dropbox_setup_div").html(
                     `
