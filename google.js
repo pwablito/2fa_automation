@@ -21,8 +21,7 @@ chrome.runtime.onMessage.addListener(
             chrome.runtime.sendMessage({
                 "google_get_password": true
             });
-        }
-        if (request.google_phone_number) {
+        } else if (request.google_phone_number) {
             document.querySelector("c-wiz > div > div:nth-child(3) > c-wiz > div > div > div:nth-child(3) > div > div > div > div > div:nth-child(2) > div:nth-child(2) > div:nth-child(2) > div > div:nth-child(2) > div > div > div > input").value = request.number;
             document.querySelector("c-wiz > div > div:nth-child(3) > c-wiz > div > div > div:nth-child(3) > div:nth-child(2) > div > div:nth-child(3) > div").click();
 
@@ -38,8 +37,7 @@ chrome.runtime.onMessage.addListener(
                     })
                 }
             }, 3000);
-        }
-        if (request.google_code) {
+        } else if (request.google_code) {
             document.querySelector("c-wiz > div > div:nth-child(3) > c-wiz > div > div > div:nth-child(3) > div > div > div > div > div:nth-child(2) > div:nth-child(2) > div:nth-child(2) > div > div > div > div > input").value = request.code;
             document.querySelector("c-wiz > div > div:nth-child(3) > c-wiz > div > div > div:nth-child(3) > div:nth-child(2) > div > div:nth-child(3) > div").click()
             setTimeout(() => {
@@ -52,8 +50,7 @@ chrome.runtime.onMessage.addListener(
                     document.querySelector("c-wiz > div > div:nth-child(3) > c-wiz > div > div > div:nth-child(3) > div:nth-child(2) > div > div:nth-child(3) > div:nth-child(2)").click();
                 }
             }, 4000);
-        }
-        if (request.google_password) {
+        } else if (request.google_password) {
             document.querySelector("#password > div > div > div > input").value = request.password;
             document.querySelector("#passwordNext > div > button").click();
             setTimeout(() => {
@@ -64,6 +61,34 @@ chrome.runtime.onMessage.addListener(
                     })
                 }
             }, 5000);
+        } else if (request.google_start_backup) {
+            document.querySelector("html > body > c-wiz > div > div:nth-of-type(3) > c-wiz > div > div > div:first-of-type > div > div:nth-of-type(3) > div > div > div > div:nth-of-type(2) > div > div:nth-of-type(3) > div").click();
+            setTimeout(() => {
+                document.querySelector("html > body > div > div > div:nth-of-type(2) > div:nth-of-type(3) > div > div:nth-of-type(3)").click();
+                setTimeout(() => {
+                    chrome.runtime.sendMessage({
+                        google_get_totp_code: true,
+                        totp_url: document.querySelector("html > body > div > div > div:nth-of-type(2) > span > div > div > div > div:nth-of-type(2) > div:nth-of-type(2) > div > img").src
+                    });
+                    document.querySelector("html > body > div > div > div:nth-of-type(2) > div:nth-of-type(3) > div > div:nth-of-type(3)").click();
+                }, 1500);
+            }, 1500);
+        } else if (request.google_totp_code) {
+            document.querySelector("html > body > div > div > div:nth-of-type(2) > span > div > div > div > div:nth-of-type(2) > div:nth-of-type(2) > div > div > div:first-of-type > div > div:first-of-type > input").value = request.code;
+            document.querySelector("html > body > div > div > div:nth-of-type(2) > div:nth-of-type(3) > div > div:nth-of-type(4)").click();
+            setTimeout(() => {
+                if (document.querySelector("html > body > div > div > div:nth-of-type(2) > div:nth-of-type(3) > div > div:nth-of-type(5) > span > span") !== null &&
+                    document.querySelector("html > body > div > div > div:nth-of-type(2) > div:nth-of-type(3) > div > div:nth-of-type(5) > span > span").textContent === "Done") {
+                    chrome.runtime.sendMessage({
+                        google_finished: true,
+                    });
+                } else {
+                    chrome.runtime.sendMessage({
+                        google_error: true,
+                        message: "Something went wrong",
+                    })
+                }
+            }, 2000);
         }
     }
 );
@@ -86,7 +111,7 @@ if (window.location.href.includes("myaccount.google.com/signinoptions/two-step-v
     }
 } else if (window.location.href.includes("myaccount.google.com/signinoptions/two-step-verification?")) {
     chrome.runtime.sendMessage({
-        "google_finished": true
+        "google_backup": true
     });
 } else if (window.location.href.includes("myaccount.google.com/intro/security")) {
     document.querySelector("c-wiz > div > div:nth-child(2) > c-wiz > c-wiz > div > div:nth-child(3) > div > div > c-wiz > section > div > div > div > div > div > div > div > div:nth-child(4) > div > a").click();

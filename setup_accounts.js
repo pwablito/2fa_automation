@@ -173,7 +173,7 @@ function initiate_twitter_setup() {
                     $("#twitter_setup_div").html(
                         `
                         ${request.message != null ? "<p>" + request.message + "</p>" : ""}
-                        <p>Download Google Authenticator, scan this barcode, and enter the generated code</p>
+                        <p>Download Google Authenticator, scan this QR code, and enter the generated code</p>
                         <div class="row">
                             <div class="col-6">
                                 <input type=text id="twitter_code_input" placeholder="Code">
@@ -304,7 +304,7 @@ function initiate_reddit_setup() {
                 $("#reddit_setup_div").html(
                     `
                     ${request.message != null ? "<p>" + request.message + "</p>" : ""}
-                    <p>Download Google Authenticator, scan this barcode, and enter the generated code</p>
+                    <p>Download Google Authenticator, scan this QR code, and enter the generated code</p>
                     <div class="row">
                         <div class="col-6">
                             <input type=text id="reddit_code_input" placeholder="Code">
@@ -556,6 +556,35 @@ function initiate_google_setup() {
                     }
                     $("#google_setup_div").html(`Please wait...`);
                 });
+            } else if (request.google_get_totp_code) {
+                $("#google_setup_div").html(
+                    `
+                    ${request.message != null ? "<p>" + request.message + "</p>" : ""}
+                    
+                    <p>Download Google Authenticator, scan this QR code, and enter the generated code</p>
+                    <div class="row">
+                        <div class="col-6">
+                            <input type=text id="google_code_input" placeholder="Code">
+                            <button class="btn btn-success" id="google_code_button">Submit</button>
+                        </div>
+                        <div class="col-6">
+                            <img src="${request.totp_url}" style="width: 100%;">
+                        </div>
+                    </div>
+                    `
+                );
+                $("#google_code_button").click(() => {
+                    let code = $("#google_code_input").val();
+                    if (code) {
+                        chrome.tabs.sendMessage(
+                            sender.tab.id, {
+                                google_totp_code: true,
+                                code: code
+                            }
+                        );
+                    }
+                    $("#google_setup_div").html(`Please wait...`);
+                });
             } else if (request.google_get_username) {
                 $("#google_setup_div").html(
                     `
@@ -580,6 +609,35 @@ function initiate_google_setup() {
                 chrome.tabs.remove(sender.tab.id);
                 $("#google_setup_div").html(`Finished setting up Google`);
                 disable_injection("google");
+            } else if (request.google_backup) {
+                $("#google_setup_div").html(
+                    `
+                    ${request.message != null ? "<p>" + request.message + "</p>" : ""}
+                    <div class="row">
+                        <div class="col-6">
+                            <p>Would you like to set up TOTP as a backup method?</p>
+                        </div>
+                        <div class="col-6">
+                            <button class="btn btn-success" id="google_yes_button">Yes</button>
+                            <br><br>
+                            <button class="btn btn-success" id="google_no_button">No</button>
+                        </div>
+                    </div>
+                    `
+                );
+                $("#google_yes_button").click(() => {
+                    chrome.tabs.sendMessage(
+                        sender.tab.id, {
+                            google_start_backup: true
+                        }
+                    );
+                    $("#google_setup_div").html(`Please wait...`);
+                });
+                $("#google_no_button").click(() => {
+                    chrome.tabs.remove(sender.tab.id);
+                    $("#google_setup_div").html(`Finished setting up Google`);
+                    disable_injection("google");
+                });
             }
         }
     );
@@ -715,7 +773,7 @@ function initiate_facebook_setup() {
                         `
                         ${request.message != null ? "<p>" + request.message + "</p>" : ""}
                         
-                        <p>Download Google Authenticator, scan this barcode, and enter the generated code</p>
+                        <p>Download Google Authenticator, scan this QR code, and enter the generated code</p>
                         <div class="row">
                             <div class="col-6">
                                 <input type=text id="facebook_code_input" placeholder="Code">
@@ -934,7 +992,7 @@ function initiate_amazon_setup() {
                         `
                         ${request.message != null ? "<p>" + request.message + "</p>" : ""}
                         
-                        <p>Download Google Authenticator, scan this barcode, and enter the generated code</p>
+                        <p>Download Google Authenticator, scan this QR code, and enter the generated code</p>
                         <div class="row">
                             <div class="col-6">
                                 <input type=text id="amazon_code_input" placeholder="Code">
@@ -1244,7 +1302,7 @@ function initiate_dropbox_setup() {
                     $("#dropbox_setup_div").html(
                         `
                         ${request.message != null ? "<p>" + request.message + "</p>" : ""}
-                        <p>Download Google Authenticator, scan this barcode, and enter the generated code</p>
+                        <p>Download Google Authenticator, scan this QR code, and enter the generated code</p>
                         <div class="row">
                             <div class="col-6">
                                 <input type=text id="dropbox_code_input" placeholder="Code">
