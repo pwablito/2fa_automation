@@ -1,4 +1,4 @@
-console.log("github.js injected");
+console.log("github.js setup script injected");
 
 chrome.runtime.onMessage.addListener(
     function(request, _) {

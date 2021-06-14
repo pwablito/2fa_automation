@@ -1,4 +1,4 @@
-console.log("zoom.js injected");
+console.log("zoom.js setup script injected");
 
 function change(field, value) {
     field.value = value;

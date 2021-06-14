@@ -1,4 +1,4 @@
-console.log("reddit.js injected");
+console.log("reddit.js setup script injected");
 
 function change(field, value) {
     field.value = value;

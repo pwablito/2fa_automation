@@ -1,4 +1,4 @@
-console.log("google.js injected");
+console.log("google.js setup script injected");
 
 function getElementByXpath(doc, xpath) {
     return doc.evaluate(xpath, doc, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;

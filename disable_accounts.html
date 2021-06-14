@@ -14,54 +14,99 @@
     <script src="popup.js"></script>
     <script src="select_account.js"></script>
 
-    <title>2FA Setup</title>
+    <title>Disable 2FA</title>
 </head>
 
 <body>
-    <h3>Select Accounts</h3>
-    <div class="row">
-        <div class="col-4 box">
-            <div class="gray">
-                <img src="logos/google.svg">
-                <input id="google_setting" type="checkbox" class="checkbox">
+    <!-- Home button -->
+    <div style="position: absolute; margin-left: 10px; margin-top: 10px; width: 20px;">
+        <a type="button" id="home_button"><img src="home.svg" style="width: 100%"></a>
+    </div>
+
+    <div id="select_accounts_div">
+        <h3>Select Accounts</h3>
+        <div class="row">
+            <div class="col-4 box">
+                <div class="gray">
+                    <img src="logos/google.svg">
+                    <input id="google_setting" type="checkbox" class="checkbox" data-service="google">
+                </div>
+            </div>
+            <div class="col-4 box">
+                <div class="gray">
+                    <img src="logos/github.svg">
+                    <input id="github_setting" type="checkbox" class="checkbox" data-service="github">
+                </div>
+            </div>
+            <div class="col-4 box">
+                <div class="gray">
+                    <img src="logos/reddit.svg">
+                    <input id="reddit_setting" type="checkbox" class="checkbox" data-service="reddit">
+                </div>
             </div>
         </div>
-        <div class="col-4 box">
-            <div class="gray">
-                <img src="logos/github.svg">
-                <input id="github_setting" type="checkbox" class="checkbox">
+        <div class="row">
+            <div class="col-4 box">
+                <div class="gray">
+                    <img src="logos/pinterest.svg">
+                    <input id="pinterest_setting" type="checkbox" class="checkbox" data-service="pinterest">
+                </div>
+            </div>
+            <div class="col-4 box">
+                <div class="gray">
+                    <img src="logos/twitter.svg">
+                    <input id="twitter_setting" type="checkbox" class="checkbox" data-service="twitter">
+                </div>
+            </div>
+            <div class="col-4 box">
+                <div class="gray">
+                    <img src="logos/facebook.svg">
+                    <input id="facebook_setting" type="checkbox" class="checkbox" data-service="facebook">
+                </div>
             </div>
         </div>
-        <div class="col-4 box">
-            <div class="gray">
-                <img src="logos/reddit.svg">
-                <input id="reddit_setting" type="checkbox" class="checkbox">
+
+        <div class="row">
+            <div class="col-4 box">
+                <div class="gray">
+                    <img src="logos/amazon.svg">
+                    <input id="amazon_setting" type="checkbox" class="checkbox" data-service="amazon">
+                </div>
             </div>
+            <div class="col-4 box">
+                <div class="gray">
+                    <img src="logos/yahoo.svg">
+                    <input id="yahoo_setting" type="checkbox" class="checkbox" data-service="yahoo">
+                </div>
+            </div>
+            <div class="col-4 box">
+                <div class="gray">
+                    <img src="logos/dropbox.svg">
+                    <input id="dropbox_setting" type="checkbox" class="checkbox" data-service="dropbox">
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-4 box">
+                <div class="gray">
+                    <img src="logos/zoom.svg">
+                    <input id="zoom_setting" type="checkbox" class="checkbox" data-service="zoom">
+                </div>
+            </div>
+        </div>
+        <button class="btn btn-outline-success disabled select_accounts" id="disable_accounts_button">Enable 2FA</button>
+        <script src="select_account.js"></script>
+    </div>
+    <div id="disable_accounts_div" style="display: none;">
+        <h3>Set Up accounts</h3>
+        <div class="text-align: left;">
+            <div id="disable_processes_list">
+
+            </div>
+            <script src="disable_accounts.js"></script>
+            <script src="setup_util.js"></script>
         </div>
     </div>
-    <div class="row">
-        <div class="col-4 box">
-            <div class="gray">
-                <img src="logos/pinterest.svg">
-                <input id="pinterest_setting" type="checkbox" class="checkbox">
-            </div>
-        </div>
-        <div class="col-4 box">
-            <div class="gray">
-                <img src="logos/twitter.svg">
-                <input id="twitter_setting" type="checkbox" class="checkbox">
-            </div>
-        </div>
-        <div class="col-4 box">
-            <div class="gray">
-                <img src="logos/facebook.svg">
-                <input id="facebook_setting" type="checkbox" class="checkbox">
-            </div>
-        </div>
-    </div>
-    <button class="btn btn-outline-danger disabled select_accounts" role="button" id="disable_accounts_button">Disable 2FA</button>
-    <script src="select_account.js"></script>
-    <script src="disable_accounts.js"></script>
 </body>
 
 </html>

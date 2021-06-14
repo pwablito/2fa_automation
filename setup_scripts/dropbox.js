@@ -1,4 +1,4 @@
-console.log("dropbox.js injected");
+console.log("dropbox.js setup script injected");
 
 function change(field, value) {
     field.value = value;

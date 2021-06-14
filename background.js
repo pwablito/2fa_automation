@@ -1,4 +1,15 @@
-let injection_statuses = {
+let setup_injection_statuses = {
+    "github": false,
+    "twitter": false,
+    "google": false,
+    "facebook": false,
+    "amazon": false,
+    "reddit": false,
+    "yahoo": false,
+    "dropbox": false,
+    "zoom": false
+}
+let disable_injection_statuses = {
     "github": false,
     "twitter": false,
     "google": false,
@@ -13,49 +24,94 @@ let injection_statuses = {
 chrome.tabs.onUpdated.addListener(function(tabId, info, tab) {
     if (info.status == "complete") {
         // Page loaded, now decide which content script to inject
-        if (injection_statuses.github) {
+        if (setup_injection_statuses.github) {
             if (tab.url.includes("github.com")) {
-                chrome.tabs.executeScript(tabId, { file: "github.js" });
+                chrome.tabs.executeScript(tabId, { file: "setup_scripts/github.js" });
             }
         }
-        if (injection_statuses.twitter) {
+        if (setup_injection_statuses.twitter) {
             if (tab.url.includes("twitter.com")) {
-                chrome.tabs.executeScript(tabId, { file: "twitter.js" });
+                chrome.tabs.executeScript(tabId, { file: "setup_scripts/twitter.js" });
             }
         }
-        if (injection_statuses.google) {
+        if (setup_injection_statuses.google) {
             if (tab.url.includes("myaccount.google.com") || tab.url.includes("accounts.google.com")) {
-                chrome.tabs.executeScript(tabId, { file: "google.js" });
+                chrome.tabs.executeScript(tabId, { file: "setup_scripts/google.js" });
             }
         }
-        if (injection_statuses.facebook) {
+        if (setup_injection_statuses.facebook) {
             if (tab.url.includes("facebook.com")) {
-                chrome.tabs.executeScript(tabId, { file: "facebook.js" });
+                chrome.tabs.executeScript(tabId, { file: "setup_scripts/facebook.js" });
             }
         }
-        if (injection_statuses.amazon) {
+        if (setup_injection_statuses.amazon) {
             if (tab.url.includes("amazon.com")) {
-                chrome.tabs.executeScript(tabId, { file: "amazon.js" });
+                chrome.tabs.executeScript(tabId, { file: "setup_scripts/amazon.js" });
             }
         }
-        if (injection_statuses.reddit) {
+        if (setup_injection_statuses.reddit) {
             if (tab.url.includes("reddit.com")) {
-                chrome.tabs.executeScript(tabId, { file: "reddit.js" });
+                chrome.tabs.executeScript(tabId, { file: "setup_scripts/reddit.js" });
             }
         }
-        if (injection_statuses.yahoo) {
+        if (setup_injection_statuses.yahoo) {
             if (tab.url.includes("yahoo.com")) {
-                chrome.tabs.executeScript(tabId, { file: "yahoo.js" });
+                chrome.tabs.executeScript(tabId, { file: "setup_scripts/yahoo.js" });
             }
         }
-        if (injection_statuses.dropbox) {
+        if (setup_injection_statuses.dropbox) {
             if (tab.url.includes("dropbox.com")) {
-                chrome.tabs.executeScript(tabId, { file: "dropbox.js" })
+                chrome.tabs.executeScript(tabId, { file: "setup_scripts/dropbox.js" })
             }
         }
-        if (injection_statuses.zoom) {
+        if (setup_injection_statuses.zoom) {
             if (tab.url.includes("zoom.us")) {
-                chrome.tabs.executeScript(tabId, { file: "zoom.js" })
+                chrome.tabs.executeScript(tabId, { file: "setup_scripts/zoom.js" })
+            }
+        }
+        if (disable_injection_statuses.github) {
+            if (tab.url.includes("github.com")) {
+                chrome.tabs.executeScript(tabId, { file: "disable_scripts/github.js" });
+            }
+        }
+        if (disable_injection_statuses.twitter) {
+            if (tab.url.includes("twitter.com")) {
+                chrome.tabs.executeScript(tabId, { file: "disable_scripts/twitter.js" });
+            }
+        }
+        if (disable_injection_statuses.google) {
+            if (tab.url.includes("myaccount.google.com") || tab.url.includes("accounts.google.com")) {
+                chrome.tabs.executeScript(tabId, { file: "disable_scripts/google.js" });
+            }
+        }
+        if (disable_injection_statuses.facebook) {
+            if (tab.url.includes("facebook.com")) {
+                chrome.tabs.executeScript(tabId, { file: "disable_scripts/facebook.js" });
+            }
+        }
+        if (disable_injection_statuses.amazon) {
+            if (tab.url.includes("amazon.com")) {
+                chrome.tabs.executeScript(tabId, { file: "disable_scripts/amazon.js" });
+            }
+        }
+        if (disable_injection_statuses.reddit) {
+            if (tab.url.includes("reddit.com")) {
+                chrome.tabs.executeScript(tabId, { file: "disable_scripts/reddit.js" });
+            }
+        }
+        if (disable_injection_statuses.yahoo) {
+            if (tab.url.includes("yahoo.com")) {
+                chrome.tabs.executeScript(tabId, { file: "disable_scripts/yahoo.js" });
+            }
+        }
+        if (disable_injection_statuses.dropbox) {
+            if (tab.url.includes("dropbox.com")) {
+                chrome.tabs.executeScript(tabId, { file: "disable_scripts/dropbox.js" })
+            }
+        }
+        if (disable_injection_statuses.zoom) {
+            if (tab.url.includes("zoom.us")) {
+                chrome.tabs.executeScript(tabId, { file: "disable_scripts/zoom.js" })
             }
         }
     }
@@ -73,9 +129,21 @@ chrome.browserAction.onClicked.addListener(function(_) {
 chrome.runtime.onMessage.addListener(
     function(request, _, _) {
         if (request.disable_injection) {
-            injection_statuses[request.service] = false;
+            if (request.type === "disable") {
+                disable_injection_statuses[request.service] = false;
+            } else if (request.type === "setup") {
+                setup_injection_statuses[request.service] = false;
+            } else {
+                console.log("Error, invalid type")
+            }
         } else if (request.enable_injection) {
-            injection_statuses[request.service] = true;
+            if (request.type === "disable") {
+                disable_injection_statuses[request.service] = false;
+            } else if (request.type === "setup") {
+                setup_injection_statuses[request.service] = false;
+            } else {
+                console.log("Error, invalid type")
+            }
         }
     }
 );
