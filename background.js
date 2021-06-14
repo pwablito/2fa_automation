@@ -138,9 +138,9 @@ chrome.runtime.onMessage.addListener(
             }
         } else if (request.enable_injection) {
             if (request.type === "disable") {
-                disable_injection_statuses[request.service] = false;
+                disable_injection_statuses[request.service] = true;
             } else if (request.type === "setup") {
-                setup_injection_statuses[request.service] = false;
+                setup_injection_statuses[request.service] = true;
             } else {
                 console.log("Error, invalid type")
             }
