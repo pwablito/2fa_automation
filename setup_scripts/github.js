@@ -31,7 +31,12 @@ chrome.runtime.onMessage.addListener(
     }
 );
 
-if (document.querySelector("#two-factor > div > div.border-top.pt-6.mt-6.clearfix > div.col-12.col-md-6.pl-md-3.float-left > form > button") != null) {
+if (window.location.href.includes("github.com/sessions/two-factor")) {
+    chrome.runtime.sendMessage({
+        github_error: true,
+        message: "2FA already set up",
+    });
+} else if (document.querySelector("#two-factor > div > div.border-top.pt-6.mt-6.clearfix > div.col-12.col-md-6.pl-md-3.float-left > form > button") != null) {
     //Initiate 2fa process (generate backup codes in github servers)
     document.querySelector("#two-factor > div > div.border-top.pt-6.mt-6.clearfix > div.col-12.col-md-6.pl-md-3.float-left > form > button").click();
 } else if (document.querySelector("#js-pjax-container > div > form:nth-child(3) > button") !== null) {

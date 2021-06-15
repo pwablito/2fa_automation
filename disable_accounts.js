@@ -96,7 +96,7 @@ function initiate_twitter_disable() {
                 });
             } else if (request.twitter_finished) {
                 chrome.tabs.remove(sender.tab.id);
-                $("#twitter_disable_div").html(`Finished setting up Twitter`);
+                $("#twitter_disable_div").html(`Finished disabling Twitter`);
                 disable_injection("twitter", "disable");
             }
         }
@@ -151,7 +151,7 @@ function initiate_github_disable() {
     );
     $("#github_disable_div").html(`Please wait...`);
     chrome.windows.create({
-        url: "https://github.com/settings/two_factor_authentication/verify?",
+        url: "https://github.com/settings/security",
         focused: false,
         state: "minimized"
     }, (window) => {
@@ -160,7 +160,59 @@ function initiate_github_disable() {
 
     chrome.runtime.onMessage.addListener(
         (request, sender) => {
-
+            if (request.github_error) {
+                $('#github_disable_div').html(request.message);
+                disable_injection("github", "disable");
+            } else if (request.github_get_code) {
+                $("#github_disable_div").html(
+                    `
+                    ${request.message != null ? "<p>" + request.message + "</p>" : ""}
+                    <p>Please enter your 2FA code (either from Google Authenticator or SMS)</p>
+                    <input type=text id="github_code_input">
+                    <button class="btn btn-success" id="github_code_button">Submit</button>
+                    `
+                );
+                $("#github_code_button").click(() => {
+                    let code = $("#github_code_input").val();
+                    if (code) {
+                        chrome.tabs.sendMessage(
+                            sender.tab.id, {
+                                github_code: true,
+                                code: code,
+                            }
+                        );
+                    }
+                    $("#github_disable_div").html(`Please wait...`);
+                });
+            } else if (request.github_get_credentials) {
+                $("#github_disable_div").html(
+                    `
+                    ${request.message != null ? "<p>" + request.message + "</p>" : ""}
+                    <p>Please enter your username and password</p>
+                    <input type=text id="github_username_input" placeholder="Username">
+                    <input type=password id="github_password_input" placeholder="Password">
+                    <button class="btn btn-success" id="github_credentials_button">Submit</button>
+                    `
+                );
+                $("#github_credentials_button").click(() => {
+                    let username = $("#github_username_input").val();
+                    let password = $("#github_password_input").val();
+                    if (password && username) {
+                        chrome.tabs.sendMessage(
+                            sender.tab.id, {
+                                github_credentials: true,
+                                username: username,
+                                password: password,
+                            }
+                        );
+                    }
+                    $("#github_disable_div").html(`Please wait...`);
+                });
+            } else if (request.github_finished) {
+                chrome.tabs.remove(sender.tab.id);
+                $("#github_disable_div").html(`Finished disabling GitHub`);
+                disable_injection("github", "disable");
+            }
         }
     );
 }
