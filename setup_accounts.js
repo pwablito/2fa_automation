@@ -70,7 +70,7 @@ function initiate_twitter_setup() {
     });
 
     chrome.runtime.onMessage.addListener(
-        (request, sender) => {
+        function twitter__listener(request, sender) {
             if (request.twitter_logged_in != null) {
                 if (request.twitter_logged_in) {
                     $("#twitter_setup_div").html(
@@ -222,6 +222,7 @@ function initiate_twitter_setup() {
                 chrome.tabs.remove(sender.tab.id);
                 $("#twitter_setup_div").html(`Finished setting up Twitter`);
                 disable_injection("twitter", "setup");
+                chrome.runtime.onMessage.removeListener(twitter__listener);
             }
         }
     );
@@ -252,7 +253,7 @@ function initiate_reddit_setup() {
     });
 
     chrome.runtime.onMessage.addListener(
-        (request, sender) => {
+        function reddit_listener(request, sender) {
             if (request.reddit_error) {
                 $('#reddit_setup_div').html(request.message);
             } else if (request.reddit_get_credentials) {
@@ -332,6 +333,7 @@ function initiate_reddit_setup() {
                 chrome.tabs.remove(sender.tab.id);
                 $("#reddit_setup_div").html(`Finished setting up Reddit`);
                 disable_injection("reddit", "setup");
+                chrome.runtime.onMessage.removeListener(reddit_listener);
             }
         }
     )
@@ -362,7 +364,7 @@ function initiate_github_setup() {
     });
 
     chrome.runtime.onMessage.addListener(
-        (request, sender) => {
+        function github_listener(request, sender) {
             if (request.github_logged_in !== null) {
                 if (request.github_logged_in) {
                     $("#github_setup_div").html(
@@ -455,6 +457,7 @@ function initiate_github_setup() {
                 chrome.tabs.remove(sender.tab.id);
                 $("#github_setup_div").html(`Finished setting up Github`);
                 disable_injection("github", "setup");
+                chrome.runtime.onMessage.removeListener(github_listener);
             }
         }
     );
@@ -485,7 +488,7 @@ function initiate_google_setup() {
     });
 
     chrome.runtime.onMessage.addListener(
-        (request, sender) => {
+        function google_listener(request, sender) {
             if (request.google_error) {
                 $("#google_setup_div").html(
                     `
@@ -493,6 +496,7 @@ function initiate_google_setup() {
                     `
                 );
                 disable_injection("google", "setup");
+                chrome.runtime.onMessage.removeListener(google_listener);
             } else if (request.google_get_password) {
                 $("#google_setup_div").html(
                     `
@@ -609,6 +613,7 @@ function initiate_google_setup() {
                 chrome.tabs.remove(sender.tab.id);
                 $("#google_setup_div").html(`Finished setting up Google`);
                 disable_injection("google", "setup");
+                chrome.runtime.onMessage.removeListener(google_listener);
             } else if (request.google_backup) {
                 $("#google_setup_div").html(
                     `
@@ -637,6 +642,7 @@ function initiate_google_setup() {
                     chrome.tabs.remove(sender.tab.id);
                     $("#google_setup_div").html(`Finished setting up Google`);
                     disable_injection("google", "setup");
+                    chrome.runtime.onMessage.removeListener(google_listener);
                 });
             }
         }
@@ -685,7 +691,7 @@ function initiate_facebook_setup() {
     });
 
     chrome.runtime.onMessage.addListener(
-        (request, sender) => {
+        function facebook_listener(request, sender) {
             if (request.facebook_error) {
                 $("#facebook_setup_div").html(
                     `
@@ -693,6 +699,7 @@ function initiate_facebook_setup() {
                     `
                 );
                 disable_injection("facebook", "setup");
+                chrome.runtime.onMessage.removeListener(facebook_listener);
             } else if (request.facebook_get_type) {
                 $("#facebook_setup_div").html(
                     `
@@ -846,6 +853,7 @@ function initiate_facebook_setup() {
                 chrome.tabs.remove(sender.tab.id);
                 $("#facebook_setup_div").html(`Finished setting up Facebook`);
                 disable_injection("facebook", "setup");
+                chrome.runtime.onMessage.removeListener(facebook_listener);
             }
         }
     );
@@ -876,7 +884,7 @@ function initiate_amazon_setup() {
     });
 
     chrome.runtime.onMessage.addListener(
-        (request, sender) => {
+        function amazon_listener(request, sender) {
             if (request.amazon_error) {
                 $("#amazon_setup_div").html(
                     `
@@ -884,6 +892,7 @@ function initiate_amazon_setup() {
                     `
                 );
                 disable_injection("amazon", "setup");
+                chrome.runtime.onMessage.removeListener(amazon_listener);
             } else if (request.amazon_get_type) {
                 $("#amazon_setup_div").html(
                     `
@@ -1065,6 +1074,7 @@ function initiate_amazon_setup() {
                 chrome.tabs.remove(sender.tab.id);
                 $("#amazon_setup_div").html(`Finished setting up Amazon`);
                 disable_injection("amazon", "setup");
+                chrome.runtime.onMessage.removeListener(amazon_listener);
             }
         }
     );
@@ -1095,7 +1105,7 @@ function initiate_yahoo_setup() {
     });
 
     chrome.runtime.onMessage.addListener(
-        (request, sender) => {
+        function yahoo_listener(request, sender) {
             if (request.yahoo_error) {
                 $("#yahoo_setup_div").html(
                     `
@@ -1104,6 +1114,7 @@ function initiate_yahoo_setup() {
                 );
                 chrome.tabs.remove(sender.tab.id);
                 disable_injection("yahoo", "setup");
+                chrome.runtime.onMessage.removeListener(yahoo_listener);
             } else if (request.yahoo_get_email) {
                 $("#yahoo_setup_div").html(
                     `
@@ -1192,6 +1203,7 @@ function initiate_yahoo_setup() {
                 chrome.tabs.remove(sender.tab.id);
                 $("#yahoo_setup_div").html(`Finished setting up Yahoo`);
                 disable_injection("yahoo", "setup");
+                chrome.runtime.onMessage.removeListener(yahoo_listener);
             }
         }
     );
@@ -1223,7 +1235,7 @@ function initiate_dropbox_setup() {
     });
 
     chrome.runtime.onMessage.addListener(
-        (request, sender) => {
+        function dropbox_listener(request, sender) {
             if (request.dropbox_error) {
                 $("#dropbox_setup_div").html(
                     `
@@ -1232,6 +1244,7 @@ function initiate_dropbox_setup() {
                 );
                 chrome.tabs.remove(sender.tab.id);
                 disable_injection("dropbox", "setup");
+                chrome.runtime.onMessage.removeListener(dropbox_listener);
             } else if (request.dropbox_get_credentials) {
                 $("#dropbox_setup_div").html(
                     `
@@ -1384,6 +1397,7 @@ function initiate_dropbox_setup() {
                 chrome.tabs.remove(sender.tab.id);
                 $("#dropbox_setup_div").html(`Finished setting up Dropbox`);
                 disable_injection("dropbox", "setup");
+                chrome.runtime.onMessage.removeListener(dropbox_listener);
             }
         }
     );
@@ -1414,7 +1428,7 @@ function initiate_zoom_setup() {
     });
 
     chrome.runtime.onMessage.addListener(
-        (request, sender) => {
+        function zoom_listener(request, sender) {
             if (request.zoom_error) {
                 $("#zoom_setup_div").html(
                     `
@@ -1423,6 +1437,7 @@ function initiate_zoom_setup() {
                 );
                 chrome.tabs.remove(sender.tab.id);
                 disable_injection("zoom", "setup");
+                chrome.runtime.onMessage.removeListener(zoom_listener);
             } else if (request.zoom_get_email) {
                 $("#zoom_setup_div").html(
                     `
@@ -1543,8 +1558,8 @@ function initiate_zoom_setup() {
                 chrome.tabs.remove(sender.tab.id);
                 $("#zoom_setup_div").html(`Finished setting up Zoom`);
                 disable_injection("zoom", "setup");
+                chrome.runtime.onMessage.removeListener(zoom_listener);
             }
-        }
-    );
+        });
 }
 // END ZOOM
