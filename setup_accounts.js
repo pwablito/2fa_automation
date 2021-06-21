@@ -336,7 +336,7 @@ function initiate_reddit_setup() {
                 chrome.runtime.onMessage.removeListener(reddit_listener);
             }
         }
-    )
+    );
 }
 // END REDDIT
 
