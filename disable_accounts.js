@@ -62,48 +62,53 @@ function initiate_twitter_disable() {
     );
     $("#twitter_disable_div").html(`Please wait...`);
     chrome.windows.create({
-        url: "https://twitter.com/settings/account/login_verification/enrollment",
-        focused: false,
-        state: "minimized"
-    }, (window) => {
-        chrome.windows.update(window.id, { state: 'minimized' });
-    });
+            url: "https://twitter.com/settings/account/login_verification/enrollment",
+            focused: false,
+            state: "minimized",
+        },
+        (window) => {
+            chrome.windows.update(window.id, { state: "minimized" });
+        }
+    );
 
-    chrome.runtime.onMessage.addListener(
-        function twitter_listener(request, sender) {
-            if (request.twitter_error) {
-                $('#twitter_disable_div').html(request.message);
-                disable_injection("twitter", "disable");
-                chrome.runtime.onMessage.removeListener(twitter_listener);
-            } else if (request.twitter_get_password) {
-                $("#twitter_disable_div").html(
-                    `
-                    ${request.message != null ? "<p>" + request.message + "</p>" : ""}
+    chrome.runtime.onMessage.addListener(function twitter_listener(
+        request,
+        sender
+    ) {
+        if (request.twitter_error) {
+            $("#twitter_disable_div").html(request.message);
+            disable_injection("twitter", "disable");
+            chrome.runtime.onMessage.removeListener(twitter_listener);
+        } else if (request.twitter_get_password) {
+            $("#twitter_disable_div").html(
+                `
+                    ${
+                      request.message != null
+                        ? "<p>" + request.message + "</p>"
+                        : ""
+                    }
                     <p>Please enter your password</p>
                     <input type=password id="twitter_password_input">
                     <button class="btn btn-success" id="twitter_password_button">Submit</button>
                     `
-                );
-                $("#twitter_password_button").click(() => {
-                    let password = $("#twitter_password_input").val();
-                    if (password) {
-                        chrome.tabs.sendMessage(
-                            sender.tab.id, {
-                                twitter_password: true,
-                                password: password
-                            }
-                        );
-                    }
-                    $("#twitter_disable_div").html(`Please wait...`);
-                });
-            } else if (request.twitter_finished) {
-                chrome.tabs.remove(sender.tab.id);
-                $("#twitter_disable_div").html(`Finished disabling Twitter`);
-                disable_injection("twitter", "disable");
-                chrome.runtime.onMessage.removeListener(twitter_listener);
-            }
+            );
+            $("#twitter_password_button").click(() => {
+                let password = $("#twitter_password_input").val();
+                if (password) {
+                    chrome.tabs.sendMessage(sender.tab.id, {
+                        twitter_password: true,
+                        password: password,
+                    });
+                }
+                $("#twitter_disable_div").html(`Please wait...`);
+            });
+        } else if (request.twitter_finished) {
+            chrome.tabs.remove(sender.tab.id);
+            $("#twitter_disable_div").html(`Finished disabling Twitter`);
+            disable_injection("twitter", "disable");
+            chrome.runtime.onMessage.removeListener(twitter_listener);
         }
-    );
+    });
 }
 // END TWITTER
 
@@ -123,48 +128,53 @@ function initiate_reddit_disable() {
     );
     $("#reddit_disable_div").html("Please wait...");
     chrome.windows.create({
-        url: "https://www.reddit.com/2fa/enable",
-        focused: false,
-        state: "minimized"
-    }, (window) => {
-        chrome.windows.update(window.id, { state: 'minimized' });
-    });
+            url: "https://www.reddit.com/2fa/enable",
+            focused: false,
+            state: "minimized",
+        },
+        (window) => {
+            chrome.windows.update(window.id, { state: "minimized" });
+        }
+    );
 
-    chrome.runtime.onMessage.addListener(
-        function reddit_listener(request, sender) {
-            if (request.reddit_error) {
-                $('#reddit_disable_div').html(request.message);
-                disable_injection("reddit", "disable");
-                chrome.runtime.onMessage.removeListener(reddit_listener);
-            } else if (request.reddit_get_password) {
-                $("#reddit_disable_div").html(
-                    `
-                    ${request.message != null ? "<p>" + request.message + "</p>" : ""}
+    chrome.runtime.onMessage.addListener(function reddit_listener(
+        request,
+        sender
+    ) {
+        if (request.reddit_error) {
+            $("#reddit_disable_div").html(request.message);
+            disable_injection("reddit", "disable");
+            chrome.runtime.onMessage.removeListener(reddit_listener);
+        } else if (request.reddit_get_password) {
+            $("#reddit_disable_div").html(
+                `
+                    ${
+                      request.message != null
+                        ? "<p>" + request.message + "</p>"
+                        : ""
+                    }
                     <p>Please enter your password</p>
                     <input type=password id="reddit_password_input">
                     <button class="btn btn-success" id="reddit_password_button">Submit</button>
                     `
-                );
-                $("#reddit_password_button").click(() => {
-                    let password = $("#reddit_password_input").val();
-                    if (password) {
-                        chrome.tabs.sendMessage(
-                            sender.tab.id, {
-                                reddit_password: true,
-                                password: password
-                            }
-                        );
-                    }
-                    $("#reddit_disable_div").html(`Please wait...`);
-                });
-            } else if (request.reddit_finished) {
-                chrome.tabs.remove(sender.tab.id);
-                $("#reddit_disable_div").html(`Finished disabling reddit`);
-                disable_injection("reddit", "disable");
-                chrome.runtime.onMessage.removeListener(reddit_listener);
-            }
+            );
+            $("#reddit_password_button").click(() => {
+                let password = $("#reddit_password_input").val();
+                if (password) {
+                    chrome.tabs.sendMessage(sender.tab.id, {
+                        reddit_password: true,
+                        password: password,
+                    });
+                }
+                $("#reddit_disable_div").html(`Please wait...`);
+            });
+        } else if (request.reddit_finished) {
+            chrome.tabs.remove(sender.tab.id);
+            $("#reddit_disable_div").html(`Finished disabling reddit`);
+            disable_injection("reddit", "disable");
+            chrome.runtime.onMessage.removeListener(reddit_listener);
         }
-    );
+    });
 }
 // END REDDIT
 
@@ -184,72 +194,79 @@ function initiate_github_disable() {
     );
     $("#github_disable_div").html(`Please wait...`);
     chrome.windows.create({
-        url: "https://github.com/settings/security",
-        focused: false,
-        state: "minimized"
-    }, (window) => {
-        chrome.windows.update(window.id, { state: 'minimized' });
-    });
+            url: "https://github.com/settings/security",
+            focused: false,
+            state: "minimized",
+        },
+        (window) => {
+            chrome.windows.update(window.id, { state: "minimized" });
+        }
+    );
 
-    chrome.runtime.onMessage.addListener(
-        function github_listener(request, sender) {
-            if (request.github_error) {
-                $('#github_disable_div').html(request.message);
-                disable_injection("github", "disable");
-                chrome.runtime.onMessage.removeListener(github_listener);
-            } else if (request.github_get_code) {
-                $("#github_disable_div").html(
-                    `
-                    ${request.message != null ? "<p>" + request.message + "</p>" : ""}
+    chrome.runtime.onMessage.addListener(function github_listener(
+        request,
+        sender
+    ) {
+        if (request.github_error) {
+            $("#github_disable_div").html(request.message);
+            disable_injection("github", "disable");
+            chrome.runtime.onMessage.removeListener(github_listener);
+        } else if (request.github_get_code) {
+            $("#github_disable_div").html(
+                `
+                    ${
+                      request.message != null
+                        ? "<p>" + request.message + "</p>"
+                        : ""
+                    }
                     <p>Please enter your 2FA code (either from Google Authenticator or SMS)</p>
                     <input type=text id="github_code_input">
                     <button class="btn btn-success" id="github_code_button">Submit</button>
                     `
-                );
-                $("#github_code_button").click(() => {
-                    let code = $("#github_code_input").val();
-                    if (code) {
-                        chrome.tabs.sendMessage(
-                            sender.tab.id, {
-                                github_code: true,
-                                code: code,
-                            }
-                        );
+            );
+            $("#github_code_button").click(() => {
+                let code = $("#github_code_input").val();
+                if (code) {
+                    chrome.tabs.sendMessage(sender.tab.id, {
+                        github_code: true,
+                        code: code,
+                    });
+                }
+                $("#github_disable_div").html(`Please wait...`);
+            });
+        } else if (request.github_get_credentials) {
+            $("#github_disable_div").html(
+                `
+                    ${
+                      request.message != null
+                        ? "<p>" + request.message + "</p>"
+                        : ""
                     }
-                    $("#github_disable_div").html(`Please wait...`);
-                });
-            } else if (request.github_get_credentials) {
-                $("#github_disable_div").html(
-                    `
-                    ${request.message != null ? "<p>" + request.message + "</p>" : ""}
                     <p>Please enter your username and password</p>
                     <input type=text id="github_username_input" placeholder="Username">
                     <input type=password id="github_password_input" placeholder="Password">
                     <button class="btn btn-success" id="github_credentials_button">Submit</button>
                     `
-                );
-                $("#github_credentials_button").click(() => {
-                    let username = $("#github_username_input").val();
-                    let password = $("#github_password_input").val();
-                    if (password && username) {
-                        chrome.tabs.sendMessage(
-                            sender.tab.id, {
-                                github_credentials: true,
-                                username: username,
-                                password: password,
-                            }
-                        );
-                    }
-                    $("#github_disable_div").html(`Please wait...`);
-                });
-            } else if (request.github_finished) {
-                chrome.tabs.remove(sender.tab.id);
-                $("#github_disable_div").html(`Finished disabling GitHub`);
-                disable_injection("github", "disable");
-                chrome.runtime.onMessage.removeListener(github_listener);
-            }
+            );
+            $("#github_credentials_button").click(() => {
+                let username = $("#github_username_input").val();
+                let password = $("#github_password_input").val();
+                if (password && username) {
+                    chrome.tabs.sendMessage(sender.tab.id, {
+                        github_credentials: true,
+                        username: username,
+                        password: password,
+                    });
+                }
+                $("#github_disable_div").html(`Please wait...`);
+            });
+        } else if (request.github_finished) {
+            chrome.tabs.remove(sender.tab.id);
+            $("#github_disable_div").html(`Finished disabling GitHub`);
+            disable_injection("github", "disable");
+            chrome.runtime.onMessage.removeListener(github_listener);
         }
-    );
+    });
 }
 // END GITHUB
 
@@ -269,48 +286,53 @@ function initiate_google_disable() {
     );
     $("#google_disable_div").html(`Please wait...`);
     chrome.windows.create({
-        url: "https://myaccount.google.com/signinoptions/two-step-verification/enroll-welcome",
-        focused: false,
-        state: "minimized"
-    }, (window) => {
-        chrome.windows.update(window.id, { state: 'minimized' });
-    });
+            url: "https://myaccount.google.com/signinoptions/two-step-verification/enroll-welcome",
+            focused: false,
+            state: "minimized",
+        },
+        (window) => {
+            chrome.windows.update(window.id, { state: "minimized" });
+        }
+    );
 
-    chrome.runtime.onMessage.addListener(
-        function google_listener(request, sender) {
-            if (request.google_error) {
-                $('#google_disable_div').html(request.message);
-                disable_injection("google", "disable");
-                chrome.runtime.onMessage.removeListener(google_listener);
-            } else if (request.google_get_password) {
-                $("#google_disable_div").html(
-                    `
-                    ${request.message != null ? "<p>" + request.message + "</p>" : ""}
+    chrome.runtime.onMessage.addListener(function google_listener(
+        request,
+        sender
+    ) {
+        if (request.google_error) {
+            $("#google_disable_div").html(request.message);
+            disable_injection("google", "disable");
+            chrome.runtime.onMessage.removeListener(google_listener);
+        } else if (request.google_get_password) {
+            $("#google_disable_div").html(
+                `
+                    ${
+                      request.message != null
+                        ? "<p>" + request.message + "</p>"
+                        : ""
+                    }
                     <p>Please enter your password</p>
                     <input type=password id="google_password_input">
                     <button class="btn btn-success" id="google_password_button">Submit</button>
                     `
-                );
-                $("#google_password_button").click(() => {
-                    let password = $("#google_password_input").val();
-                    if (password) {
-                        chrome.tabs.sendMessage(
-                            sender.tab.id, {
-                                google_password: true,
-                                password: password
-                            }
-                        );
-                    }
-                    $("#google_disable_div").html(`Please wait...`);
-                });
-            } else if (request.google_finished) {
-                chrome.tabs.remove(sender.tab.id);
-                $("#google_disable_div").html(`Finished disabling google`);
-                disable_injection("google", "disable");
-                chrome.runtime.onMessage.removeListener(google_listener);
-            }
+            );
+            $("#google_password_button").click(() => {
+                let password = $("#google_password_input").val();
+                if (password) {
+                    chrome.tabs.sendMessage(sender.tab.id, {
+                        google_password: true,
+                        password: password,
+                    });
+                }
+                $("#google_disable_div").html(`Please wait...`);
+            });
+        } else if (request.google_finished) {
+            chrome.tabs.remove(sender.tab.id);
+            $("#google_disable_div").html(`Finished disabling google`);
+            disable_injection("google", "disable");
+            chrome.runtime.onMessage.removeListener(google_listener);
         }
-    );
+    });
 }
 // END GOOGLE
 
@@ -347,48 +369,53 @@ function initiate_facebook_disable() {
     );
     $("#facebook_disable_div").html(`Please wait...`);
     chrome.windows.create({
-        url: "https://www.facebook.com/security/2fac/disable/intro",
-        focused: false,
-        state: "minimized"
-    }, (window) => {
-        chrome.windows.update(window.id, { state: 'minimized' });
-    });
+            url: "https://www.facebook.com/security/2fac/disable/intro",
+            focused: false,
+            state: "minimized",
+        },
+        (window) => {
+            chrome.windows.update(window.id, { state: "minimized" });
+        }
+    );
 
-    chrome.runtime.onMessage.addListener(
-        function facebook_listener(request, sender) {
-            if (request.facebook_error) {
-                $('#facebook_disable_div').html(request.message);
-                disable_injection("facebook", "disable");
-                chrome.runtime.onMessage.removeListener(facebook_listener);
-            } else if (request.facebook_get_password) {
-                $("#facebook_disable_div").html(
-                    `
-                    ${request.message != null ? "<p>" + request.message + "</p>" : ""}
+    chrome.runtime.onMessage.addListener(function facebook_listener(
+        request,
+        sender
+    ) {
+        if (request.facebook_error) {
+            $("#facebook_disable_div").html(request.message);
+            disable_injection("facebook", "disable");
+            chrome.runtime.onMessage.removeListener(facebook_listener);
+        } else if (request.facebook_get_password) {
+            $("#facebook_disable_div").html(
+                `
+                    ${
+                      request.message != null
+                        ? "<p>" + request.message + "</p>"
+                        : ""
+                    }
                     <p>Please enter your password</p>
                     <input type=password id="facebook_password_input">
                     <button class="btn btn-success" id="facebook_password_button">Submit</button>
                     `
-                );
-                $("#facebook_password_button").click(() => {
-                    let password = $("#facebook_password_input").val();
-                    if (password) {
-                        chrome.tabs.sendMessage(
-                            sender.tab.id, {
-                                facebook_password: true,
-                                password: password
-                            }
-                        );
-                    }
-                    $("#facebook_disable_div").html(`Please wait...`);
-                });
-            } else if (request.facebook_finished) {
-                chrome.tabs.remove(sender.tab.id);
-                $("#facebook_disable_div").html(`Finished disabling facebook`);
-                disable_injection("facebook", "disable");
-                chrome.runtime.onMessage.removeListener(facebook_listener);
-            }
+            );
+            $("#facebook_password_button").click(() => {
+                let password = $("#facebook_password_input").val();
+                if (password) {
+                    chrome.tabs.sendMessage(sender.tab.id, {
+                        facebook_password: true,
+                        password: password,
+                    });
+                }
+                $("#facebook_disable_div").html(`Please wait...`);
+            });
+        } else if (request.facebook_finished) {
+            chrome.tabs.remove(sender.tab.id);
+            $("#facebook_disable_div").html(`Finished disabling facebook`);
+            disable_injection("facebook", "disable");
+            chrome.runtime.onMessage.removeListener(facebook_listener);
         }
-    );
+    });
 }
 // END FACEBOOK
 
@@ -408,72 +435,79 @@ function initiate_amazon_disable() {
     );
     $("#amazon_disable_div").html(`Please wait...`);
     chrome.windows.create({
-        url: "https://www.amazon.com/a/settings/approval",
-        focused: false,
-        state: "minimized"
-    }, (window) => {
-        chrome.windows.update(window.id, { state: 'minimized' });
-    });
+            url: "https://www.amazon.com/a/settings/approval",
+            focused: false,
+            state: "minimized",
+        },
+        (window) => {
+            chrome.windows.update(window.id, { state: "minimized" });
+        }
+    );
 
-    chrome.runtime.onMessage.addListener(
-        function amazon_listener(request, sender) {
-            if (request.amazon_error) {
-                $('#amazon_disable_div').html(request.message);
-                disable_injection("amazon", "disable");
-                chrome.runtime.onMessage.removeListener(amazon_listener);
-            } else if (request.amazon_get_code) {
-                $("#amazon_disable_div").html(
-                    `
-                    ${request.message != null ? "<p>" + request.message + "</p>" : ""}
+    chrome.runtime.onMessage.addListener(function amazon_listener(
+        request,
+        sender
+    ) {
+        if (request.amazon_error) {
+            $("#amazon_disable_div").html(request.message);
+            disable_injection("amazon", "disable");
+            chrome.runtime.onMessage.removeListener(amazon_listener);
+        } else if (request.amazon_get_code) {
+            $("#amazon_disable_div").html(
+                `
+                    ${
+                      request.message != null
+                        ? "<p>" + request.message + "</p>"
+                        : ""
+                    }
                     <p>Please enter your 2FA code (either from Google Authenticator or SMS)</p>
                     <input type=text id="amazon_code_input">
                     <button class="btn btn-success" id="amazon_code_button">Submit</button>
                     `
-                );
-                $("#amazon_code_button").click(() => {
-                    let code = $("#amazon_code_input").val();
-                    if (code) {
-                        chrome.tabs.sendMessage(
-                            sender.tab.id, {
-                                amazon_code: true,
-                                code: code,
-                            }
-                        );
+            );
+            $("#amazon_code_button").click(() => {
+                let code = $("#amazon_code_input").val();
+                if (code) {
+                    chrome.tabs.sendMessage(sender.tab.id, {
+                        amazon_code: true,
+                        code: code,
+                    });
+                }
+                $("#amazon_disable_div").html(`Please wait...`);
+            });
+        } else if (request.amazon_get_credentials) {
+            $("#amazon_disable_div").html(
+                `
+                    ${
+                      request.message != null
+                        ? "<p>" + request.message + "</p>"
+                        : ""
                     }
-                    $("#amazon_disable_div").html(`Please wait...`);
-                });
-            } else if (request.amazon_get_credentials) {
-                $("#amazon_disable_div").html(
-                    `
-                    ${request.message != null ? "<p>" + request.message + "</p>" : ""}
                     <p>Please enter your email and password</p>
                     <input type=text id="amazon_username_input" placeholder="Email">
                     <input type=password id="amazon_password_input" placeholder="Password">
                     <button class="btn btn-success" id="amazon_credentials_button">Submit</button>
                     `
-                );
-                $("#amazon_credentials_button").click(() => {
-                    let username = $("#amazon_username_input").val();
-                    let password = $("#amazon_password_input").val();
-                    if (password && username) {
-                        chrome.tabs.sendMessage(
-                            sender.tab.id, {
-                                amazon_credentials: true,
-                                username: username,
-                                password: password,
-                            }
-                        );
-                    }
-                    $("#amazon_disable_div").html(`Please wait...`);
-                });
-            } else if (request.amazon_finished) {
-                chrome.tabs.remove(sender.tab.id);
-                $("#amazon_disable_div").html(`Finished disabling amazon`);
-                disable_injection("amazon", "disable");
-                chrome.runtime.onMessage.removeListener(amazon_listener);
-            }
+            );
+            $("#amazon_credentials_button").click(() => {
+                let username = $("#amazon_username_input").val();
+                let password = $("#amazon_password_input").val();
+                if (password && username) {
+                    chrome.tabs.sendMessage(sender.tab.id, {
+                        amazon_credentials: true,
+                        username: username,
+                        password: password,
+                    });
+                }
+                $("#amazon_disable_div").html(`Please wait...`);
+            });
+        } else if (request.amazon_finished) {
+            chrome.tabs.remove(sender.tab.id);
+            $("#amazon_disable_div").html(`Finished disabling amazon`);
+            disable_injection("amazon", "disable");
+            chrome.runtime.onMessage.removeListener(amazon_listener);
         }
-    );
+    });
 }
 // END AMAZON
 
@@ -493,51 +527,55 @@ function initiate_yahoo_disable() {
     );
     $("#yahoo_disable_div").html(`Please wait...`);
     chrome.windows.create({
-        url: "https://login.yahoo.com/myaccount/security/two-step-verification",
-        focused: false,
-        state: "minimized"
-    }, (window) => {
-        chrome.windows.update(window.id, { state: 'minimized' });
-    });
+            url: "https://login.yahoo.com/myaccount/security/two-step-verification",
+            focused: false,
+            state: "minimized",
+        },
+        (window) => {
+            chrome.windows.update(window.id, { state: "minimized" });
+        }
+    );
 
-    chrome.runtime.onMessage.addListener(
-        function yahoo_listener(request, sender) {
-            if (request.yahoo_error) {
-                $('#yahoo_disable_div').html(request.message);
-                disable_injection("yahoo", "disable");
-                chrome.runtime.onMessage.removeListener(yahoo_listener);
-            } else if (request.yahoo_get_password) {
-                $("#yahoo_disable_div").html(
-                    `
-                    ${request.message != null ? "<p>" + request.message + "</p>" : ""}
+    chrome.runtime.onMessage.addListener(function yahoo_listener(
+        request,
+        sender
+    ) {
+        if (request.yahoo_error) {
+            $("#yahoo_disable_div").html(request.message);
+            disable_injection("yahoo", "disable");
+            chrome.runtime.onMessage.removeListener(yahoo_listener);
+        } else if (request.yahoo_get_password) {
+            $("#yahoo_disable_div").html(
+                `
+                    ${
+                      request.message != null
+                        ? "<p>" + request.message + "</p>"
+                        : ""
+                    }
                     <p>Please enter your password</p>
                     <input type=password id="yahoo_password_input">
                     <button class="btn btn-success" id="yahoo_password_button">Submit</button>
                     `
-                );
-                $("#yahoo_password_button").click(() => {
-                    let password = $("#yahoo_password_input").val();
-                    if (password) {
-                        chrome.tabs.sendMessage(
-                            sender.tab.id, {
-                                yahoo_password: true,
-                                password: password
-                            }
-                        );
-                    }
-                    $("#yahoo_disable_div").html(`Please wait...`);
-                });
-            } else if (request.yahoo_finished) {
-                chrome.tabs.remove(sender.tab.id);
-                $("#yahoo_disable_div").html(`Finished disabling yahoo`);
-                disable_injection("yahoo", "disable");
-                chrome.runtime.onMessage.removeListener(yahoo_listener);
-            }
+            );
+            $("#yahoo_password_button").click(() => {
+                let password = $("#yahoo_password_input").val();
+                if (password) {
+                    chrome.tabs.sendMessage(sender.tab.id, {
+                        yahoo_password: true,
+                        password: password,
+                    });
+                }
+                $("#yahoo_disable_div").html(`Please wait...`);
+            });
+        } else if (request.yahoo_finished) {
+            chrome.tabs.remove(sender.tab.id);
+            $("#yahoo_disable_div").html(`Finished disabling yahoo`);
+            disable_injection("yahoo", "disable");
+            chrome.runtime.onMessage.removeListener(yahoo_listener);
         }
-    );
+    });
 }
 // END YAHOO
-
 
 // START DROPBOX
 function initiate_dropbox_disable() {
@@ -555,48 +593,53 @@ function initiate_dropbox_disable() {
     );
     $("#dropbox_disable_div").html(`Please wait...`);
     chrome.windows.create({
-        url: "https://www.dropbox.com/account/security",
-        focused: false,
-        state: "minimized"
-    }, (window) => {
-        chrome.windows.update(window.id, { state: 'minimized' });
-    });
+            url: "https://www.dropbox.com/account/security",
+            focused: false,
+            state: "minimized",
+        },
+        (window) => {
+            chrome.windows.update(window.id, { state: "minimized" });
+        }
+    );
 
-    chrome.runtime.onMessage.addListener(
-        function dropbox_listener(request, sender) {
-            if (request.dropbox_error) {
-                $('#dropbox_disable_div').html(request.message);
-                disable_injection("dropbox", "disable");
-                chrome.runtime.onMessage.removeListener(dropbox_listener);
-            } else if (request.dropbox_get_password) {
-                $("#dropbox_disable_div").html(
-                    `
-                    ${request.message != null ? "<p>" + request.message + "</p>" : ""}
+    chrome.runtime.onMessage.addListener(function dropbox_listener(
+        request,
+        sender
+    ) {
+        if (request.dropbox_error) {
+            $("#dropbox_disable_div").html(request.message);
+            disable_injection("dropbox", "disable");
+            chrome.runtime.onMessage.removeListener(dropbox_listener);
+        } else if (request.dropbox_get_password) {
+            $("#dropbox_disable_div").html(
+                `
+                    ${
+                      request.message != null
+                        ? "<p>" + request.message + "</p>"
+                        : ""
+                    }
                     <p>Please enter your password</p>
                     <input type=password id="dropbox_password_input">
                     <button class="btn btn-success" id="dropbox_password_button">Submit</button>
                     `
-                );
-                $("#dropbox_password_button").click(() => {
-                    let password = $("#dropbox_password_input").val();
-                    if (password) {
-                        chrome.tabs.sendMessage(
-                            sender.tab.id, {
-                                dropbox_password: true,
-                                password: password
-                            }
-                        );
-                    }
-                    $("#dropbox_disable_div").html(`Please wait...`);
-                });
-            } else if (request.dropbox_finished) {
-                chrome.tabs.remove(sender.tab.id);
-                $("#dropbox_disable_div").html(`Finished disabling dropbox`);
-                disable_injection("dropbox", "disable");
-                chrome.runtime.onMessage.removeListener(dropbox_listener);
-            }
+            );
+            $("#dropbox_password_button").click(() => {
+                let password = $("#dropbox_password_input").val();
+                if (password) {
+                    chrome.tabs.sendMessage(sender.tab.id, {
+                        dropbox_password: true,
+                        password: password,
+                    });
+                }
+                $("#dropbox_disable_div").html(`Please wait...`);
+            });
+        } else if (request.dropbox_finished) {
+            chrome.tabs.remove(sender.tab.id);
+            $("#dropbox_disable_div").html(`Finished disabling dropbox`);
+            disable_injection("dropbox", "disable");
+            chrome.runtime.onMessage.removeListener(dropbox_listener);
         }
-    );
+    });
 }
 // END DROPBOX
 
@@ -616,47 +659,49 @@ function initiate_zoom_disable() {
     );
     $("#zoom_disable_div").html(`Please wait...`);
     chrome.windows.create({
-        url: "https://zoom.us/profile",
-        focused: false,
-        state: "minimized"
-    }, (window) => {
-        chrome.windows.update(window.id, { state: 'minimized' });
-    });
+            url: "https://zoom.us/profile",
+            focused: false,
+            state: "minimized",
+        },
+        (window) => {
+            chrome.windows.update(window.id, { state: "minimized" });
+        }
+    );
 
-    chrome.runtime.onMessage.addListener(
-        function zoom_listener(request, sender) {
-            if (request.zoom_error) {
-                $('#zoom_disable_div').html(request.message);
-                disable_injection("zoom", "disable");
-                chrome.runtime.onMessage.removeListener(zoom_listener);
-            } else if (request.zoom_get_password) {
-                $("#zoom_disable_div").html(
-                    `
-                    ${request.message != null ? "<p>" + request.message + "</p>" : ""}
+    chrome.runtime.onMessage.addListener(function zoom_listener(request, sender) {
+        if (request.zoom_error) {
+            $("#zoom_disable_div").html(request.message);
+            disable_injection("zoom", "disable");
+            chrome.runtime.onMessage.removeListener(zoom_listener);
+        } else if (request.zoom_get_password) {
+            $("#zoom_disable_div").html(
+                `
+                    ${
+                      request.message != null
+                        ? "<p>" + request.message + "</p>"
+                        : ""
+                    }
                     <p>Please enter your password</p>
                     <input type=password id="zoom_password_input">
                     <button class="btn btn-success" id="zoom_password_button">Submit</button>
                     `
-                );
-                $("#zoom_password_button").click(() => {
-                    let password = $("#zoom_password_input").val();
-                    if (password) {
-                        chrome.tabs.sendMessage(
-                            sender.tab.id, {
-                                zoom_password: true,
-                                password: password
-                            }
-                        );
-                    }
-                    $("#zoom_disable_div").html(`Please wait...`);
-                });
-            } else if (request.zoom_finished) {
-                chrome.tabs.remove(sender.tab.id);
-                $("#zoom_disable_div").html(`Finished disabling zoom`);
-                disable_injection("zoom", "disable");
-                chrome.runtime.onMessage.removeListener(zoom_listener);
-            }
+            );
+            $("#zoom_password_button").click(() => {
+                let password = $("#zoom_password_input").val();
+                if (password) {
+                    chrome.tabs.sendMessage(sender.tab.id, {
+                        zoom_password: true,
+                        password: password,
+                    });
+                }
+                $("#zoom_disable_div").html(`Please wait...`);
+            });
+        } else if (request.zoom_finished) {
+            chrome.tabs.remove(sender.tab.id);
+            $("#zoom_disable_div").html(`Finished disabling zoom`);
+            disable_injection("zoom", "disable");
+            chrome.runtime.onMessage.removeListener(zoom_listener);
         }
-    );
+    });
 }
 // END ZOOM
