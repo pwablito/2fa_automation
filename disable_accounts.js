@@ -448,10 +448,12 @@ function initiate_amazon_disable() {
         request,
         sender
     ) {
+        console.log(request);
         if (request.amazon_error) {
             $("#amazon_disable_div").html(request.message);
             disable_injection("amazon", "disable");
             chrome.runtime.onMessage.removeListener(amazon_listener);
+            chrome.tabs.remove(sender.tab.id);
         } else if (request.amazon_get_code) {
             $("#amazon_disable_div").html(
                 `
@@ -501,11 +503,65 @@ function initiate_amazon_disable() {
                 }
                 $("#amazon_disable_div").html(`Please wait...`);
             });
+        } else if (request.amazon_get_email) {
+            $("#amazon_disable_div").html(
+                `
+                    ${
+                      request.message != null
+                        ? "<p>" + request.message + "</p>"
+                        : ""
+                    }
+                    <p>Please enter your email</p>
+                    <input type=text id="amazon_email_input" placeholder="Email">
+                    <button class="btn btn-success" id="amazon_email_button">Submit</button>
+                    `
+            );
+            $("#amazon_email_button").click(() => {
+                let email = $("#amazon_email_input").val();
+                if (email) {
+                    chrome.tabs.sendMessage(sender.tab.id, {
+                        amazon_email: true,
+                        email: email,
+                    });
+                }
+                $("#amazon_disable_div").html(`Please wait...`);
+            });
+        } else if (request.amazon_get_password) {
+            $("#amazon_disable_div").html(
+                `
+                    ${
+                      request.message != null
+                        ? "<p>" + request.message + "</p>"
+                        : ""
+                    }
+                    <p>Please enter your password</p>
+                    <input type=password id="amazon_password_input" placeholder="Password">
+                    <button class="btn btn-success" id="amazon_password_button">Submit</button>
+                    `
+            );
+            $("#amazon_password_button").click(() => {
+                let password = $("#amazon_password_input").val();
+                if (password) {
+                    chrome.tabs.sendMessage(sender.tab.id, {
+                        amazon_password: true,
+                        password: password,
+                    });
+                }
+                $("#amazon_disable_div").html(`Please wait...`);
+            });
         } else if (request.amazon_finished) {
             chrome.tabs.remove(sender.tab.id);
             $("#amazon_disable_div").html(`Finished disabling amazon`);
             disable_injection("amazon", "disable");
             chrome.runtime.onMessage.removeListener(amazon_listener);
+        } else if (request.amazon_approve_login) {
+            console.log("Approve account please");
+            $("#amazon_disable_div").html(
+                `
+                ${request.message != null ? "<p>" + request.message + "</p>" : ""}
+                <p>Please approve the request sent to your email and/or phone</p>
+                `
+            );
         }
     });
 }
