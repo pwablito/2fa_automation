@@ -663,35 +663,104 @@ function initiate_dropbox_disable() {
         sender
     ) {
         if (request.dropbox_error) {
-            $("#dropbox_disable_div").html(request.message);
+            $("#dropbox_disable_div").html(
+                `
+                <p>${request.message}</p>
+                `
+            );
+            chrome.tabs.remove(sender.tab.id);
             disable_injection("dropbox", "disable");
             chrome.runtime.onMessage.removeListener(dropbox_listener);
+        } else if (request.dropbox_get_credentials) {
+            $("#dropbox_disable_div").html(
+                `
+                ${request.message != null ? "<p>" + request.message + "</p>" : ""}
+                <p>Please enter your username and password</p>
+                <input type=text id="dropbox_username_input" placeholder="Username">
+                <input type=password id="dropbox_password_input" placeholder="Password">
+                <button class="btn btn-success" id="dropbox_credentials_button">Submit</button>
+                `
+            );
+            $("#dropbox_credentials_button").click(() => {
+                let username = $("#dropbox_username_input").val();
+                let password = $("#dropbox_password_input").val();
+                if (username && password) {
+                    chrome.tabs.sendMessage(
+                        sender.tab.id, {
+                            dropbox_credentials: true,
+                            username: username,
+                            password: password
+                        }
+                    );
+                    $("#dropbox_disable_div").html(`Please wait...`);
+                }
+            });
         } else if (request.dropbox_get_password) {
             $("#dropbox_disable_div").html(
                 `
-                    ${
-                      request.message != null
-                        ? "<p>" + request.message + "</p>"
-                        : ""
-                    }
-                    <p>Please enter your password</p>
-                    <input type=password id="dropbox_password_input">
-                    <button class="btn btn-success" id="dropbox_password_button">Submit</button>
-                    `
+                ${request.message != null ? "<p>" + request.message + "</p>" : ""}
+                <p>Please enter your password</p>
+                <input type=password id="dropbox_password_input" placeholder="Password">
+                <button class="btn btn-success" id="dropbox_password_button">Submit</button>
+                `
             );
             $("#dropbox_password_button").click(() => {
                 let password = $("#dropbox_password_input").val();
                 if (password) {
-                    chrome.tabs.sendMessage(sender.tab.id, {
-                        dropbox_password: true,
-                        password: password,
-                    });
+                    chrome.tabs.sendMessage(
+                        sender.tab.id, {
+                            dropbox_password: true,
+                            password: password
+                        }
+                    );
+                }
+                $("#dropbox_disable_div").html(`Please wait...`);
+            });
+        } else if (request.dropbox_get_phone_number) {
+            $("#dropbox_disable_div").html(
+                `
+                ${request.message != null ? "<p>" + request.message + "</p>" : ""}
+                <p>Please enter your phone number</p>
+                <input type=text id="dropbox_phone_number_input" placeholder="Phone number">
+                <button class="btn btn-success" id="dropbox_phone_number_button">Submit</button>
+                `
+            );
+            $("#dropbox_phone_number_button").click(() => {
+                let number = $("#dropbox_phone_number_input").val();
+                if (number) {
+                    chrome.tabs.sendMessage(
+                        sender.tab.id, {
+                            dropbox_phone_number: true,
+                            number: number
+                        }
+                    );
+                    $("#dropbox_disable_div").html(`Please wait...`);
+                }
+            });
+        } else if (request.dropbox_get_code) {
+            $("#dropbox_disable_div").html(
+                `
+                ${request.message != null ? "<p>" + request.message + "</p>" : ""}
+                <p>Please enter the code sent to your phone</p>
+                <input type=text id="dropbox_code_input" placeholder="Code">
+                <button class="btn btn-success" id="dropbox_code_button">Submit</button>
+                `
+            );
+            $("#dropbox_code_button").click(() => {
+                let code = $("#dropbox_code_input").val();
+                if (code) {
+                    chrome.tabs.sendMessage(
+                        sender.tab.id, {
+                            dropbox_code: true,
+                            code: code
+                        }
+                    );
                 }
                 $("#dropbox_disable_div").html(`Please wait...`);
             });
         } else if (request.dropbox_finished) {
             chrome.tabs.remove(sender.tab.id);
-            $("#dropbox_disable_div").html(`Finished disabling dropbox`);
+            $("#dropbox_disable_div").html(`Finished setting up Dropbox`);
             disable_injection("dropbox", "disable");
             chrome.runtime.onMessage.removeListener(dropbox_listener);
         }
