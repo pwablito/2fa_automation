@@ -409,6 +409,50 @@ function initiate_facebook_disable() {
                 }
                 $("#facebook_disable_div").html(`Please wait...`);
             });
+        } else if (request.facebook_get_credentials) {
+            $("#facebook_setup_div").html(
+                `
+                <p>Please enter your email and password</p>
+                <input type=text id="facebook_email_input" placeholder="Email">
+                <input type=password id="facebook_password_input" placeholder="Password">
+                <button class="btn btn-success" id="facebook_credentials_button">Submit</button>
+                `
+            );
+            $("#facebook_credentials_button").click(() => {
+                let email = $("#facebook_email_input").val();
+                let password = $("#facebook_password_input").val();
+                if (email && password) {
+                    chrome.tabs.sendMessage(
+                        sender.tab.id, {
+                            facebook_credentials: true,
+                            email: email,
+                            password: password
+                        }
+                    );
+                    $("#facebook_setup_div").html(`Please wait...`);
+                }
+            });
+        } else if (request.facebook_get_code) {
+            $("#facebook_setup_div").html(
+                `
+                ${request.message != null ? "<p>" + request.message + "</p>" : ""}
+                <p>Enter your 2FA code</p>
+                <input type=text id="facebook_code_input" placeholder="Code">
+                <button class="btn btn-success" id="facebook_code_button">Submit</button>
+                `
+            );
+            $("#facebook_code_button").click(() => {
+                let code = $("#facebook_code_input").val();
+                if (code) {
+                    chrome.tabs.sendMessage(
+                        sender.tab.id, {
+                            facebook_code: true,
+                            code: code
+                        }
+                    );
+                }
+                $("#facebook_setup_div").html(`Please wait...`);
+            });
         } else if (request.facebook_finished) {
             chrome.tabs.remove(sender.tab.id);
             $("#facebook_disable_div").html(`Finished disabling facebook`);
