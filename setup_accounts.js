@@ -28,8 +28,8 @@ $("#setup_accounts_button").click(() => {
                     initiate_yahoo_setup();
                 } else if (service_name === "dropbox") {
                     initiate_dropbox_setup();
-                } else if (service_name === "zoom") {
-                    initiate_zoom_setup();
+                } else if (service_name === "linkedin") {
+                    initiate_linkedin_setup();
                 } else {
                     console.log("Undefined service: '" + service_name + "'");
                 }
@@ -1404,23 +1404,23 @@ function initiate_dropbox_setup() {
 }
 // END DROPBOX
 
-// START ZOOM
-function initiate_zoom_setup() {
+// START LINKEDIN
+function initiate_linkedin_setup() {
     $("#setup_processes_list").append(
         `
         <div class="gray">
             <div class="row">
-                <div class="col-3"><img src="logos/zoom.svg"></div>
+                <div class="col-3"><img src="logos/linkedin.svg"></div>
                 <div class="col-9">
-                    <div id="zoom_setup_div" class="row"></div>
+                    <div id="linkedin_setup_div" class="row"></div>
                 </div>
             </div>
         </div>
         `
     );
-    $("#zoom_setup_div").html(`Please wait...`);
+    $("#linkedin_setup_div").html(`Please wait...`);
     chrome.windows.create({
-        url: "https://zoom.us/profile",
+        url: "https://linkedin.com/",
         focused: false,
         state: "minimized"
     }, (window) => {
@@ -1428,138 +1428,8 @@ function initiate_zoom_setup() {
     });
 
     chrome.runtime.onMessage.addListener(
-        function zoom_listener(request, sender) {
-            if (request.zoom_error) {
-                $("#zoom_setup_div").html(
-                    `
-                    <p>${request.message}</p>
-                    `
-                );
-                chrome.tabs.remove(sender.tab.id);
-                disable_injection("zoom", "setup");
-                chrome.runtime.onMessage.removeListener(zoom_listener);
-            } else if (request.zoom_get_email) {
-                $("#zoom_setup_div").html(
-                    `
-                    ${request.message != null ? "<p>" + request.message + "</p>" : ""}
-                    <p>Please enter your email address</p>
-                    <input type=text id="zoom_email_input" placeholder="Email">
-                    <button class="btn btn-success" id="zoom_email_button">Submit</button>
-                    `
-                );
-                $("#zoom_email_button").click(() => {
-                    let email = $("#zoom_email_input").val();
-                    if (email) {
-                        chrome.tabs.sendMessage(
-                            sender.tab.id, {
-                                zoom_email: true,
-                                email: email
-                            }
-                        );
-                        $("#zoom_setup_div").html(`Please wait...`);
-                    }
-                });
-            } else if (request.zoom_get_password) {
-                $("#zoom_setup_div").html(
-                    `
-                    ${request.message != null ? "<p>" + request.message + "</p>" : ""}
-                    <p>Please enter your password</p>
-                    <input type=password id="zoom_password_input" placeholder="Password">
-                    <button class="btn btn-success" id="zoom_password_button">Submit</button>
-                    `
-                );
-                $("#zoom_password_button").click(() => {
-                    let password = $("#zoom_password_input").val();
-                    if (password) {
-                        chrome.tabs.sendMessage(
-                            sender.tab.id, {
-                                zoom_password: true,
-                                password: password
-                            }
-                        );
-                    }
-                    $("#zoom_setup_div").html(`Please wait...`);
-                });
-            } else if (request.zoom_get_phone_number) {
-                $("#zoom_setup_div").html(
-                    `
-                    ${request.message != null ? "<p>" + request.message + "</p>" : ""}
-                    <p>Please enter your phone number</p>
-                    <input type=text id="zoom_phone_number_input" placeholder="Phone number">
-                    <button class="btn btn-success" id="zoom_phone_number_button">Submit</button>
-                    `
-                );
-                $("#zoom_phone_number_button").click(() => {
-                    let number = $("#zoom_phone_number_input").val();
-                    if (number) {
-                        chrome.tabs.sendMessage(
-                            sender.tab.id, {
-                                zoom_phone_number: true,
-                                number: number,
-                            }
-                        );
-                        $("#zoom_setup_div").html(`Please wait...`);
-                    }
-                });
-            } else if (request.zoom_get_code) {
-                $("#zoom_setup_div").html(
-                    `
-                    ${request.message != null ? "<p>" + request.message + "</p>" : ""}
-                    <p>Please enter the code sent to your phone</p>
-                    <input type=text id="zoom_code_input" placeholder="Code">
-                    <button class="btn btn-success" id="zoom_code_button">Submit</button>
-                    `
-                );
-                $("#zoom_code_button").click(() => {
-                    let code = $("#zoom_code_input").val();
-                    if (code) {
-                        chrome.tabs.sendMessage(
-                            sender.tab.id, {
-                                zoom_code: true,
-                                code: code
-                            }
-                        );
-                    }
-                    $("#zoom_setup_div").html(`Please wait...`);
-                });
-            } else if (request.zoom_get_type) {
-                $("#zoom_setup_div").html(
-                    `
-                    ${request.message != null ? "<p>" + request.message + "</p>" : ""}
-                    <div class="row">
-                        <div class="col-6">
-                            <p>Please choose a type of 2FA to set up</p>
-                        </div>
-                        <div class="col-6">
-                            <button class="btn btn-success" id="zoom_totp_button">TOTP</button>
-                            <br><br>
-                            <button class="btn btn-success" id="zoom_sms_button">SMS</button>
-                        </div>
-                    </div>
-                    `
-                );
-                $("#zoom_totp_button").click(() => {
-                    chrome.tabs.sendMessage(
-                        sender.tab.id, {
-                            zoom_start_totp: true
-                        }
-                    );
-                    $("#zoom_setup_div").html(`Please wait...`);
-                });
-                $("#zoom_sms_button").click(() => {
-                    chrome.tabs.sendMessage(
-                        sender.tab.id, {
-                            zoom_start_sms: true
-                        }
-                    );
-                    $("#zoom_setup_div").html(`Please wait...`);
-                });
-            } else if (request.zoom_finished) {
-                chrome.tabs.remove(sender.tab.id);
-                $("#zoom_setup_div").html(`Finished setting up Zoom`);
-                disable_injection("zoom", "setup");
-                chrome.runtime.onMessage.removeListener(zoom_listener);
-            }
+        function linkedin_listener(request, sender) {
+
         });
 }
-// END ZOOM
+// END LINKEDIN

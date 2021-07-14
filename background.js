@@ -7,7 +7,7 @@ let setup_injection_statuses = {
     "reddit": false,
     "yahoo": false,
     "dropbox": false,
-    "zoom": false
+    "linkedin": false
 }
 let disable_injection_statuses = {
     "github": false,
@@ -18,7 +18,7 @@ let disable_injection_statuses = {
     "reddit": false,
     "yahoo": false,
     "dropbox": false,
-    "zoom": false
+    "linkedin": false
 }
 
 chrome.tabs.onUpdated.addListener(function(tabId, info, tab) {
@@ -64,9 +64,9 @@ chrome.tabs.onUpdated.addListener(function(tabId, info, tab) {
                 chrome.tabs.executeScript(tabId, { file: "setup_scripts/dropbox.js" })
             }
         }
-        if (setup_injection_statuses.zoom) {
-            if (tab.url.includes("zoom.us")) {
-                chrome.tabs.executeScript(tabId, { file: "setup_scripts/zoom.js" })
+        if (setup_injection_statuses.linkedin) {
+            if (tab.url.includes("linkedin.com")) {
+                chrome.tabs.executeScript(tabId, { file: "setup_scripts/linkedin.js" })
             }
         }
         if (disable_injection_statuses.github) {
@@ -109,9 +109,9 @@ chrome.tabs.onUpdated.addListener(function(tabId, info, tab) {
                 chrome.tabs.executeScript(tabId, { file: "disable_scripts/dropbox.js" })
             }
         }
-        if (disable_injection_statuses.zoom) {
-            if (tab.url.includes("zoom.us")) {
-                chrome.tabs.executeScript(tabId, { file: "disable_scripts/zoom.js" })
+        if (disable_injection_statuses.linkedin) {
+            if (tab.url.includes("linkedin.com")) {
+                chrome.tabs.executeScript(tabId, { file: "disable_scripts/linkedin.js" })
             }
         }
     }

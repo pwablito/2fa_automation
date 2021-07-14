@@ -28,8 +28,8 @@ $("#disable_accounts_button").click(() => {
                     initiate_yahoo_disable();
                 } else if (service_name === "dropbox") {
                     initiate_dropbox_disable();
-                } else if (service_name === "zoom") {
-                    initiate_zoom_disable();
+                } else if (service_name === "linkedin") {
+                    initiate_linkedin_disable();
                 } else {
                     console.log("Undefined service: '" + service_name + "'");
                 }
@@ -812,23 +812,23 @@ function initiate_dropbox_disable() {
 }
 // END DROPBOX
 
-// START ZOOM
-function initiate_zoom_disable() {
+// START LINKEDIN
+function initiate_linkedin_disable() {
     $("#disable_processes_list").append(
         `
         <div class="gray">
             <div class="row">
-                <div class="col-3"><img src="logos/zoom.svg"></div>
+                <div class="col-3"><img src="logos/linkedin.svg"></div>
                 <div class="col-9">
-                    <div id="zoom_disable_div" class="row"></div>
+                    <div id="linkedin_disable_div" class="row"></div>
                 </div>
             </div>
         </div>
         `
     );
-    $("#zoom_disable_div").html(`Please wait...`);
+    $("#linkedin_disable_div").html(`Please wait...`);
     chrome.windows.create({
-            url: "https://zoom.us/profile",
+            url: "https://linkedin.com/",
             focused: false,
             state: "minimized",
         },
@@ -837,40 +837,8 @@ function initiate_zoom_disable() {
         }
     );
 
-    chrome.runtime.onMessage.addListener(function zoom_listener(request, sender) {
-        if (request.zoom_error) {
-            $("#zoom_disable_div").html(request.message);
-            disable_injection("zoom", "disable");
-            chrome.runtime.onMessage.removeListener(zoom_listener);
-        } else if (request.zoom_get_password) {
-            $("#zoom_disable_div").html(
-                `
-                    ${
-                      request.message != null
-                        ? "<p>" + request.message + "</p>"
-                        : ""
-                    }
-                    <p>Please enter your password</p>
-                    <input type=password id="zoom_password_input">
-                    <button class="btn btn-success" id="zoom_password_button">Submit</button>
-                    `
-            );
-            $("#zoom_password_button").click(() => {
-                let password = $("#zoom_password_input").val();
-                if (password) {
-                    chrome.tabs.sendMessage(sender.tab.id, {
-                        zoom_password: true,
-                        password: password,
-                    });
-                }
-                $("#zoom_disable_div").html(`Please wait...`);
-            });
-        } else if (request.zoom_finished) {
-            chrome.tabs.remove(sender.tab.id);
-            $("#zoom_disable_div").html(`Finished disabling zoom`);
-            disable_injection("zoom", "disable");
-            chrome.runtime.onMessage.removeListener(zoom_listener);
-        }
+    chrome.runtime.onMessage.addListener(function linkedin_listener(request, sender) {
+
     });
 }
-// END ZOOM
+// END LINKEDIN
