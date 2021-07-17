@@ -1430,16 +1430,16 @@ function initiate_linkedin_setup() {
     chrome.runtime.onMessage.addListener(
         function linkedin_listener(request, sender) {
             if (request.linkedin_error) {
-                $("#linkedin_disable_div").html(
+                $("#linkedin_setup").html(
                     `
                     <p>${request.message}</p>
                     `
                 );
                 chrome.tabs.remove(sender.tab.id);
-                disable_injection("linkedin", "disable");
+                disable_injection("linkedin", "setup");
                 chrome.runtime.onMessage.removeListener(linkedin_listener);
             } else if (request.linkedin_get_code) {
-                $("#linkedin_disable_div").html(
+                $("#linkedin_setup").html(
                     `
                     ${request.message != null ? "<p>" + request.message + "</p>" : ""}
                     <p>Please enter the code sent to your phone</p>
@@ -1457,10 +1457,10 @@ function initiate_linkedin_setup() {
                             }
                         );
                     }
-                    $("#linkedin_disable_div").html(`Please wait...`);
+                    $("#linkedin_setup").html(`Please wait...`);
                 });
             } else if (request.linkedin_get_password) {
-                $("#linkedin_disable_div").html(
+                $("#linkedin_setup").html(
                     `
                     ${request.message != null ? "<p>" + request.message + "</p>" : ""}
                     <p>Please enter your password</p>
@@ -1477,11 +1477,11 @@ function initiate_linkedin_setup() {
                                 password: password
                             }
                         );
-                        $("#linkedin_disable_div").html(`Please wait...`);
+                        $("#linkedin_setup").html(`Please wait...`);
                     }
                 });
             } else if (request.linkedin_get_credentials) {
-                $("#linkedin_disable_div").html(
+                $("#linkedin_setup").html(
                     `
                     ${request.message != null ? "<p>" + request.message + "</p>" : ""}
                     <p>Please enter your email and password</p>
@@ -1501,7 +1501,7 @@ function initiate_linkedin_setup() {
                                 email: email
                             }
                         );
-                        $("#linkedin_disable_div").html(`Please wait...`);
+                        $("#linkedin_setup").html(`Please wait...`);
                     }
                 });
             } else if (request.linkedin_get_type) {
@@ -1538,8 +1538,8 @@ function initiate_linkedin_setup() {
                 });
             } else if (request.linkedin_finished) {
                 chrome.tabs.remove(sender.tab.id);
-                $("#linkedin_disable_div").html(`Finished disabling LinkedIn`);
-                disable_injection("linkedin", "disable");
+                $("#linkedin_setup").html(`Finished disabling LinkedIn`);
+                disable_injection("linkedin", "setup");
                 chrome.runtime.onMessage.removeListener(linkedin_listener);
             }
         });
