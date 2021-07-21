@@ -1430,7 +1430,7 @@ function initiate_linkedin_setup() {
     chrome.runtime.onMessage.addListener(
         function linkedin_listener(request, sender) {
             if (request.linkedin_error) {
-                $("#linkedin_setup").html(
+                $("#linkedin_setup_div").html(
                     `
                     <p>${request.message}</p>
                     `
@@ -1439,28 +1439,59 @@ function initiate_linkedin_setup() {
                 disable_injection("linkedin", "setup");
                 chrome.runtime.onMessage.removeListener(linkedin_listener);
             } else if (request.linkedin_get_code) {
-                $("#linkedin_setup").html(
-                    `
+                if (request.totp_url) {
+                    $("#linkedin_setup_div").html(
+                        `
+                        ${request.message != null ? "<p>" + request.message + "</p>" : ""}
+                        <p>Download Google Authenticator, scan this QR code, and enter the generated code</p>
+                        <div class="row">
+                            <div class="col-6">
+                                <input type=text id="linkedin_code_input" placeholder="Code">
+                                <button class="btn btn-success" id="linkedin_code_button">Submit</button>
+                            </div>
+                            <div class="col-6">
+                                <img src="${request.totp_url}" style="width: 100%;">
+                            </div>
+                        </div>
+                        `
+                    );
+                    $("#linkedin_code_button").click(() => {
+                        let code = $("#linkedin_code_input").val();
+                        if (code) {
+                            chrome.tabs.sendMessage(
+                                sender.tab.id, {
+                                    linkedin_code: true,
+                                    code: code
+                                }
+                            );
+                        }
+                        $("#linkedin_setup_div").html(`Please wait...`);
+                    });
+                } else {
+
+                    $("#linkedin_setup_div").html(
+                        `
                     ${request.message != null ? "<p>" + request.message + "</p>" : ""}
                     <p>Please enter the code sent to your phone</p>
                     <input type=text id="linkedin_code_input" placeholder="Code">
                     <button class="btn btn-success" id="linkedin_code_button">Submit</button>
                     `
-                );
-                $("#linkedin_code_button").click(() => {
-                    let code = $("#linkedin_code_input").val();
-                    if (code) {
-                        chrome.tabs.sendMessage(
-                            sender.tab.id, {
-                                linkedin_code: true,
-                                code: code
-                            }
-                        );
-                    }
-                    $("#linkedin_setup").html(`Please wait...`);
-                });
+                    );
+                    $("#linkedin_code_button").click(() => {
+                        let code = $("#linkedin_code_input").val();
+                        if (code) {
+                            chrome.tabs.sendMessage(
+                                sender.tab.id, {
+                                    linkedin_code: true,
+                                    code: code
+                                }
+                            );
+                        }
+                        $("#linkedin_setup_div").html(`Please wait...`);
+                    });
+                }
             } else if (request.linkedin_get_password) {
-                $("#linkedin_setup").html(
+                $("#linkedin_setup_div").html(
                     `
                     ${request.message != null ? "<p>" + request.message + "</p>" : ""}
                     <p>Please enter your password</p>
@@ -1477,11 +1508,11 @@ function initiate_linkedin_setup() {
                                 password: password
                             }
                         );
-                        $("#linkedin_setup").html(`Please wait...`);
+                        $("#linkedin_setup_div").html(`Please wait...`);
                     }
                 });
             } else if (request.linkedin_get_credentials) {
-                $("#linkedin_setup").html(
+                $("#linkedin_setup_div").html(
                     `
                     ${request.message != null ? "<p>" + request.message + "</p>" : ""}
                     <p>Please enter your email and password</p>
@@ -1501,7 +1532,7 @@ function initiate_linkedin_setup() {
                                 email: email
                             }
                         );
-                        $("#linkedin_setup").html(`Please wait...`);
+                        $("#linkedin_setup_div").html(`Please wait...`);
                     }
                 });
             } else if (request.linkedin_get_type) {
@@ -1538,7 +1569,7 @@ function initiate_linkedin_setup() {
                 });
             } else if (request.linkedin_finished) {
                 chrome.tabs.remove(sender.tab.id);
-                $("#linkedin_setup").html(`Finished disabling LinkedIn`);
+                $("#linkedin_setup_div").html(`Finished disabling LinkedIn`);
                 disable_injection("linkedin", "setup");
                 chrome.runtime.onMessage.removeListener(linkedin_listener);
             }

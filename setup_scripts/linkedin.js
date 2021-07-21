@@ -18,13 +18,14 @@ chrome.runtime.onMessage.addListener(function(request, _) {
                 chrome.runtime.sendMessage({
                     linkedin_get_password: true,
                 });
+            } else {
+                setTimeout(() => {
+                    chrome.runtime.sendMessage({
+                        linkedin_get_code: true,
+                        totp_url: document.querySelector("html > body > div > main > div:nth-of-type(2) > div > div > ul > li:nth-of-type(7) > div > div > div > form > ol > li:nth-of-type(3) > img").src,
+                    });
+                }, 2000);
             }
-            setTimeout(() => {
-                chrome.runtime.sendMessage({
-                    linkedin_get_code: true,
-                    totp_url: document.querySelector("html > body > div > main > div:nth-of-type(2) > div > div > ul > li:nth-of-type(7) > div > div > div > form > ol > li:nth-of-type(3) > img").src,
-                });
-            }, 1000);
         }, 2000);
     } else if (request.linkedin_start_sms) {
         document.querySelector("html > body > div > main > div:nth-of-type(2) > div > div > ul > li:nth-of-type(7) > div > div > div > section > select").selectedIndex = 1;
@@ -36,6 +37,7 @@ chrome.runtime.onMessage.addListener(function(request, _) {
                 });
             } else {
                 document.querySelector("html > body > div > main > div:nth-of-type(2) > div > div > ul > li:nth-of-type(7) > div > div > div > form > fieldset > ul > li > a").click();
+                // Send get code message? There might be more inputs to work through first.
             }
         }, 2000);
     }
