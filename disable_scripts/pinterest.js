@@ -1,0 +1,1 @@
+console.log("pinterest.js disable script injected");

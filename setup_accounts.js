@@ -664,6 +664,51 @@ function initiate_pinterest_setup() {
         </div>
         `
     );
+    $("#pinterest_setup_div").html("Please wait...");
+    chrome.windows.create({
+        url: "https://www.pinterest.com/settings/security",
+        focused: false,
+        state: "minimized",
+    }, (window) => {
+        chrome.windows.update(window.id, { state: "minimized" });
+    });
+
+    chrome.runtime.onMessage.addListener(
+        function pinterest_listener(request, sender) {
+            if (request.pinterest_error) {
+                $("#pinterest_setup_div").html(
+                    `
+                    <p>${request.message}</p>
+                    `
+                );
+                disable_injection("pinterest", "setup");
+                chrome.runtime.onMessage.removeListener(pinterest_listener);
+            } else if (request.pinterest_get_credentials) {
+                $("#pinterest_setup_div").html(
+                    `
+                    <p>Please enter your email and password</p>
+                    <input type=text id="pinterest_email_input" placeholder="Email">
+                    <input type=password id="pinterest_password_input" placeholder="Password">
+                    <button class="btn btn-success" id="pinterest_credentials_button">Submit</button>
+                    `
+                );
+                $("#pinterest_credentials_button").click(() => {
+                    let email = $("#pinterest_email_input").val();
+                    let password = $("#pinterest_password_input").val();
+                    if (email && password) {
+                        chrome.tabs.sendMessage(
+                            sender.tab.id, {
+                                pinterest_credentials: true,
+                                email: email,
+                                password: password
+                            }
+                        );
+                        $("#pinterest_setup_div").html(`Please wait...`);
+                    }
+                });
+            }
+        }
+    );
 }
 // END PINTEREST
 
