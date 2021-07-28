@@ -410,7 +410,7 @@ function initiate_facebook_disable() {
                 $("#facebook_disable_div").html(`Please wait...`);
             });
         } else if (request.facebook_get_credentials) {
-            $("#facebook_setup_div").html(
+            $("#facebook_disable_div").html(
                 `
                 <p>Please enter your email and password</p>
                 <input type=text id="facebook_email_input" placeholder="Email">
@@ -429,11 +429,11 @@ function initiate_facebook_disable() {
                             password: password
                         }
                     );
-                    $("#facebook_setup_div").html(`Please wait...`);
+                    $("#facebook_disable_div").html(`Please wait...`);
                 }
             });
         } else if (request.facebook_get_code) {
-            $("#facebook_setup_div").html(
+            $("#facebook_disable_div").html(
                 `
                 ${request.message != null ? "<p>" + request.message + "</p>" : ""}
                 <p>Enter your 2FA code</p>
@@ -451,7 +451,7 @@ function initiate_facebook_disable() {
                         }
                     );
                 }
-                $("#facebook_setup_div").html(`Please wait...`);
+                $("#facebook_disable_div").html(`Please wait...`);
             });
         } else if (request.facebook_finished) {
             chrome.tabs.remove(sender.tab.id);
@@ -847,27 +847,6 @@ function initiate_linkedin_disable() {
             chrome.tabs.remove(sender.tab.id);
             disable_injection("linkedin", "disable");
             chrome.runtime.onMessage.removeListener(linkedin_listener);
-        } else if (request.linkedin_get_code) {
-            $("#linkedin_disable_div").html(
-                `
-                ${request.message != null ? "<p>" + request.message + "</p>" : ""}
-                <p>Please enter the code sent to your phone</p>
-                <input type=text id="linkedin_code_input" placeholder="Code">
-                <button class="btn btn-success" id="linkedin_code_button">Submit</button>
-                `
-            );
-            $("#linkedin_code_button").click(() => {
-                let code = $("#linkedin_code_input").val();
-                if (code) {
-                    chrome.tabs.sendMessage(
-                        sender.tab.id, {
-                            linkedin_code: true,
-                            code: code
-                        }
-                    );
-                }
-                $("#linkedin_disable_div").html(`Please wait...`);
-            });
         } else if (request.linkedin_get_password) {
             $("#linkedin_disable_div").html(
                 `
