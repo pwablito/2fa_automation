@@ -1,15 +1,25 @@
 console.log("linkedin.js setup script injected");
 
 chrome.runtime.onMessage.addListener(function(request, _) {
-    if (request.linkedin_code) {
-
-    } else if (request.linkedin_credentials) {
+    if (request.linkedin_credentials) {
         document.querySelector("#username").value = request.username;
         document.querySelector("#password").value = request.password;
         document.querySelector("html > body > div > main > div:nth-of-type(2) > div:nth-of-type(1) > form").submit();
     } else if (request.linkedin_password) {
         document.querySelector("#verify-password").value = request.password;
         document.querySelector("html > body > div > main > div:nth-of-type(2) > div > div > ul > li:nth-of-type(7) > div > div > div > section > div:nth-of-type(2) > span > form > div > button").click();
+        setTimeout(() => {
+            if (document.querySelector("html > body > div > main > div:nth-of-type(2) > div > div > ul > li:nth-of-type(7) > div > div > div > form > ol > li:nth-of-type(3) > img") !== null) {
+                chrome.runtime.sendMessage({
+                    linkedin_get_code: true,
+                    totp_url: document.querySelector("html > body > div > main > div:nth-of-type(2) > div > div > ul > li:nth-of-type(7) > div > div > div > form > ol > li:nth-of-type(3) > img").src,
+                });
+            } else {
+                chrome.runtime.sendMessage({
+                    linkedin_get_code: true
+                });
+            }
+        }, 2000);
     } else if (request.linkedin_start_totp) {
         document.querySelector("html > body > div > main > div:nth-of-type(2) > div > div > ul > li:nth-of-type(7) > div > div > div > section > select").selectedIndex = 0;
         document.querySelector("html > body > div > main > div:nth-of-type(2) > div > div > ul > li:nth-of-type(7) > div > div > div > section > div:nth-of-type(2) > button:nth-of-type(2)").click()
@@ -38,6 +48,27 @@ chrome.runtime.onMessage.addListener(function(request, _) {
             } else {
                 document.querySelector("html > body > div > main > div:nth-of-type(2) > div > div > ul > li:nth-of-type(7) > div > div > div > form > fieldset > ul > li > a").click();
                 // Send get code message? There might be more inputs to work through first.
+            }
+        }, 2000);
+    } else if (request.linkedin_code) {
+        console.log("Got code");
+        // TODO This works for TOTP, must check for SMS
+        document.querySelector("#enter-code").value = request.code;
+        if (document.querySelector("html > body > div > main > div:nth-of-type(2) > div > div > ul > li:nth-of-type(7) > div > div > div > form > div:nth-of-type(2) > button:nth-of-type(2)") !== null) {
+            document.querySelector("html > body > div > main > div:nth-of-type(2) > div > div > ul > li:nth-of-type(7) > div > div > div > form > div:nth-of-type(2) > button:nth-of-type(2)").click();
+        } else {
+            document.querySelector("html > body > div > main > div:nth-of-type(2) > div > div > ul > li:nth-of-type(7) > div > div > div > form > div:nth-of-type(3) > button:nth-of-type(2)").click();
+        }
+        setTimeout(() => {
+            if (document.querySelector("html > body > div > main > div:nth-of-type(2) > div > div > ul > li:nth-of-type(7) > a > span:nth-of-type(2)").textContent === "On") {
+                chrome.runtime.sendMessage({
+                    linkedin_finished: true,
+                });
+            } else {
+                chrome.runtime.sendMessage({
+                    linkedin_error: true,
+                    message: "Something went wrong",
+                });
             }
         }, 2000);
     }
