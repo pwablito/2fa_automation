@@ -74,10 +74,17 @@ chrome.runtime.onMessage.addListener(function(request, _) {
     }
 });
 if (window.location.href.includes("linkedin.com/psettings/two-step-verification")) {
-    document.querySelector("html > body > div > main > div:nth-of-type(2) > div > div > ul > li:nth-of-type(7) > div > div > p:nth-of-type(1) > button").click()
-    chrome.runtime.sendMessage({
-        linkedin_get_type: true,
-    });
+    if (document.querySelector("html > body > div > main > div:nth-of-type(2) > div > div > ul > li:nth-of-type(7) > a > span:nth-of-type(2)").textContent === "On") {
+        chrome.runtime.sendMessage({
+            linkedin_error: true,
+            message: "Already setup",
+        });
+    } else {
+        document.querySelector("html > body > div > main > div:nth-of-type(2) > div > div > ul > li:nth-of-type(7) > div > div > p:nth-of-type(1) > button").click()
+        chrome.runtime.sendMessage({
+            linkedin_get_type: true,
+        });
+    }
 } else if (window.location.href.includes("login-submit")) {
     document.querySelector("html > body > div > main > div > section > footer > form:nth-of-type(1) > button").click();
 } else if (window.location.href.includes("login")) {
