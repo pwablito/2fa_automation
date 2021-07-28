@@ -47,12 +47,10 @@ chrome.runtime.onMessage.addListener(function(request, _) {
                 });
             } else {
                 document.querySelector("html > body > div > main > div:nth-of-type(2) > div > div > ul > li:nth-of-type(7) > div > div > div > form > fieldset > ul > li > a").click();
-                // Send get code message? There might be more inputs to work through first.
             }
         }, 2000);
     } else if (request.linkedin_code) {
         console.log("Got code");
-        // TODO This works for TOTP, must check for SMS
         document.querySelector("#enter-code").value = request.code;
         if (document.querySelector("html > body > div > main > div:nth-of-type(2) > div > div > ul > li:nth-of-type(7) > div > div > div > form > div:nth-of-type(2) > button:nth-of-type(2)") !== null) {
             document.querySelector("html > body > div > main > div:nth-of-type(2) > div > div > ul > li:nth-of-type(7) > div > div > div > form > div:nth-of-type(2) > button:nth-of-type(2)").click();
@@ -74,17 +72,19 @@ chrome.runtime.onMessage.addListener(function(request, _) {
     }
 });
 if (window.location.href.includes("linkedin.com/psettings/two-step-verification")) {
-    if (document.querySelector("html > body > div > main > div:nth-of-type(2) > div > div > ul > li:nth-of-type(7) > a > span:nth-of-type(2)").textContent === "On") {
-        chrome.runtime.sendMessage({
-            linkedin_error: true,
-            message: "Already setup",
-        });
-    } else {
-        document.querySelector("html > body > div > main > div:nth-of-type(2) > div > div > ul > li:nth-of-type(7) > div > div > p:nth-of-type(1) > button").click()
-        chrome.runtime.sendMessage({
-            linkedin_get_type: true,
-        });
-    }
+    setTimeout(() => {
+        if (document.querySelector("html > body > div > main > div:nth-of-type(2) > div > div > ul > li:nth-of-type(7) > a > span:nth-of-type(2)").textContent === "On") {
+            chrome.runtime.sendMessage({
+                linkedin_error: true,
+                message: "Already setup",
+            });
+        } else {
+            document.querySelector("html > body > div > main > div:nth-of-type(2) > div > div > ul > li:nth-of-type(7) > div > div > p:nth-of-type(1) > button").click()
+            chrome.runtime.sendMessage({
+                linkedin_get_type: true,
+            });
+        }
+    }, 2000);
 } else if (window.location.href.includes("login-submit")) {
     document.querySelector("html > body > div > main > div > section > footer > form:nth-of-type(1) > button").click();
 } else if (window.location.href.includes("login")) {
