@@ -536,7 +536,7 @@ function initiate_facebook_disable() {
     );
     $("#facebook_disable_div").html(`Please wait...`);
     chrome.windows.create({
-            url: "https://www.facebook.com/security/2fac/disable/intro",
+            url: "https://www.facebook.com/security/2fac/settings",
             focused: false,
             state: "minimized",
         },
@@ -549,6 +549,7 @@ function initiate_facebook_disable() {
         request,
         sender
     ) {
+        console.log("in disable_accountjs", request);
         if (request.facebook_error) {
             $("#facebook_disable_div").html(request.message);
             disable_injection("facebook", "disable");
