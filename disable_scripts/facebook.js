@@ -51,10 +51,21 @@ setTimeout(() => {
         if (window.location.href.includes("?cquick=")) {
             // Inside iframe
             document.querySelector("html > body > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div > a").click();
-            document.querySelector("html > body > div:nth-of-type(6) > div:nth-of-type(2) > div > div > div > div > div > div > div:nth-of-type(3) > span:nth-of-type(2) > div > div:nth-of-type(2) > button > div > div").click();
-                chrome.runtime.sendMessage({
-                    facebook_finished: true
-                });
+            setTimeout(() => {
+                if(document.querySelector("html > body > div:nth-of-type(7) > div:nth-of-type(2) > div > div > div > div > div > div > div:nth-of-type(3) > span:nth-of-type(2) > div > div:nth-of-type(2) > button > div > div") != null){
+                    document.querySelector("html > body > div:nth-of-type(7) > div:nth-of-type(2) > div > div > div > div > div > div > div:nth-of-type(3) > span:nth-of-type(2) > div > div:nth-of-type(2) > button > div > div").click()
+                    chrome.runtime.sendMessage({
+                        facebook_finished: true
+                    });
+                } else if(document.querySelector("html > body > div:nth-of-type(6) > div:nth-of-type(2) > div > div > div > div > div > div > div:nth-of-type(3) > span:nth-of-type(2) > div > div:nth-of-type(2) > button > div > div") != null){
+                    document.querySelector("html > body > div:nth-of-type(6) > div:nth-of-type(2) > div > div > div > div > div > div > div:nth-of-type(3) > span:nth-of-type(2) > div > div:nth-of-type(2) > button > div > div").click();
+                    chrome.runtime.sendMessage({
+                        facebook_finished: true
+                    });
+                }
+                
+            }, 2000);
+                
         } else {
             if (document.querySelector("body > div > div > div > div > div:nth-child(6) > div > div > div > div > iframe") != null) {
                 // logged in- open iframe
