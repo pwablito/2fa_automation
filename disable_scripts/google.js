@@ -1,6 +1,20 @@
 console.log("google.js disable script injected");
 
 
+function rafAsync() {
+    return new Promise(resolve => {
+        requestAnimationFrame(resolve); //faster than set time out
+    });
+}
+
+function checkElement(selector) {
+    if (document.querySelector(selector) === null) {
+        return rafAsync().then(() => checkElement(selector));
+    } else {
+        return Promise.resolve(true);
+    }
+}
+
 chrome.runtime.onMessage.addListener(
     function(request, _) {
         if (request.google_username) {
@@ -37,33 +51,43 @@ chrome.runtime.onMessage.addListener(
     }
 );
 
-if (window.location.href.includes("myaccount.google.com/signinoptions/two-step-verification/enroll-welcome")) {
-    if (document.querySelector("c-wiz > div > div:nth-child(3) > c-wiz > div > div > div > div:nth-child(3) > div > div:nth-child(2) > div > div") != null) {
-        document.querySelector("c-wiz > div > div:nth-child(3) > c-wiz > div > div > div > div:nth-child(3) > div > div:nth-child(2) > div > div").click();
-    } else {
-        document.querySelector("c-wiz > div > div:nth-child(3) > c-wiz > div > div > div:nth-child(3) > div:nth-child(2) > div > div").click()
-    }
-} else if (window.location.href.includes("accounts.google.com/signin/v2/challenge/pwd")) {
+if (window.location.href.includes("accounts.google.com/signin/v2/challenge/pwd")) {
     chrome.runtime.sendMessage({
         "google_get_password": true
     });
-} else if (window.location.href.includes("myaccount.google.com/signinoptions/two-step-verification/enroll")) {
-    if (document.querySelector("c-wiz > div > div:nth-child(3) > c-wiz > div > div > div:nth-child(3) > div > div > div > div > div:nth-child(2) > div:nth-child(2) > div:nth-child(2) > div > div:nth-child(2) > div > div > div > input") != null) {
-        // TODO Perform the logout automation
-    }
-} else if (window.location.href.includes("myaccount.google.com/intro/security")) {
-    document.querySelector("c-wiz > div > div:nth-child(2) > c-wiz > c-wiz > div > div:nth-child(3) > div > div > c-wiz > section > div > div > div > div > div > div > div > div:nth-child(4) > div > a").click();
 } else if (window.location.href.includes("/identifier")) {
     chrome.runtime.sendMessage({
         "google_username": true
     });
 } else if (window.location.href.includes("myaccount.google.com/security")) {
-    window.location.href = "https://myaccount.google.com/signinoptions/two-step-verification/enroll-welcome";
-} else if (window.location.href.includes("accounts.google.com/ServiceLogin/signinchooser")) {
-    document.querySelector("#view_container > div > div > div:nth-child(2) > div > div > div > form > span > section > div > div > div > div > ul > li:nth-child(2) > div").click();
-    setTimeout(() => {
-        chrome.runtime.sendMessage({
-            "google_get_username": true
+    console.log("In myaccount.google.com/security");
+    if( document.readyState !== 'loading' ) {
+        console.log( 'document is already ready, just execute code here' );
+        document.querySelector("html > body > c-wiz > div > div:nth-of-type(2) > c-wiz > c-wiz > div > div:nth-of-type(3) > div > div > c-wiz > section > div:nth-of-type(3) > div > div > div:nth-of-type(3) > div:nth-of-type(2) > a").click();
+    } else {
+        document.addEventListener('DOMContentLoaded', function () {
+            console.log( 'document was not ready, place code here' );
+            document.querySelector("html > body > c-wiz > div > div:nth-of-type(2) > c-wiz > c-wiz > div > div:nth-of-type(3) > div > div > c-wiz > section > div:nth-of-type(3) > div > div > div:nth-of-type(3) > div:nth-of-type(2) > a").click();
+
         });
-    }, 5000);
+    }
+} else if (window.location.href.includes("myaccount.google.com/signinoptions/two-step-verification?")) {
+    function onReady() {
+        if (document.querySelector("html > body > c-wiz > div > div:nth-of-type(3) > c-wiz > div > div > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(2) > div > div")) {
+            document.querySelector("html > body > c-wiz > div > div:nth-of-type(3) > c-wiz > div > div > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(2) > div > div").click();
+        } 
+        checkElement("html > body > div:nth-of-type(11) > div > div:nth-of-type(2) > div:nth-of-type(3) > div > div:nth-of-type(2)") //use whichever selector you want
+        .then((element) => {
+            console.info(element);
+            document.querySelector("html > body > div:nth-of-type(11) > div > div:nth-of-type(2) > div:nth-of-type(3) > div > div:nth-of-type(2)").click()
+            chrome.runtime.sendMessage({
+                "google_finished": true
+            });
+        });
+    }
+    if( document.readyState !== 'loading' ) {
+        onReady();
+    } else {
+        document.addEventListener('DOMContentLoaded', onReady);
+    }
 }

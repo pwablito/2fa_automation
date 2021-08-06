@@ -453,7 +453,7 @@ function initiate_google_disable() {
     );
     $("#google_disable_div").html(`Please wait...`);
     chrome.windows.create({
-            url: "https://myaccount.google.com/signinoptions/two-step-verification/enroll-welcome",
+            url: "https://myaccount.google.com/security",
             focused: false,
             state: "minimized",
         },
