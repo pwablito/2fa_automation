@@ -43,7 +43,11 @@ chrome.runtime.onMessage.addListener(
                         message: error.textContent
                     });
                 } else {
-                    document.querySelector("html > body > div:nth-of-type(15) > div > div > div > div > div:nth-of-type(3) > button").click();
+                    if(document.querySelector("html > body > div:nth-of-type(16) > div > div > div > div > div:nth-of-type(3) > button") != null){
+                        document.querySelector("html > body > div:nth-of-type(16) > div > div > div > div > div:nth-of-type(3) > button").click();
+                    } else {
+                        document.querySelector("html > body > div:nth-of-type(15) > div > div > div > div > div:nth-of-type(3) > button").click();
+                    }
                     setTimeout(() => {
                         chrome.runtime.sendMessage({
                             dropbox_finished: true,
