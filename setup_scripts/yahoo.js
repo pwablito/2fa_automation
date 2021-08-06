@@ -15,7 +15,7 @@ chrome.runtime.onMessage.addListener(
             document.querySelector("#login-username").value = request.email;
             document.querySelector("#login-signin").click();
         } else if (request.yahoo_password) {
-            document.querySelector("#login-passwd") = request.password;
+            document.querySelector("#login-passwd").value = request.password;
             document.querySelector("#login-signin").click();
         } else if (request.yahoo_phone_number) {
             change(document.querySelector("#txtPhoneNumber"), request.number);

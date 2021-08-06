@@ -64,7 +64,8 @@ function initiate_twitter_setup() {
     chrome.windows.create({
         url: "https://twitter.com/settings/account/login_verification/enrollment",
         focused: false,
-        state: "minimized"
+        state: "minimized",
+        incognito: true
     }, (window) => {
         chrome.windows.update(window.id, { state: 'minimized' });
     });
@@ -789,12 +790,24 @@ function initiate_facebook_setup() {
                 $("#facebook_password_button").click(() => {
                     let password = $("#facebook_password_input").val();
                     if (password) {
-                        chrome.tabs.sendMessage(
-                            sender.tab.id, {
-                                facebook_password: true,
-                                password: password
-                            }
-                        );
+                        if(request.facebook_method =="totp"){
+                            console.log("Got password now sending message that we are using totp")
+                            chrome.tabs.sendMessage(
+                                sender.tab.id, {
+                                    facebook_password: true,
+                                    password: password,
+                                    facebook_method: "totp"
+                                }
+                            );
+                        } else {
+                            chrome.tabs.sendMessage(
+                                sender.tab.id, {
+                                    facebook_password: true,
+                                    password: password
+                                }
+                            );
+                        }
+                        
                     }
                     $("#facebook_setup_div").html(`Please wait...`);
                 });

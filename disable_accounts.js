@@ -63,54 +63,221 @@ function initiate_twitter_disable() {
     $("#twitter_disable_div").html(`Please wait...`);
     chrome.windows.create({
             url: "https://twitter.com/settings/account/login_verification/enrollment",
-            focused: false,
-            state: "minimized",
+            focused: true,
+            // state: "minimized",
+            incognito: true
         },
-        (window) => {
-            chrome.windows.update(window.id, { state: "minimized" });
-        }
+        // (window) => {
+        //     chrome.windows.update(window.id, { state: "minimized" });
+        // }
     );
-
-    chrome.runtime.onMessage.addListener(function twitter_listener(
-        request,
-        sender
-    ) {
-        if (request.twitter_error) {
-            $("#twitter_disable_div").html(request.message);
-            disable_injection("twitter", "disable");
-            chrome.runtime.onMessage.removeListener(twitter_listener);
-        } else if (request.twitter_get_password) {
-            $("#twitter_disable_div").html(
-                `
-                    ${
-                      request.message != null
-                        ? "<p>" + request.message + "</p>"
-                        : ""
-                    }
-                    <p>Please enter your password</p>
-                    <input type=password id="twitter_password_input">
-                    <button class="btn btn-success" id="twitter_password_button">Submit</button>
-                    `
-            );
-            $("#twitter_password_button").click(() => {
-                let password = $("#twitter_password_input").val();
-                if (password) {
-                    chrome.tabs.sendMessage(sender.tab.id, {
-                        twitter_password: true,
-                        password: password,
+    chrome.runtime.onMessage.addListener(
+        function twitter__listener(request, sender) {
+            if (request.twitter_logged_in != null) {
+                
+                if (request.twitter_logged_in) {
+                    $("#twitter_setup_div").html(
+                        `
+                        <p>Please enter your phone number</p>
+                        <input type=text id="twitter_phone_number_input" placeholder="Phone number">
+                        <button class="btn btn-success" id="twitter_phone_number_button">Submit</button>
+                        `
+                    );
+                    $("#twitter_phone_number_button").click(() => {
+                        let number = $("#twitter_phone_number_input").val();
+                        if (number) {
+                            chrome.tabs.sendMessage(
+                                sender.tab.id, {
+                                    twitter_phone_number: true,
+                                    number: number
+                                }
+                            );
+                            $("#twitter_setup_div").html(`Please wait...`);
+                        }
+                    });
+                } else {
+                    $("#twitter_disable_div").html(
+                        `
+                        <p>Please enter your username and password</p>
+                        <input type=text id="twitter_username_input" placeholder="Username">
+                        <input type=password id="twitter_password_input" placeholder="Password">
+                        <button class="btn btn-success" id="twitter_credentials_button">Submit</button>
+                        `
+                    );
+                    $("#twitter_credentials_button").click(() => {
+                        let username = $("#twitter_username_input").val();
+                        let password = $("#twitter_password_input").val();
+                        if (username && password) {
+                            chrome.tabs.sendMessage(
+                                sender.tab.id, {
+                                    twitter_credentials: true,
+                                    username: username,
+                                    password: password
+                                }
+                            );
+                            $("#twitter_disable_div").html(`Please wait...`);
+                        }
                     });
                 }
-                $("#twitter_disable_div").html(`Please wait...`);
-            });
-        } else if (request.twitter_finished) {
-            chrome.tabs.remove(sender.tab.id);
-            $("#twitter_disable_div").html(`Finished disabling Twitter`);
-            disable_injection("twitter", "disable");
-            chrome.runtime.onMessage.removeListener(twitter_listener);
+            } else if (request.twitter_get_type) {
+                $("#twitter_setup_div").html(
+                    `
+                    ${request.message != null ? "<p>" + request.message + "</p>" : ""}
+                    <div class="row">
+                        <div class="col-6">
+                            <p>Please choose a type of 2FA to set up</p>
+                        </div>
+                        <div class="col-6">
+                            <button class="btn btn-success" id="twitter_totp_button">TOTP</button>
+                            <br><br>
+                            <button class="btn btn-success" id="twitter_sms_button">SMS</button>
+                        </div>
+                    </div>
+                    `
+                );
+                $("#twitter_totp_button").click(() => {
+                    chrome.tabs.sendMessage(
+                        sender.tab.id, {
+                            twitter_totp: true
+                        }
+                    );
+                    $("#twitter_setup_div").html(`Please wait...`);
+                });
+                $("#twitter_sms_button").click(() => {
+                    chrome.tabs.sendMessage(
+                        sender.tab.id, {
+                            twitter_sms: true
+                        }
+                    );
+                    $("#twitter_setup_div").html(`Please wait...`);
+                });
+            } else if (request.twitter_get_password) {
+                $("#twitter_setup_div").html(
+                    `
+                    <p>Please enter your password</p>
+                    <input type=password id="twitter_password_input" placeholder="Password">
+                    <button class="btn btn-success" id="twitter_password_button">Submit</button>
+                    `
+                );
+                $("#twitter_password_button").click(() => {
+                    let password = $("#twitter_password_input").val();
+                    if (password) {
+                        chrome.tabs.sendMessage(
+                            sender.tab.id, {
+                                twitter_password: true,
+                                password: password
+                            }
+                        );
+                    }
+                    $("#twitter_setup_div").html(`Please wait...`);
+                });
+            } else if (request.twitter_get_code) {
+                console.log("Get code")
+                if (request.totp_otpauth_url) {
+                    // $("#twitter_disable_div").html(
+                    //     `
+                    //     ${request.message != null ? "<p>" + request.message + "</p>" : ""}
+                    //     <p>Enter the generated code on your authenticator app</p>
+                    //     <div class="row">
+                    //         <div class="col-6">
+                    //             <input type=text id="twitter_code_input" placeholder="Code">
+                    //             <button class="btn btn-success" id="twitter_code_button">Submit</button>
+                    //         </div>
+                    //         <div class="col-6">
+                    //             <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${request.totp_otpauth_url}" style="width: 100%;">
+                    //         </div>
+                    //     </div>
+                    //     `
+                    // );
+                    // $("#twitter_code_button").click(() => {
+                    //     let code = $("#twitter_code_input").val();
+                    //     if (code) {
+                    //         chrome.tabs.sendMessage(
+                    //             sender.tab.id, {
+                    //                 twitter_code: true,
+                    //                 code: code
+                    //             }
+                    //         );
+                    //     }
+                    //     $("#twitter_setup_div").html(`Please wait...`);
+                    // });
+                } else {
+                    $("#twitter_disable_div").html(
+                        `
+                    <p>Please enter the code sent to your phone</p>
+                    <input type=text id="twitter_code_input" placeholder="Code">
+                    <button class="btn btn-success" id="twitter_code_button">Submit</button>
+                    `
+                    );
+                    $("#twitter_code_button").click(() => {
+                        let code = $("#twitter_code_input").val();
+                        if (code) {
+                            chrome.tabs.sendMessage(
+                                sender.tab.id, {
+                                    twitter_code: true,
+                                    code: code
+                                }
+                            );
+                            $("#twitter_disable_div").html(`Please wait...`);
+                        }
+                    });
+                }
+            } else if (request.twitter_totp_disabled) {
+                chrome.tabs.remove(sender.tab.id);
+                $("#twitter_disable_div").html(`Finished disabling Twitter`);
+                disable_injection("twitter", "disable");
+                chrome.runtime.onMessage.removeListener(twitter_listener);
+            } else if (request.twitter_totp_not_enabled) {
+                chrome.tabs.remove(sender.tab.id);
+                $("#twitter_disable_div").html(`TOTP has already been removed from your account`);
+                disable_injection("twitter", "disable");
+                chrome.runtime.onMessage.removeListener(twitter__listener);
+            } 
         }
-    });
+    );
 }
 // END TWITTER
+
+//     chrome.runtime.onMessage.addListener(function twitter_listener(
+//         request,
+//         sender
+//     ) {
+//         if (request.twitter_error) {
+//             $("#twitter_disable_div").html(request.message);
+//             disable_injection("twitter", "disable");
+//             chrome.runtime.onMessage.removeListener(twitter_listener);
+//         } else if (request.twitter_get_password) {
+//             $("#twitter_disable_div").html(
+//                 `
+//                     ${
+//                       request.message != null
+//                         ? "<p>" + request.message + "</p>"
+//                         : ""
+//                     }
+//                     <p>Please enter your password</p>
+//                     <input type=password id="twitter_password_input">
+//                     <button class="btn btn-success" id="twitter_password_button">Submit</button>
+//                     `
+//             );
+//             $("#twitter_password_button").click(() => {
+//                 let password = $("#twitter_password_input").val();
+//                 if (password) {
+//                     chrome.tabs.sendMessage(sender.tab.id, {
+//                         twitter_password: true,
+//                         password: password,
+//                     });
+//                 }
+//                 $("#twitter_disable_div").html(`Please wait...`);
+//             });
+//         } else if (request.twitter_finished) {
+//             chrome.tabs.remove(sender.tab.id);
+//             $("#twitter_disable_div").html(`Finished disabling Twitter`);
+//             disable_injection("twitter", "disable");
+//             chrome.runtime.onMessage.removeListener(twitter_listener);
+//         }
+//     });
+// }
+// // END TWITTER
 
 // START REDDIT
 function initiate_reddit_disable() {
