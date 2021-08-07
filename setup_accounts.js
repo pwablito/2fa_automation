@@ -1,5 +1,4 @@
 var setup_processes = [];
-
 $("#setup_accounts_button").click(() => {
     if (!$("#setup_accounts_button").hasClass("disabled")) {
         $("#select_accounts_div").hide();
@@ -357,7 +356,7 @@ function initiate_github_setup() {
     );
     $("#github_setup_div").html(`Please wait...`);
     chrome.windows.create({
-        url: "https://github.com/settings/two_factor_authentication/verify?",
+        url: "https://github.com/login",
         focused: false,
         state: "minimized"
     }, (window) => {
@@ -432,8 +431,28 @@ function initiate_github_setup() {
                     }
                     $("#github_setup_div").html(`Please wait...`);
                 });
-            }
-            if (request.github_get_code) {
+            } else if (request.github_get_phone_number) {
+                $("#github_setup_div").html(
+                    `
+                    ${request.message != null ? "<p>" + request.message + "</p>" : ""}
+                    <p>Please enter your phone number</p>
+                    <input type=text id="github_phone_number_input" placeholder="Phone number">
+                    <button class="btn btn-success" id="github_phone_number_button">Submit</button>
+                    `
+                );
+                $("#github_phone_number_button").click(() => {
+                    let number = $("#github_phone_number_input").val();
+                    if (number) {
+                        chrome.tabs.sendMessage(
+                            sender.tab.id, {
+                                github_phone_number: true,
+                                number: number
+                            }
+                        );
+                        $("#github_setup_div").html(`Please wait...`);
+                    }
+                });
+            } else if (request.github_get_code) {
                 $("#github_setup_div").html(
                     `
                     <p>Please enter the code sent to your phone</p>
@@ -453,8 +472,39 @@ function initiate_github_setup() {
                     }
                     $("#github_setup_div").html(`Please wait...`);
                 });
-            }
-            if (request.github_finished) {
+            } else if (request.github_get_type) {
+                $("#github_setup_div").html(
+                    `
+                    ${request.message != null ? "<p>" + request.message + "</p>" : ""}
+                    <div class="row">
+                        <div class="col-6">
+                            <p>Please choose a type of 2FA to set up</p>
+                        </div>
+                        <div class="col-6">
+                            <button class="btn btn-success" id="github_totp_button">TOTP</button>
+                            <br><br>
+                            <button class="btn btn-success" id="github_sms_button">SMS</button>
+                        </div>
+                    </div>
+                    `
+                );
+                $("#github_totp_button").click(() => {
+                    chrome.tabs.sendMessage(
+                        sender.tab.id, {
+                            github_start_totp: true
+                        }
+                    );
+                    $("#github_setup_div").html(`Please wait...`);
+                });
+                $("#github_sms_button").click(() => {
+                    chrome.tabs.sendMessage(
+                        sender.tab.id, {
+                            github_start_sms: true,
+                        }
+                    );
+                    $("#github_setup_div").html(`Please wait...`);
+                });
+            } else if (request.github_finished) {
                 chrome.tabs.remove(sender.tab.id);
                 $("#github_setup_div").html(`Finished setting up Github`);
                 disable_injection("github", "setup");

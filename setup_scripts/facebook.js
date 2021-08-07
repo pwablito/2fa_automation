@@ -1,14 +1,5 @@
+import {change} from '../util.js'
 console.log("facebook.js setup script injected");
-
-function change(field, value) {
-    field.value = value;
-    field.dispatchEvent(new Event('input', { bubbles: true }));
-    field.dispatchEvent(new Event('change', { bubbles: true }));
-    field.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, cancelable: false, key: '', char: '' }));
-    field.dispatchEvent(new KeyboardEvent('keypress', { bubbles: true, cancelable: false, key: '', char: '' }));
-    field.dispatchEvent(new KeyboardEvent('keyup', { bubbles: true, cancelable: false, key: '', char: '' }));
-}
-
 chrome.runtime.onMessage.addListener(
     function(request, _) {
         if (request.facebook_phone_number) {
