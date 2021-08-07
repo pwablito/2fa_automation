@@ -365,51 +365,30 @@ function initiate_github_setup() {
 
     chrome.runtime.onMessage.addListener(
         function github_listener(request, sender) {
-            if (request.github_logged_in !== null) {
-                if (request.github_logged_in) {
-                    $("#github_setup_div").html(
-                        `
-                        <p>Please enter your phone number</p>
-                        <input type=text id="github_phone_number_input" placeholder="Phone number">
-                        <button class="btn btn-success" id="github_phone_number_button">Submit</button>
-                        `
-                    );
-                    $("#github_phone_number_button").click(() => {
-                        let number = $("#github_phone_number_input").val();
-                        if (number) {
-                            chrome.tabs.sendMessage(
-                                sender.tab.id, {
-                                    github_phone_number: true,
-                                    number: number
-                                }
-                            );
-                            $("#github_setup_div").html(`Please wait...`);
-                        }
-                    });
-                } else {
-                    $("#github_setup_div").html(
-                        `
-                        <p>Please enter your username and password</p>
-                        <input type=text id="github_username_input" placeholder="Username">
-                        <input type=password id="github_password_input" placeholder="Password">
-                        <button class="btn btn-success" id="github_credentials_button">Submit</button>
-                        `
-                    );
-                    $("#github_credentials_button").click(() => {
-                        let username = $("#github_username_input").val();
-                        let password = $("#github_password_input").val();
-                        if (username && password) {
-                            chrome.tabs.sendMessage(
-                                sender.tab.id, {
-                                    github_credentials: true,
-                                    username: username,
-                                    password: password
-                                }
-                            );
-                            $("#github_setup_div").html(`Please wait...`);
-                        }
-                    });
-                }
+            if (request.github_log_in !== null) {
+                $("#github_setup_div").html(
+                    `
+                    <p>Please enter your username and password</p>
+                    <input type=text id="github_username_input" placeholder="Username">
+                    <input type=password id="github_password_input" placeholder="Password">
+                    <button class="btn btn-success" id="github_credentials_button">Submit</button>
+                    `
+                );
+                $("#github_credentials_button").click(() => {
+                    let username = $("#github_username_input").val();
+                    let password = $("#github_password_input").val();
+                    if (username && password) {
+                        chrome.tabs.sendMessage(
+                            sender.tab.id, {
+                                github_credentials: true,
+                                username: username,
+                                password: password
+                            }
+                        );
+                        $("#github_setup_div").html(`Please wait...`);
+                    }
+                });
+                
             }
             if (request.github_get_password) {
                 $("#github_setup_div").html(
@@ -453,25 +432,55 @@ function initiate_github_setup() {
                     }
                 });
             } else if (request.github_get_code) {
-                $("#github_setup_div").html(
-                    `
-                    <p>Please enter the code sent to your phone</p>
-                    <input type=text id="github_code_input" placeholder="Code">
-                    <button class="btn btn-success" id="github_code_button">Submit</button>
-                    `
-                );
-                $("#github_code_button").click(() => {
-                    let code = $("#github_code_input").val();
-                    if (code) {
-                        chrome.tabs.sendMessage(
-                            sender.tab.id, {
-                                github_code: true,
-                                code: code
-                            }
-                        );
-                    }
-                    $("#github_setup_div").html(`Please wait...`);
-                });
+                if (request.totp_secret) {
+                    $("#github_setup_div").html(
+                        `
+                        ${request.message != null ? "<p>" + request.message + "</p>" : ""}
+                        <p>Download Google Authenticator, scan this QR code, and enter the generated code</p>
+                        <div class="row">
+                            <div class="col-6">
+                                <input type=text id="github_code_input" placeholder="Code">
+                                <button class="btn btn-success" id="github_code_button">Submit</button>
+                            </div>
+                            <div class="col-6">
+                                <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=otpauth://totp/github?secret=${request.totp_secret}" style="width: 100%;">
+                            </div>
+                        </div>
+                        `
+                    );
+                    $("#github_code_button").click(() => {
+                        let code = $("#github_code_input").val();
+                        if (code) {
+                            chrome.tabs.sendMessage(
+                                sender.tab.id, {
+                                    github_code: true,
+                                    code: code
+                                }
+                            );
+                        }
+                        $("#github_setup_div").html(`Please wait...`);
+                    });
+                } else {
+                    $("#github_setup_div").html(
+                        `
+                        <p>Please enter the code sent to your phone</p>
+                        <input type=text id="github_code_input" placeholder="Code">
+                        <button class="btn btn-success" id="github_code_button">Submit</button>
+                        `
+                    );
+                    $("#github_code_button").click(() => {
+                        let code = $("#github_code_input").val();
+                        if (code) {
+                            chrome.tabs.sendMessage(
+                                sender.tab.id, {
+                                    github_code: true,
+                                    code: code
+                                }
+                            );
+                        }
+                        $("#github_setup_div").html(`Please wait...`);
+                    });
+                }
             } else if (request.github_get_type) {
                 $("#github_setup_div").html(
                     `
