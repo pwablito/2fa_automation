@@ -49,11 +49,13 @@ chrome.runtime.onMessage.addListener(
                 document.querySelector("[id='two-factor'] > div > single-page-wizard > div:nth-of-type(2) > single-page-wizard-step:nth-of-type(3) > div > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(2) > two-factor-setup-recovery-codes > div > form:nth-of-type(1) > button:nth-of-type(1)").click();
                 setTimeout(() => {
                     document.querySelector("[id='two-factor'] > div > single-page-wizard > div:nth-of-type(2) > single-page-wizard-step:nth-of-type(3) > div > div:nth-of-type(2) > div:nth-of-type(2) > button:nth-of-type(3)").click();
-                    document.querySelector("[id='two-factor'] > div > single-page-wizard > div:nth-of-type(2) > single-page-wizard-step:nth-of-type(4) > div > div:nth-of-type(2) > div:nth-of-type(2) > button:nth-of-type(3)").click();
-                    chrome.runtime.sendMessage({
-                        github_finished: true
-                    });
-                }, 1000);
+                    setTimeout(() => {
+                        document.querySelector("[id='two-factor'] > div > single-page-wizard > div:nth-of-type(2) > single-page-wizard-step:nth-of-type(4) > div > div:nth-of-type(2) > div:nth-of-type(2) > button:nth-of-type(3)").click();
+                        chrome.runtime.sendMessage({
+                            github_finished: true
+                        });
+                    }, 1000);
+                }, 2000);
             }, 1000);
             
             // checkElement("[id='two-factor'] > div > single-page-wizard > div:nth-of-type(2) > single-page-wizard-step:nth-of-type(3) > div > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(2) > two-factor-setup-recovery-codes > div > form:nth-of-type(1) > button:nth-of-type(1)")

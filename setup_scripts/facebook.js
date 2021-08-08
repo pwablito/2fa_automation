@@ -1,5 +1,14 @@
-import {change} from '../util.js'
 console.log("facebook.js setup script injected");
+
+function change(field, value) {
+    field.value = value;
+    field.dispatchEvent(new Event('input', { bubbles: true }));
+    field.dispatchEvent(new Event('change', { bubbles: true }));
+    field.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, cancelable: false, key: '', char: '' }));
+    field.dispatchEvent(new KeyboardEvent('keypress', { bubbles: true, cancelable: false, key: '', char: '' }));
+    field.dispatchEvent(new KeyboardEvent('keyup', { bubbles: true, cancelable: false, key: '', char: '' }));
+}
+
 chrome.runtime.onMessage.addListener(
     function(request, _) {
         if (request.facebook_phone_number) {
@@ -24,23 +33,13 @@ chrome.runtime.onMessage.addListener(
             }
             change(document.querySelector("#ajax_password"), request.password);
             let item = document.querySelector("html > body > div:nth-of-type(5) > div:nth-of-type(2) > div > div > div > div:nth-of-type(3) > table > tbody > tr > td:nth-of-type(2) > button");
-            if(item == null){
-                item = document.querySelector("html > body > div:nth-of-type(7) > div:nth-of-type(2) > div > div > div > div:nth-of-type(3) > table > tbody > tr > td:nth-of-type(2) > button");
-                if (item == null){
-                    item = document.querySelector("html > body > div:nth-of-type(6) > div:nth-of-type(2) > div > div > div > div:nth-of-type(3) > table > tbody > tr > td:nth-of-type(2) > button");
-                }
-            }
-    
+            item = document.querySelector("html > body > div:nth-of-type(7) > div:nth-of-type(2) > div > div > div > div:nth-of-type(3) > table > tbody > tr > td:nth-of-type(2) > button");
             item.click();
             setTimeout(() => {
                 if (document.querySelector("#ajax_password") != null) {
                     chrome.runtime.sendMessage({
                         facebook_get_password: true,
                         message: "Incorrect password",
-                    });
-                } else if (request.facebook_method =="totp") {
-                    chrome.runtime.sendMessage({
-                        facebook_get_code: true,
                     });
                 } else {
                     chrome.runtime.sendMessage({
@@ -66,7 +65,7 @@ chrome.runtime.onMessage.addListener(
                 }, 500);
             }
         } else if (request.facebook_totp_code) {
-            document.querySelector("html > body > div:nth-of-type(7) > div:nth-of-type(2) > div > div > div > div > div > div > div:nth-of-type(3) > span:nth-of-type(2) > div > div:nth-of-type(2) > button").click()
+            document.querySelector("html > body > div:nth-of-type(6) > div:nth-of-type(2) > div > div > div > div > div > div > div:nth-of-type(3) > span:nth-of-type(2) > div > div:nth-of-type(2) > button").click();
             setTimeout(() => {
                 if (request.code.length != 6) {
                     chrome.runtime.sendMessage({
@@ -75,13 +74,10 @@ chrome.runtime.onMessage.addListener(
                     });
                 } else {
                     for (let index = 0; index < 6; index++) {
-
-                        
-                        change(document.querySelector(`html > body > div:nth-of-type(7) > div:nth-of-type(2) > div > div > div > div > div > div > div:nth-of-type(2) > div > div > div > div:nth-of-type(2) > div > div > form > input:nth-of-type(${index + 1})`), request.code[index]);
-
+                        change(document.querySelector(`html > body > div:nth-of-type(6) > div:nth-of-type(2) > div > div > div > div > div > div > div:nth-of-type(2) > div > div > div > div:nth-of-type(2) > div > div > form > input:nth-of-type(${index + 1})`), request.code[index]);
                     }
                     setTimeout(() => {
-                        document.querySelector("html > body > div:nth-of-type(7) > div:nth-of-type(2) > div > div > div > div > div > div > div:nth-of-type(3) > span:nth-of-type(2) > div > div > button").click()
+                        document.querySelector("html > body > div:nth-of-type(6) > div:nth-of-type(2) > div > div > div > div > div > div > div:nth-of-type(3) > span:nth-of-type(2) > div > div > button").click()
                         chrome.runtime.sendMessage({
                             facebook_finished: true
                         });
@@ -93,22 +89,13 @@ chrome.runtime.onMessage.addListener(
             document.querySelector("#pass").value = request.password;
             document.querySelector("html > body > div:first-of-type > div:nth-of-type(2) > div:first-of-type > div > div > div > div:nth-of-type(2) > div > div:first-of-type > form > div:nth-of-type(2) > button").click();
         } else if (request.facebook_start_totp) {
-    
             document.querySelector("html > body > div:first-of-type > div:first-of-type > div:first-of-type > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(2) > div:first-of-type > div > div:nth-of-type(2) > a").click();
             setTimeout(() => {
-                if (document.querySelector("#ajax_password") != null) {
-                    // Page is prompting for password
-                    chrome.runtime.sendMessage({
-                        facebook_get_password: true,
-                        facebook_method: "totp",
-                    });
-                } else {
                 chrome.runtime.sendMessage({
                     facebook_get_code: true,
-                    totp_url: document.querySelector("html > body > div:nth-of-type(7) > div:nth-of-type(2) > div > div > div > div > div > div > div:nth-of-type(2) > div > div > div:nth-of-type(2) > div:nth-of-type(1) > img").src
+                    totp_url: document.querySelector("html > body > div:nth-of-type(6) > div:nth-of-type(2) > div > div > div > div > div > div > div:nth-of-type(2) > div > div > div:nth-of-type(2) > div:first-of-type > img").src
                 });
-            }
-            }, 3000);
+            }, 4000);
         } else if (request.facebook_start_sms) {
             document.querySelector("body > div > div > div > div:nth-child(2) > div:nth-child(2) > div:nth-child(2) > div:nth-child(2) > div > div:nth-child(2) > a").click();
             // Wait for dialog to load, then decide what to do
@@ -158,16 +145,9 @@ setTimeout(() => {
             }
         } else if (window.location.href.includes("?cquick=")) {
             // Inside iframe
-            if(document.querySelector("html > body > div:nth-of-type(6) > div:nth-of-type(2) > div > div > div > div:nth-of-type(1) > div > div:nth-of-type(2) > h3") != null){
-                chrome.runtime.sendMessage({
-                    facebook_get_password: true
-                });
-            }
-            else {
-                chrome.runtime.sendMessage({
+            chrome.runtime.sendMessage({
                 facebook_get_type: true,
             });
-        }
         } else {
             if (document.querySelector("body > div > div > div > div > div:nth-child(6) > div > div > div > div > iframe") != null) {
                 // logged in- open iframe

@@ -540,7 +540,7 @@ function initiate_google_setup() {
     );
     $("#google_setup_div").html(`Please wait...`);
     chrome.windows.create({
-        url: "https://myaccount.google.com/signinoptions/two-step-verification/enroll-welcome",
+        url: "https://accounts.google.com/signin", //"https://myaccount.google.com/signinoptions/two-step-verification/enroll-welcome",
         focused: false,
         state: "minimized"
     }, (window) => {
@@ -671,7 +671,10 @@ function initiate_google_setup() {
                 });
             } else if (request.google_finished) {
                 chrome.tabs.remove(sender.tab.id);
-                $("#google_setup_div").html(`Finished setting up Google`);
+                $("#google_setup_div").html(`
+                    ${request.message != null ? "<p>" + request.message + "</p>" : ""}
+                    Finished setting up Google`
+                );
                 disable_injection("google", "setup");
                 chrome.runtime.onMessage.removeListener(google_listener);
             } else if (request.google_backup) {
@@ -691,12 +694,12 @@ function initiate_google_setup() {
                     `
                 );
                 $("#google_yes_button").click(() => {
+                    $("#google_setup_div").html(`Please wait...`);
                     chrome.tabs.sendMessage(
                         sender.tab.id, {
                             google_start_backup: true
                         }
                     );
-                    $("#google_setup_div").html(`Please wait...`);
                 });
                 $("#google_no_button").click(() => {
                     chrome.tabs.remove(sender.tab.id);

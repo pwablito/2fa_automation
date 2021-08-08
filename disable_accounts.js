@@ -361,7 +361,7 @@ function initiate_github_disable() {
     );
     $("#github_disable_div").html(`Please wait...`);
     chrome.windows.create({
-            url: "https://github.com/settings/security",
+            url: "https://github.com/login",
             focused: false,
             state: "minimized",
         },
@@ -374,30 +374,23 @@ function initiate_github_disable() {
         request,
         sender
     ) {
-        if (request.github_error) {
-            $("#github_disable_div").html(request.message);
-            disable_injection("github", "disable");
-            chrome.runtime.onMessage.removeListener(github_listener);
-        } else if (request.github_get_code) {
+        if (request.github_get_password) {
             $("#github_disable_div").html(
                 `
-                    ${
-                      request.message != null
-                        ? "<p>" + request.message + "</p>"
-                        : ""
-                    }
-                    <p>Please enter your 2FA code (either from Google Authenticator or SMS)</p>
-                    <input type=text id="github_code_input">
-                    <button class="btn btn-success" id="github_code_button">Submit</button>
-                    `
+                <p>Please enter your password</p>
+                <input type=password id="github_password_input">
+                <button class="btn btn-success" id="github_password_button">Submit</button>
+                `
             );
-            $("#github_code_button").click(() => {
-                let code = $("#github_code_input").val();
-                if (code) {
-                    chrome.tabs.sendMessage(sender.tab.id, {
-                        github_code: true,
-                        code: code,
-                    });
+            $("#github_password_button").click(() => {
+                let password = $("#github_password_input").val();
+                if (password) {
+                    chrome.tabs.sendMessage(
+                        sender.tab.id, {
+                            github_password: true,
+                            password: password
+                        }
+                    );
                 }
                 $("#github_disable_div").html(`Please wait...`);
             });
@@ -427,6 +420,12 @@ function initiate_github_disable() {
                 }
                 $("#github_disable_div").html(`Please wait...`);
             });
+        } else if (request.github_error) {
+            chrome.tabs.remove(sender.tab.id);
+            $("#github_disable_div").html(request.message);
+            disable_injection("github", "disable");
+            chrome.runtime.onMessage.removeListener(github_listener);
+
         } else if (request.github_finished) {
             chrome.tabs.remove(sender.tab.id);
             $("#github_disable_div").html(`Finished disabling GitHub`);

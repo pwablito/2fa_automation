@@ -80,9 +80,9 @@ if (window.location.href.includes("accounts.google.com/signin/v2/challenge/pwd")
         .then((element) => {
             console.info(element);
             document.querySelector("html > body > div:nth-of-type(11) > div > div:nth-of-type(2) > div:nth-of-type(3) > div > div:nth-of-type(2)").click()
-            chrome.runtime.sendMessage({
-                "google_finished": true
-            });
+            // chrome.runtime.sendMessage({
+            //     "google_finished": true
+            // });
         });
     }
     if( document.readyState !== 'loading' ) {
