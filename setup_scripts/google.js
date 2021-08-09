@@ -13,9 +13,9 @@ async function waitUntilPageLoad(document,maxWait) {
     return false;
 }
 
-async function waitUntilElementLoad(elem,  maxWait) {
+async function waitUntilElementLoad(document, elemXPath,  maxWait) {
     for (let i = 0; i < maxWait*10; i++) {
-        if(elem) { return true;}
+        if(document.querySelector(elemXPath)) { return true;}
         console.log(i);
         await timer(100); // then the created Promise can be awaited
     }
@@ -45,7 +45,8 @@ async function handleReceivedMessage(request) {
         document.querySelector("[type=tel]").value = request.number;
         let phoneNumberError =document.querySelector("html > body > c-wiz > div > div:nth-of-type(3) > c-wiz > div > div > div:nth-of-type(3) > div:nth-of-type(1) > div > div:nth-of-type(1) > div > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(2) > div > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(2)");
         document.querySelector("c-wiz > div > div:nth-child(3) > c-wiz > div > div > div:nth-child(3) > div:nth-child(2) > div > div:nth-child(3) > div").click();
-        let textCodeInput = document.querySelector("c-wiz > div > div:nth-child(3) > c-wiz > div > div > div:nth-child(3) > div > div > div > div > div:nth-child(2) > div:nth-child(2) > div:nth-child(2) > div > div:nth-child(2) > div > div > div > input");
+        let textCodeInputXPath = "c-wiz > div > div:nth-child(3) > c-wiz > div > div > div:nth-child(3) > div > div > div > div > div:nth-child(2) > div:nth-child(2) > div:nth-child(2) > div > div:nth-child(2) > div > div > div > input";
+        // let textCodeInput = document.querySelector("c-wiz > div > div:nth-child(3) > c-wiz > div > div > div:nth-child(3) > div > div > div > div > div:nth-child(2) > div:nth-child(2) > div:nth-child(2) > div > div:nth-child(2) > div > div > div > input");
         await timer(1000);
         console.log("1"), phoneNumberError.innerHTML;
         if (phoneNumberError.innerHTML != "") {
@@ -54,7 +55,7 @@ async function handleReceivedMessage(request) {
                 message: phoneNumberError.innerHTML
             });
             console.log("2");
-        } else if (await waitUntilElementLoad(textCodeInput, 1)) {
+        } else if (await waitUntilElementLoad(document, textCodeInputXPath, 1)) {
             chrome.runtime.sendMessage({
                 "google_get_code": true,
             });
@@ -64,9 +65,10 @@ async function handleReceivedMessage(request) {
         let codeInput = document.querySelector("c-wiz > div > div:nth-child(3) > c-wiz > div > div > div:nth-child(3) > div > div > div > div > div:nth-child(2) > div:nth-child(2) > div:nth-child(2) > div > div > div > div > input");
         codeInput.value = request.code;
         document.querySelector("c-wiz > div > div:nth-child(3) > c-wiz > div > div > div:nth-child(3) > div:nth-child(2) > div > div:nth-child(3) > div").click()
-        let codeError = document.querySelector("html > body > c-wiz > div > div:nth-of-type(3) > c-wiz > div > div > div:nth-of-type(3) > div:nth-of-type(1) > div > div:nth-of-type(1) > div > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(2) > div > div:nth-of-type(2) > div:nth-of-type(2)");
+        let codeErrorXPath ="html > body > c-wiz > div > div:nth-of-type(3) > c-wiz > div > div > div:nth-of-type(3) > div:nth-of-type(1) > div > div:nth-of-type(1) > div > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(2) > div > div:nth-of-type(2) > div:nth-of-type(2)";
+        let codeError = document.querySelector(codeErrorXPath);
         console.log("A");
-        if (await waitUntilElementLoad(codeError , 0.5) && codeError.innerHTML != "") {
+        if (await waitUntilElementLoad(document, codeErrorXPath , 0.5) && codeError.innerHTML != "") {
             chrome.runtime.sendMessage({
                 google_get_code: true,
                 message: codeError.innerHTML
@@ -77,45 +79,45 @@ async function handleReceivedMessage(request) {
             document.querySelector("c-wiz > div > div:nth-child(3) > c-wiz > div > div > div:nth-child(3) > div:nth-child(2) > div > div:nth-child(3) > div:nth-child(2)").click();
         }
     } else if (request.google_start_backup) {
-        document.querySelector("html > body > c-wiz > div > div:nth-of-type(3) > c-wiz > div > div > div:nth-of-type(1) > div:nth-of-type(12) > div:nth-of-type(2) > div > div > div > div:nth-of-type(2) > div > div:nth-of-type(3) > div").click();
-            setTimeout(() => {
-                document.querySelector("html > body > div > div > div:nth-of-type(2) > div:nth-of-type(3) > div > div:nth-of-type(3)").click();
-                setTimeout(() => {
-                    chrome.runtime.sendMessage({
-                        google_get_totp_code: true,
-                        totp_url: document.querySelector("html > body > div > div > div:nth-of-type(2) > span > div > div > div > div:nth-of-type(2) > div:nth-of-type(2) > div > img").src
-                    });
-                    document.querySelector("html > body > div > div > div:nth-of-type(2) > div:nth-of-type(3) > div > div:nth-of-type(3)").click();
-                }, 1500);
-            }, 1500);
-
         // document.querySelector("html > body > c-wiz > div > div:nth-of-type(3) > c-wiz > div > div > div:nth-of-type(1) > div:nth-of-type(12) > div:nth-of-type(2) > div > div > div > div:nth-of-type(2) > div > div:nth-of-type(3) > div").click();
-        // let popUpElemNextButton = document.querySelector("html > body > div > div > div:nth-of-type(2) > div:nth-of-type(3) > div > div:nth-of-type(3)");
-        // if (await waitUntilElementLoad(popUpElemNextButton, 2)) {
-        //     for (let i = 0; i < 20; i++) {
-        //             if(popUpElemNextButton.click()) {
-        //                 setTimeout(() => {}, 1000); // 100 ms delay. Waiting for the button to be clickable
-        //                 console.log(i)
-        //                 break;
-        //             }
-        //     }
-        // }
-        // let qrCode = document.querySelector("html > body > div > div > div:nth-of-type(2) > span > div > div > div > div:nth-of-type(2) > div:nth-of-type(2) > div > img")
-        // if (await waitUntilElementLoad(qrCode, 2)) {
-        //     popUpElemNextButton.click();
-        //     chrome.runtime.sendMessage({
-        //         google_get_totp_code: true,
-        //         totp_url: qrCode.src
-        //     });
-        //     document.querySelector("html > body > div > div > div:nth-of-type(2) > div:nth-of-type(3) > div > div:nth-of-type(3)").click();
-        // }
+        //     setTimeout(() => {
+        //         document.querySelector("html > body > div > div > div:nth-of-type(2) > div:nth-of-type(3) > div > div:nth-of-type(3)").click();
+        //         setTimeout(() => {
+        //             chrome.runtime.sendMessage({
+        //                 google_get_totp_code: true,
+        //                 totp_url: document.querySelector("html > body > div > div > div:nth-of-type(2) > span > div > div > div > div:nth-of-type(2) > div:nth-of-type(2) > div > img").src
+        //             });
+        //             document.querySelector("html > body > div > div > div:nth-of-type(2) > div:nth-of-type(3) > div > div:nth-of-type(3)").click();
+        //         }, 1500);
+        //     }, 1500);
+
+        document.querySelector("html > body > c-wiz > div > div:nth-of-type(3) > c-wiz > div > div > div:nth-of-type(1) > div:nth-of-type(12) > div:nth-of-type(2) > div > div > div > div:nth-of-type(2) > div > div:nth-of-type(3) > div").click();
+        let popUpElemNextButtonXPath = "html > body > div > div > div:nth-of-type(2) > div:nth-of-type(3) > div > div:nth-of-type(3)";
+        if (await waitUntilElementLoad(document, popUpElemNextButtonXPath, 2)) {
+            for (let i = 0; i < 20; i++) {
+                    if(document.querySelector(popUpElemNextButtonXPath).click()) {
+                        await timer(100); // 100 ms delay. Waiting for the button to be clickable
+                        break;
+                    }
+            }
+        }
+        let qrCodeXPath = "html > body > div > div > div:nth-of-type(2) > span > div > div > div > div:nth-of-type(2) > div:nth-of-type(2) > div > img";
+        if (await waitUntilElementLoad(document, qrCodeXPath, 2)) {
+            document.querySelector(popUpElemNextButtonXPath).click();
+            chrome.runtime.sendMessage({
+                google_get_totp_code: true,
+                totp_url: document.querySelector(qrCodeXPath).src
+            });
+            document.querySelector("html > body > div > div > div:nth-of-type(2) > div:nth-of-type(3) > div > div:nth-of-type(3)").click();
+        }
     } else if (request.google_totp_code) {
         document.querySelector("html > body > div > div > div:nth-of-type(2) > span > div > div > div > div:nth-of-type(2) > div:nth-of-type(2) > div > div > div:first-of-type > div > div:first-of-type > input").value = request.code;
         document.querySelector("html > body > div > div > div:nth-of-type(2) > div:nth-of-type(3) > div > div:nth-of-type(4)").click();
 
         await timer(1000);
-        let codeError = document.querySelector("html > body > div:nth-of-type(12) > div > div:nth-of-type(2) > span > div > div > div > div:nth-of-type(2) > div:nth-of-type(2) > div > div > div:nth-of-type(2) > div:nth-of-type(2)");
-        if (await waitUntilElementLoad(codeError , 0.5) && codeError.innerHTML != "") {
+        let codeErrorXPath = "html > body > div:nth-of-type(12) > div > div:nth-of-type(2) > span > div > div > div > div:nth-of-type(2) > div:nth-of-type(2) > div > div > div:nth-of-type(2) > div:nth-of-type(2)";
+        let codeError = document.querySelector(codeErrorXPath);
+        if (await waitUntilElementLoad(document, codeErrorXPath , 0.5) && codeError.innerHTML != "") {
             chrome.runtime.sendMessage({
                 google_get_totp_code: true,
                 message: codeError.innerHTML
@@ -216,7 +218,7 @@ chrome.runtime.onMessage.addListener(
                 // Get started page
                 else if (document.querySelector("#yDmH0d > c-wiz > div > div:nth-of-type(3) > c-wiz > div > div > div:nth-of-type(3) > div:nth-of-type(2) > div > div")) {
                     document.querySelector("#yDmH0d > c-wiz > div > div:nth-of-type(3) > c-wiz > div > div > div:nth-of-type(3) > div:nth-of-type(2) > div > div").click();
-                    await waitUntilElementLoad(document.querySelector("[type=tel]"), 2);
+                    await waitUntilElementLoad(document, "[type=tel]", 2);
                 }
                 if (document.querySelector("[type=tel]")) { // phone number fill page
                     chrome.runtime.sendMessage({
@@ -228,9 +230,9 @@ chrome.runtime.onMessage.addListener(
             }
         } else if (window.location.href.includes("signinchooser")) {
             // In case all the accounts are logged out and google redirects to choose account. We redirect to select a new account always. 
-            let UseAnotherAccountButton = document.querySelector("html > body > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div > div:nth-of-type(2) > div > div > div:nth-of-type(2) > div > div:nth-of-type(1) > div > form > span > section > div > div > div > div:nth-of-type(1) > ul > li:nth-of-type(2) > div > div > div:nth-of-type(2)").click();
-            if(await waitUntilElementLoad(UseAnotherAccountButton, 2)) {
-                UseAnotherAccountButton.click();
+            let UseAnotherAccountButtonXPath = "html > body > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div > div:nth-of-type(2) > div > div > div:nth-of-type(2) > div > div:nth-of-type(1) > div > form > span > section > div > div > div > div:nth-of-type(1) > ul > li:nth-of-type(2) > div > div > div:nth-of-type(2)";
+            if(await waitUntilElementLoad(document, UseAnotherAccountButtonXPath, 2)) {
+                document.querySelector(UseAnotherAccountButtonXPath).click();
             }
         } else if (window.location.href.includes("/signin/") || window.location.href.includes("/identifier")) {
             if (document.querySelector("[type=email]") && document.querySelector("[type=email]").value == "") {
