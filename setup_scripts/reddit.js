@@ -16,14 +16,13 @@ chrome.runtime.onMessage.addListener(
             document.querySelector("#loginPassword").value = request.password;
             document.querySelector("html > body > div > main > div:first-of-type > div > div:nth-of-type(2) > form > fieldset:nth-of-type(5) > button").click();
             setTimeout(() => {
-                if (document.querySelector("html > body > div > div > div:nth-of-type(2) > main > form:first-of-type > fieldset:first-of-type > div").textContent !== "") {
-                    document.querySelector("html > body > div > div > div:nth-of-type(2) > main > form:first-of-type > fieldset:first-of-type > div").textContent = "";
+                if (document.querySelector("fieldset.AnimatedForm__field.m-required.login.hideable.m-invalid > div").textContent !== "") {
                     chrome.runtime.sendMessage({
                         reddit_get_credentials: true,
                         message: "Invalid credentials"
                     });
                 }
-            });
+            }, 2000);
         } else if (request.reddit_password) {
             change(document.querySelector('#password'), request.password);
             document.querySelector("html > body > div > div > div:nth-of-type(2) > main > form:first-of-type > fieldset:nth-of-type(2) > button").click();
