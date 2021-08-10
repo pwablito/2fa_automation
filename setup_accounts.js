@@ -1347,7 +1347,7 @@ function initiate_dropbox_setup() {
     );
     $("#dropbox_setup_div").html(`Please wait...`);
     chrome.windows.create({
-        url: "https://www.dropbox.com/account/security",
+        url: "https://www.dropbox.com/login", //"https://www.dropbox.com/account/security",
         focused: false,
         state: "minimized"
     }, (window) => {
