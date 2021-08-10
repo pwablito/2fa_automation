@@ -47,7 +47,7 @@ async function handleReceivedMessage(request) {
     if (request.dropbox_credentials) {
         change(document.querySelector("input[type='email']"), request.username);
         change(document.querySelector("input[type='password']"), request.password);
-        getElementByXpath(document, "//div[contains(text(),'Sign in')]").click();
+        getElementByXpath(document, "//button[./div = 'Sign in']").click();
     } else if (request.dropbox_password) {
         change(document.querySelector("input[type='password']"), request.password);
         if(getElementByXpath(document, "//*[contains(text(),'Next')]/..")){
