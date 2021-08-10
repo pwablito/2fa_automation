@@ -1453,7 +1453,8 @@ function initiate_dropbox_setup() {
                             chrome.tabs.sendMessage(
                                 sender.tab.id, {
                                     dropbox_code: true,
-                                    code: code
+                                    code: code,
+                                    totp_secret: request.totp_secret
                                 }
                             );
                         }
@@ -1515,7 +1516,9 @@ function initiate_dropbox_setup() {
                 });
             } else if (request.dropbox_finished) {
                 chrome.tabs.remove(sender.tab.id);
-                $("#dropbox_setup_div").html(`Finished setting up Dropbox`);
+                $("#dropbox_setup_div").html(`
+                ${request.message != null ? "<p>" + request.message + "</p>" : ""}
+                Finished setting up Dropbox`);
                 disable_injection("dropbox", "setup");
                 chrome.runtime.onMessage.removeListener(dropbox_listener);
             }

@@ -34,6 +34,15 @@ async function waitUntilElementLoad(document, elemXPath,  maxWait) {
     return false;
 }
 
+function exitScriptWithError() {
+    // When debugging comment out code of this function. This will stop closing of background pages.
+    chrome.runtime.sendMessage({
+        dropbox_error: true,
+        message: "Sorry! Something went wrong. ",
+        message_for_dev : window.location.href
+    });
+}
+
 async function handleReceivedMessage(request) {
     if (request.dropbox_credentials) {
         change(document.querySelector("input[type='email']"), request.username);
@@ -43,10 +52,10 @@ async function handleReceivedMessage(request) {
         change(document.querySelector("input[type='password']"), request.password);
         if(getElementByXpath(document, "//*[contains(text(),'Next')]/..")){
             getElementByXpath(document, "//*[contains(text(),'Next')]/..").click()
-        }
+        } else {exitScriptWithError();}
         let errorMsgXPath = "div[id*=error-message]";
         let SMSChoice = "[id=sms-choice]"
-        if(await waitUntilElementLoad(document, SMSChoice, 2)) {
+        if(await waitUntilElementLoad(document, SMSChoice, 1)) {
             chrome.runtime.sendMessage({
                 dropbox_get_type: true,
             });
@@ -55,15 +64,15 @@ async function handleReceivedMessage(request) {
                 dropbox_get_password: true,
                 message: document.querySelector(errorMsgXPath).textContent
             });
-        }
+        } else {exitScriptWithError();}
     } else if (request.dropbox_phone_number) {
         let twofawindow = document.querySelector("#twofactor-enter-phone")
         if(twofawindow.querySelector("input[type='text']")){
             change(twofawindow.querySelector("input[type='text']"),request.number )
-        }         
+        } else {exitScriptWithError();}
         if(getElementByXpath(document, "//*[contains(text(),'Next')]/..")){
             getElementByXpath(document, "//*[contains(text(),'Next')]/..").click()
-        }
+        } else {exitScriptWithError();}
         let errorMsgXPath = "div[id*=error-message]";
         let phoneCodeXPath = "[id=phone-code]"
         if(await waitUntilElementLoad(document, phoneCodeXPath, 2)) {
@@ -75,33 +84,35 @@ async function handleReceivedMessage(request) {
                 dropbox_get_phone_number: true,
                 message: document.querySelector(errorMsgXPath).textContent
             });
-        }
+        } else {exitScriptWithError();}
     } else if (request.dropbox_code) {
         change(document.querySelector("#phone-code"), request.code);
         if(getElementByXpath(document, "//*[contains(text(),'Next')]/..")){
             getElementByXpath(document, "//*[contains(text(),'Next')]/..").click();
-        }
+        } else {exitScriptWithError();}
 
-        let errorMsgXPath = "div[id*=error-message]";
+        // let errorMsgXPath = "div[id*=error-message]";
         let backupDescriptionXPath = "[id=backup-phone-number-description]"
         if(await waitUntilElementLoad(document,  backupDescriptionXPath, 2)) {
             if(getElementByXpath(document, "//*[contains(text(),'Next')]/..")){
                 getElementByXpath(document, "//*[contains(text(),'Next')]/..").click();
-            }
-            if (await waitUntilElementLoad(document, "backup-code-list-container", 2)) {
+            } else {exitScriptWithError();}
+            if (await waitUntilElementLoad(document, "#backup-code-list-container", 2)) {
+                getElementByXpath(document, "//*[contains(text(),'Next')]/..").click();
+            } else {exitScriptWithError();}
+            if (await waitUntilElementLoad(document, "[id='twofactor-done'] > div:nth-of-type(2) > div > p", 2)) {
                 getElementByXpath(document, "//*[contains(text(),'Next')]/..").click();
             }
-            await waitUntilElementLoad(document, "[id='twofactor-done'] > div:nth-of-type(2) > div > p");
-            getElementByXpath(document, "//*[contains(text(),'Next')]/..").click();
             chrome.runtime.sendMessage({
                 dropbox_finished: true,
             });
-        } else if (await waitUntilElementLoad(document, errorMsgXPath, 2) && document.querySelector(errorMsgXPath) != "") {
+        } else if (getElementByXpath(document, "//*[contains(text(),'Invalid')]")) {
             chrome.runtime.sendMessage({
                 dropbox_get_code: true,
-                message: document.querySelector(errorMsgXPath).textContent
+                message: getElementByXpath(document, "//*[contains(text(),'Invalid')]").innerHTML,
+                totp_secret: request.totp_secret    // in case of totp, we need to recieve the QR code value from the extnesion to send it back for next retry/
             });
-        }
+        } else {exitScriptWithError();}
     } else if (request.dropbox_start_sms) {
         document.querySelector("#use-sms").click();
         if(getElementByXpath(document, "//*[contains(text(),'Next')]/..")){
@@ -142,19 +153,31 @@ chrome.runtime.onMessage.addListener(
     try {
         if (window.location.href.includes("dropbox.com/account/security")) {
             await waitUntilPageLoad(document, 2);
-            let turnOnButton = getElementByXpath(document, "//*[contains(text(),'Two-')]/../../div[2]/label/input");
-            let GetStartedButtonXPath = "div[id='twofactor-start'] > div:nth-of-type(3) > button:nth-of-type(2)";
-            if (turnOnButton) {
-                turnOnButton.click()
-            }
-            if (await waitUntilElementLoad(document, GetStartedButtonXPath, 2)) {
-                document.querySelector(GetStartedButtonXPath). click();
-            }
-            let passwordInputXPath = "input[type='password']";
-            if (await waitUntilElementLoad(document, passwordInputXPath, 2)) {
+            await waitUntilElementLoad(document, "label[aria-pressed=false]", 2)
+            let labelTurnedOff = getElementByXpath(document, "//*[contains(text(),'Two-')]/../../div[2]").querySelector("label[aria-pressed=false]");
+            let labelTurnedOn = getElementByXpath(document, "//*[contains(text(),'Two-')]/../../div[2]").querySelector("label[aria-pressed=true]");
+            if (labelTurnedOff) {
+                let turnOnButton = getElementByXpath(document, "//*[contains(text(),'Two-')]/../../div[2]/label/input");
+                let GetStartedButtonXPath = "div[id='twofactor-start'] > div:nth-of-type(3) > button:nth-of-type(2)";
+                if (turnOnButton) {
+                    turnOnButton.click()
+                } else {exitScriptWithError();}
+                if (await waitUntilElementLoad(document, GetStartedButtonXPath, 2)) {
+                    document.querySelector(GetStartedButtonXPath). click();
+                } else {exitScriptWithError();}
+                let passwordInputXPath = "input[type='password']";
+                if (await waitUntilElementLoad(document, passwordInputXPath, 2)) {
+                    chrome.runtime.sendMessage({
+                        dropbox_get_password: true,
+                    });
+                } else {exitScriptWithError();}
+            } else if (labelTurnedOn) {
                 chrome.runtime.sendMessage({
-                    dropbox_get_password: true,
+                    dropbox_finished: true,
+                    message: "2FA is already enabled"
                 });
+            } else {
+                exitScriptWithError();
             }
         } else if (window.location.href.includes("login")) {
             await waitUntilPageLoad(document, 2);
@@ -162,17 +185,13 @@ chrome.runtime.onMessage.addListener(
                 chrome.runtime.sendMessage({
                     dropbox_get_credentials: true,
                 });
-            } else { 
-                chrome.runtime.sendMessage({
-                    dropbox_error: true,
-                    message: "Something went wrong",
-                    message_for_dev : window.location.href
-                });
+            } else { exitScriptWithError();
             }
         } else if (window.location.href.includes("dropbox.com/h")) {
             window.location.href = "https://www.dropbox.com/account/security";
         }
     } catch (e) {
+        console.log(e);
         // Deal with the fact the chain failed
     }
 })();
