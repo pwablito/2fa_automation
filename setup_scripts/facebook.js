@@ -81,20 +81,7 @@ async function handleReceievedMessage(request) {
                 facebook_get_password: true,
                 message: "Incorrect password",
             });
-        } 
-
-        // setTimeout(() => {
-        //     if (document.querySelector("[type=password]") != null) {
-        //         chrome.runtime.sendMessage({
-        //             facebook_get_password: true,
-        //             message: "Incorrect password",
-        //         });
-        //     } else {
-        //         chrome.runtime.sendMessage({
-        //             facebook_get_phone_number: true,
-        //         });
-        //     }
-        // }, 2000);
+        } else {exitScriptWithError();}
     } else if (request.facebook_sms_code) {
         if (request.code.length != 6) {
             chrome.runtime.sendMessage({
@@ -140,40 +127,17 @@ async function handleReceievedMessage(request) {
                     message: "Invalid code"
                 });
             } else {
-                // getElementByXpath(document, "//*[contains(text(),'Done')]/../..").click();
                 chrome.runtime.sendMessage({
                     facebook_finished: true
                 });
             }
         }
-        // document.querySelector("html > body > div:nth-of-type(6) > div:nth-of-type(2) > div > div > div > div > div > div > div:nth-of-type(3) > span:nth-of-type(2) > div > div:nth-of-type(2) > button").click();
-        // setTimeout(() => {
-        //     if (request.code.length != 6) {
-        //         chrome.runtime.sendMessage({
-        //             facebook_get_code: true,
-        //             message: "Invalid code"
-        //         });
-        //     } else {
-        //         for (let index = 0; index < 6; index++) {
-        //             change(document.querySelector(`html > body > div:nth-of-type(6) > div:nth-of-type(2) > div > div > div > div > div > div > div:nth-of-type(2) > div > div > div > div:nth-of-type(2) > div > div > form > input:nth-of-type(${index + 1})`), request.code[index]);
-        //         }
-        //         setTimeout(() => {
-        //             document.querySelector("html > body > div:nth-of-type(6) > div:nth-of-type(2) > div > div > div > div > div > div > div:nth-of-type(3) > span:nth-of-type(2) > div > div > button").click()
-        //             chrome.runtime.sendMessage({
-        //                 facebook_finished: true
-        //             });
-        //         }, 500);
-        //     }
-        // }, 2000);
     } else if (request.facebook_credentials) {
         document.querySelector("#email").value = request.email;
         document.querySelector("#pass").value = request.password;
         document.querySelector("[name=login]").click();
     } else if (request.facebook_start_totp) {
         getElementByXpath(document, "//*[contains(text(),'Use Authentication App')]").click();
-        // document.querySelector("html > body > div:first-of-type > div:first-of-type > div:first-of-type > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(2) > div:first-of-type > div > div:nth-of-type(2) > a").click();
-        // document.querySelector("[src*= 'https://www.facebook.com/qr/show/code']")
-
         if (await waitUntilElementLoad(document, "[src*= 'https://www.facebook.com/qr/show/code']", 2)) {
             chrome.runtime.sendMessage({
                 facebook_get_code: true,
@@ -185,12 +149,6 @@ async function handleReceievedMessage(request) {
                 facebook_get_password: true
             });
         }
-        // setTimeout(() => {
-        //     chrome.runtime.sendMessage({
-        //         facebook_get_code: true,
-        //         totp_url: document.querySelector("html > body > div:nth-of-type(6) > div:nth-of-type(2) > div > div > div > div > div > div > div:nth-of-type(2) > div > div > div:nth-of-type(2) > div:first-of-type > img").src
-        //     });
-        // }, 4000);
     } else if (request.facebook_start_sms) {
         getElementByXpath(document, "//*[contains(text(),'Use Text Message')]").click();
         if (await waitUntilElementLoad(document, "[placeholder='Mobile phone number']", 1)) {
@@ -212,40 +170,9 @@ async function handleReceievedMessage(request) {
                 chrome.runtime.sendMessage({
                     facebook_get_password: true
                 });
-            }
+            } else {exitScriptWithError();}
 
-        } 
-
-
-        // document.querySelector("body > div > div > div > div:nth-child(2) > div:nth-child(2) > div:nth-child(2) > div:nth-child(2) > div > div:nth-child(2) > a").click();
-        // // Wait for dialog to load, then decide what to do
-        // setTimeout(() => {
-        //     if (document.querySelector("#ajax_password") != null) {
-        //         // Page is prompting for password
-        //         chrome.runtime.sendMessage({
-        //             facebook_get_password: true
-        //         });
-        //     } else if (document.querySelector("html > body > div:nth-of-type(6) > div:nth-of-type(2) > div > div > div > div > div > div > div:nth-of-type(2) > div > div > div:nth-of-type(2) > div:nth-of-type(2) > div > div:nth-of-type(2) > div:nth-of-type(2) > span > input") != null) {
-        //         // Page is prompting for phone number
-        //         chrome.runtime.sendMessage({
-        //             facebook_get_phone_number: true
-        //         });
-        //     } else if (document.querySelector("html > body > div:nth-of-type(6) > div:nth-of-type(2) > div > div > div > div > div > div > div:nth-of-type(2) > div > div > div:nth-of-type(2) > div > div:nth-of-type(2)") != null) {
-        //         document.querySelector("html > body > div:nth-of-type(6) > div:nth-of-type(2) > div > div > div > div > div > div > div:nth-of-type(2) > div > div > div:nth-of-type(2) > div > div:last-of-type").click();
-        //         document.querySelector("html > body > div:nth-of-type(6) > div:nth-of-type(2) > div > div > div > div > div > div > div:nth-of-type(3) > span:nth-of-type(2) > div > div:nth-of-type(2) > button").click();
-        //         setTimeout(() => {
-        //             if (document.querySelector("#ajax_password") != null) {
-        //                 chrome.runtime.sendMessage({
-        //                     facebook_get_password: true
-        //                 });
-        //             } else {
-        //                 chrome.runtime.sendMessage({
-        //                     facebook_get_phone_number: true,
-        //                 });
-        //             }
-        //         }, 2000);
-        //     }
-        // }, 3000);
+        } else {exitScriptWithError();}
     }
 }
 
@@ -266,11 +193,6 @@ chrome.runtime.onMessage.addListener(
             });
         } else if (window.location.href.includes("facebook.com/security/2fac/setup/intro")) {
             await waitUntilPageLoad(document, 2);
-            // if (document.querySelector("html > body > div:nth-of-type(2) > h1")) {
-            //     if (document.querySelector("html > body > div:nth-of-type(2) > h1").textContent === "Sorry, something went wrong.") {
-            //         window.location.href = "https://www.facebook.com"; // Go to sign in page
-            //     }
-            // } else
             if (window.location.href.includes("?cquick=")) {
                 // Inside iframe
                 chrome.runtime.sendMessage({
@@ -280,19 +202,14 @@ chrome.runtime.onMessage.addListener(
                 let iFrameXPath = "iframe[src*=https]";
                 if(await waitUntilElementLoad(document, iFrameXPath, 2)) {
                     window.location = document.querySelector(iFrameXPath).src;
-                }
-                // if (document.querySelector("body > div > div > div > div > div:nth-child(6) > div > div > div > div > iframe") != null) {
-                //     // logged in- open iframe
-                //     window.location = document.querySelector("body > div > div > div > div > div:nth-child(6) > div > div > div > div > iframe").src;
-                //     console.log("Logged in, opening iframe");
-                // } else {}
+                } else {exitScriptWithError();}
             }
         } else if (window.location.href.includes("facebook.com/login/reauth.php")) {
             if (document.querySelector("[type=password]") != null) {
                 chrome.runtime.sendMessage({
                     facebook_get_password: true
                 });
-            }
+            } else {exitScriptWithError();}
         } else if (window.location.href === "https://www.facebook.com/") {
             await waitUntilElementLoad(document, 2);
             if (document.querySelector("#email"))  {
@@ -303,10 +220,9 @@ chrome.runtime.onMessage.addListener(
             } else {
                 window.location.href = "https://www.facebook.com/security/2fac/setup/intro";
             }
-    
         } else if (window.location.href === "https://www.facebook.com/?sk=welcome") {
             window.location.href = "https://www.facebook.com/security/2fac/setup/intro";
-        } 
+        }  else {exitScriptWithError();}
     } catch (e) {
         console.log(e);
         // Deal with the fact the chain failed
