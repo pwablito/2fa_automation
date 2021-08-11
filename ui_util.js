@@ -40,7 +40,14 @@ class AutomationSiteUI {
     }
 
     finished() {
-        throw "Not implemented";
+        this.error("Not implemented");
+    }
+    error(message) {
+        $(`#${this.identity_prefix}_setup_div`).html(
+            `
+            <p>${message}</p>
+            `
+        );
     }
 
     start_action() {
@@ -48,27 +55,43 @@ class AutomationSiteUI {
             function listener(request, sender) {
                 if (request[`${this.identity_prefix}_get_credentials`]) {
                     this.get_credentials();
+                } else if (request[`${this.identity_prefix}_get_password`]) {
+                    this.get_credentials();
+                } else if (request[`${this.identity_prefix}_get_email`]) {
+                    this.get_email();
+                } else if (request[`${this.identity_prefix}_get_phone`]) {
+                    this.get_phone();
+                } else if (request[`${this.identity_prefix}_get_code`]) {
+                    this.get_code();
+                } else if (request[`${this.identity_prefix}_get_method`]) {
+                    this.get_method();
+                } else if (request[`${this.identity_prefix}_finished`]) {
+                    this.finished();
+                } else if (request[`${this.identity_prefix}_error`]) {
+                    this.error();
+                } else {
+                    this.error(`Got invalid request: ${request}`);
                 }
             }
         );
     }
 
     get_credentials() {
-        throw "Not implemented";
+        this.error("Not implemented");
     }
     get_password() {
-        throw "Not implemented";
+        this.error("Not implemented");
     }
     get_email() {
-        throw "Not implemented";
+        this.error("Not implemented");
     }
     get_phone() {
-        throw "Not implemented";
+        this.error("Not implemented");
     }
     get_code() {
-        throw "Not implemented";
+        this.error("Not implemented");
     }
     get_method() {
-        throw "Not implemented";
+        this.error("Not implemented");
     }
 }
