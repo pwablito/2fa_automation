@@ -1,5 +1,11 @@
 class AutomationSiteUI {
     constructor(name, identity_prefix, parent_id, logo_file) {
+        /*
+         * @param {string} name - Name of the site (i.e. "Google")
+         * @param {string} identity_prefix - Prefix for UI elements (i.e. "google" would result in "google_ui_div"
+         * @param {string} parent_id - ID of the parent element in which this will be placed
+         * @param {string} logo_file - Path to the logo file to display on the side of the UI
+         */
         this.name = name;
         this.identity_prefix = identity_prefix;
         this.parent_id = parent_id;
@@ -13,7 +19,7 @@ class AutomationSiteUI {
                 <div class="row">
                     <div class="col-3"><img src="${this.logo_file}"></div>
                     <div class="col-9">
-                        <div id="${this.identity_prefix}_setup_div" class="row" style="text-align: left;"></div>
+                        <div id="${this.identity_prefix}_ui_div" class="row" style="text-align: left;"></div>
                     </div>
                 </div>
             </div>
@@ -23,7 +29,7 @@ class AutomationSiteUI {
     }
 
     loading() {
-        $(`#${this.identity_prefix}_setup_div`).html(
+        $(`#${this.identity_prefix}_ui_div`).html(
             `
             <div class="row">
                 <div class="col-8">
@@ -43,7 +49,7 @@ class AutomationSiteUI {
         this.error("Not implemented");
     }
     error(message) {
-        $(`#${this.identity_prefix}_setup_div`).html(
+        $(`#${this.identity_prefix}_ui_div`).html(
             `
             <p>${message}</p>
             `
