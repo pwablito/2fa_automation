@@ -1,3 +1,37 @@
+class AutomationUI {
+    constructor(sites) {
+        // Make sure sites is a list
+        if (!Array.isArray(sites)) {
+            throw "Sites must be a list of AutomationSiteUI objects"
+        }
+        this.sites = sites;
+    }
+
+    run() {
+        for (let site of this.sites) {
+            site.initialize();
+        }
+    }
+
+    disable_injection(service) {
+        throw "Must be overridden"
+    }
+}
+
+class SetupUI extends AutomationUI {
+
+    disable_injection(service) {
+        throw "Not implemented"
+    }
+}
+
+class DisableUI extends AutomationUI {
+
+    disable_injection(service) {
+        throw "Not implemented"
+    }
+}
+
 class AutomationSiteUI {
     constructor(name, identity_prefix, parent_id, logo_file) {
         /*
@@ -25,7 +59,7 @@ class AutomationSiteUI {
             </div>
             `
         );
-        this.start_action();
+        this.launch_listener();
     }
 
     loading() {
@@ -56,7 +90,7 @@ class AutomationSiteUI {
         );
     }
 
-    start_action() {
+    launch_listener() {
         chrome.runtime.onMessage.addListener(
             function listener(request, sender) {
                 if (request[`${this.identity_prefix}_get_credentials`]) {
@@ -72,8 +106,10 @@ class AutomationSiteUI {
                 } else if (request[`${this.identity_prefix}_get_method`]) {
                     this.get_method();
                 } else if (request[`${this.identity_prefix}_finished`]) {
+                    chrome.runtime.onMessage.removeListener(listener);
                     this.finished();
                 } else if (request[`${this.identity_prefix}_error`]) {
+                    chrome.runtime.onMessage.removeListener(listener);
                     this.error();
                 } else {
                     this.error(`Got invalid request: ${request}`);
