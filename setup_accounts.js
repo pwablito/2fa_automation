@@ -791,7 +791,7 @@ function initiate_facebook_setup() {
     );
     $("#facebook_setup_div").html(`Please wait...`);
     chrome.windows.create({
-        url: "https://www.facebook.com/security/2fac/setup/intro",
+        url: "https://www.facebook.com/security/2fac/setup/intro", // "https://www.facebook.com", //
         focused: false,
         state: "minimized"
     }, (window) => {
@@ -918,6 +918,7 @@ function initiate_facebook_setup() {
                             chrome.tabs.sendMessage(
                                 sender.tab.id, {
                                     facebook_totp_code: true,
+                                    totp_url: request.totp_url,
                                     code: code
                                 }
                             );
@@ -971,7 +972,9 @@ function initiate_facebook_setup() {
                 });
             } else if (request.facebook_finished) {
                 chrome.tabs.remove(sender.tab.id);
-                $("#facebook_setup_div").html(`Finished setting up Facebook`);
+                $("#facebook_setup_div").html(`
+                ${request.message != null ? "<p>" + request.message + "</p>" : ""}
+                Finished setting up Facebook`);
                 disable_injection("facebook", "setup");
                 chrome.runtime.onMessage.removeListener(facebook_listener);
             }
