@@ -70,7 +70,7 @@ function initiate_twitter_setup() {
     });
 
     chrome.runtime.onMessage.addListener(
-        function twitter__listener(request, sender) {
+        function twitter_listener(request, sender) {
             if (request.twitter_logged_in != null) {
                 if (request.twitter_logged_in) {
                     $("#twitter_setup_div").html(
@@ -222,7 +222,7 @@ function initiate_twitter_setup() {
                 chrome.tabs.remove(sender.tab.id);
                 $("#twitter_setup_div").html(`Finished setting up Twitter`);
                 disable_injection("twitter", "setup");
-                chrome.runtime.onMessage.removeListener(twitter__listener);
+                chrome.runtime.onMessage.removeListener(twitter_listener);
             }
         }
     );
@@ -388,7 +388,7 @@ function initiate_github_setup() {
                         $("#github_setup_div").html(`Please wait...`);
                     }
                 });
-                
+
             }
             if (request.github_get_password) {
                 $("#github_setup_div").html(
@@ -673,8 +673,7 @@ function initiate_google_setup() {
                 chrome.tabs.remove(sender.tab.id);
                 $("#google_setup_div").html(`
                     ${request.message != null ? "<p>" + request.message + "</p>" : ""}
-                    Finished setting up Google`
-                );
+                    Finished setting up Google`);
                 disable_injection("google", "setup");
                 chrome.runtime.onMessage.removeListener(google_listener);
             } else if (request.google_backup) {
@@ -852,7 +851,7 @@ function initiate_facebook_setup() {
                 $("#facebook_password_button").click(() => {
                     let password = $("#facebook_password_input").val();
                     if (password) {
-                        if(request.facebook_method =="totp"){
+                        if (request.facebook_method == "totp") {
                             console.log("Got password now sending message that we are using totp")
                             chrome.tabs.sendMessage(
                                 sender.tab.id, {
@@ -869,7 +868,7 @@ function initiate_facebook_setup() {
                                 }
                             );
                         }
-                        
+
                     }
                     $("#facebook_setup_div").html(`Please wait...`);
                 });
