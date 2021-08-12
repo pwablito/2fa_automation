@@ -1,5 +1,6 @@
 console.log("github.js setup script injected");
 
+
 function change(field, value) {
     field.value = value;
     field.dispatchEvent(new Event('input', { bubbles: true }));
@@ -9,152 +10,168 @@ function change(field, value) {
     field.dispatchEvent(new KeyboardEvent('keyup', { bubbles: true, cancelable: false, key: '', char: '' }));
 }
 
-function rafAsync() {
-    return new Promise(resolve => {
-        requestAnimationFrame(resolve); //faster than set time out
+function getElementByXpath(doc, xpath) {
+    return doc.evaluate(xpath, doc, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+}
+
+function timer(ms) { return new Promise(res => setTimeout(res, ms)); }
+
+// maxWait is in seconds
+async function waitUntilPageLoad(document,maxWait) {
+    for (let i = 0; i < maxWait*10; i++) {
+        if( document.readyState !== 'loading' ) { return true;}
+        console.log(i);
+        await timer(100); // then the created Promise can be awaited
+    }
+    return false;
+}
+
+async function waitUntilElementLoad(document, elemXPath,  maxWait) {
+    for (let i = 0; i < maxWait*10; i++) {
+        if(document.querySelector(elemXPath)) { return true;}
+        console.log(i);
+        await timer(100); // then the created Promise can be awaited
+    }
+    return false;
+}
+
+function exitScriptWithError() {
+    // When debugging comment out code of this function. This will stop closing of background pages.
+    chrome.runtime.sendMessage({
+        dropbox_error: true,
+        message: "Sorry! Something went wrong. ",
+        message_for_dev : window.location.href
     });
 }
 
-function checkElement(selector) {
-    if (document.querySelector(selector) === null) {
-        return rafAsync().then(() => checkElement(selector));
-    } else {
-        return Promise.resolve(true);
-    }
-}
-
-
-chrome.runtime.onMessage.addListener(
-    function(request, _) {
-        if (request.github_credentials) {
-            document.querySelector("[name=login]").value = request.username;
-            document.querySelector("[name=password]").value = request.password;
-            document.querySelector("[id='login'] > div:nth-of-type(4) > form > div > input:nth-of-type(12)").click();
-            setTimeout(() => {
-                window.location.href = "https://github.com/settings/two_factor_authentication/setup/intro";
-            }, 500);
-            // window.location.href = "https://github.com/settings/two_factor_authentication/setup/intro";
-        } else if (request.github_phone_number) {
-            change(document.querySelector("[name=number]"), request.number);
-            // document.querySelector("[name=number]").value = request.number;
-            document.querySelector("[id='two-factor'] > div > single-page-wizard > div:nth-of-type(2) > single-page-wizard-step:nth-of-type(2) > div > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(2) > two-factor-setup-verification > div:nth-of-type(2) > form > div > div:nth-of-type(3) > button").click();
-            // document.querySelector("#two-factor > div > form > div > button").click();
+async function handleReceivedMessage(request) {
+    if (request.github_credentials) {
+        document.querySelector("[name=login]").value = request.username;
+        document.querySelector("[name=password]").value = request.password;
+        document.querySelector("[value='Sign in']").click();
+        setTimeout(() => {
+            window.location.href = "https://github.com/settings/two_factor_authentication/setup/intro";
+        }, 500);
+    } else if (request.github_phone_number) {
+        change(document.querySelector("[name=number]"), request.number);
+        document.querySelector("button[data-target$='buttonSendSms']").click();
+        await timer(1000);
+        if ( document.querySelector("div[data-target$='smsError']") && document.querySelector("div[data-target$='smsError']").innerText.trim() != "") {
+            chrome.runtime.sendMessage({
+                github_get_phone_number: true,
+                message: "Invalid Phone Number."
+            });
+        } else {
             chrome.runtime.sendMessage({
                 github_get_code: true
             });
-        } else if (request.github_code) {
+        }
+    } else if (request.github_code) {
+        if (request.code.length != 6) {
+            if (request.totp_secret) {
+                chrome.runtime.sendMessage({
+                    github_get_code: true,
+                    message: "Invalid code",
+                    totp_secret: request.totp_secret
+                });
+            } else {
+                chrome.runtime.sendMessage({
+                    github_get_code: true,
+                    message: "Invalid code",
+                });
+            }
+        } else {
             // Entering code
-            change(document.querySelector("[id='two-factor'] > div > single-page-wizard > div:nth-of-type(2) > single-page-wizard-step:nth-of-type(2) > div > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(2) > two-factor-setup-verification > div:nth-of-type(1) > form > div > div:nth-of-type(3) > input"), request.code);            
-            setTimeout(() => {
-                document.querySelector("[id='two-factor'] > div > single-page-wizard > div:nth-of-type(2) > single-page-wizard-step:nth-of-type(3) > div > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(2) > two-factor-setup-recovery-codes > div > form:nth-of-type(1) > button:nth-of-type(1)").click();
+            if(request.totp_secret) {
+                change(document.querySelector("input[name='appOtp']"), request.code);    
+            } else {
+                change(document.querySelector("input[name='smsOtp']"), request.code);   
+            }
+            console.log(request.totp_secret);
+
+            change(document.querySelector("input[data-target*='two-factor-setup-verification']"), request.code);    
+            await timer(1000);
+            if (document.querySelectorAll("[data-target*=stepError]")[1] && document.querySelectorAll("[data-target*=stepError]")[1].innerText.trim() != "" && document.querySelectorAll("single-page-wizard-step")[1].getAttribute("data-single-page-wizard-step-current") === "true") {
+                if (request.totp_secret) {
+                    chrome.runtime.sendMessage({
+                        github_get_code: true,
+                        message: "Invalid code",
+                        totp_secret: request.totp_secret
+                    });
+                } else {
+                    chrome.runtime.sendMessage({
+                        github_get_code: true,
+                        message: "Invalid code",
+                    });
+                }
+            } else {
+                document.querySelector("[data-action$=onDownloadClick]").click();
                 setTimeout(() => {
-                    document.querySelector("[id='two-factor'] > div > single-page-wizard > div:nth-of-type(2) > single-page-wizard-step:nth-of-type(3) > div > div:nth-of-type(2) > div:nth-of-type(2) > button:nth-of-type(3)").click();
+                    document.querySelectorAll("button[data-target*='nextButton']")[2].click();
                     setTimeout(() => {
-                        document.querySelector("[id='two-factor'] > div > single-page-wizard > div:nth-of-type(2) > single-page-wizard-step:nth-of-type(4) > div > div:nth-of-type(2) > div:nth-of-type(2) > button:nth-of-type(3)").click();
+                        getElementByXpath(document, "//button[contains(text(),'Done')]").click();
                         chrome.runtime.sendMessage({
                             github_finished: true
                         });
                     }, 1000);
-                }, 2000);
-            }, 1000);
-            
-            // checkElement("[id='two-factor'] > div > single-page-wizard > div:nth-of-type(2) > single-page-wizard-step:nth-of-type(3) > div > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(2) > two-factor-setup-recovery-codes > div > form:nth-of-type(1) > button:nth-of-type(1)")
-            // .then((element) => { // downloading recovery code
-            //     document.querySelector("[id='two-factor'] > div > single-page-wizard > div:nth-of-type(2) > single-page-wizard-step:nth-of-type(3) > div > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(2) > two-factor-setup-recovery-codes > div > form:nth-of-type(1) > button:nth-of-type(1)").click();
-            //     console.log("downloaded codes");
-            //     setTimeout(() => {
-            //         document.querySelector("[id='two-factor'] > div > single-page-wizard > div:nth-of-type(2) > single-page-wizard-step:nth-of-type(3) > div > div:nth-of-type(2) > div:nth-of-type(2) > button:nth-of-type(3)").click();
-            //         // document.querySelector("[id='two-factor'] > div > single-page-wizard > div:nth-of-type(2) > single-page-wizard-step:nth-of-type(4) > div > div:nth-of-type(2) > div:nth-of-type(2) > button:nth-of-type(3)").click();
-            //         // chrome.runtime.sendMessage({
-            //         //     github_finished: true
-            //         // });
-            //     }, 2000);
-                
-            // });
-            // checkElement("[id='two-factor'] > div > single-page-wizard > div:nth-of-type(2) > single-page-wizard-step:nth-of-type(4) > div > div:nth-of-type(2) > div:nth-of-type(2) > button:nth-of-type(3)")
-            // .then((element) => { // clicking done button
-            //     console.log("click on Done button");
-            //     document.querySelector("[id='two-factor'] > div > single-page-wizard > div:nth-of-type(2) > single-page-wizard-step:nth-of-type(4) > div > div:nth-of-type(2) > div:nth-of-type(2) > button:nth-of-type(3)").click();
-            //     chrome.runtime.sendMessage({
-            //         github_finished: true
-            //     });
-            // });
-        } else if (request.github_password) {
-            document.querySelector("#sudo_password").value = request.password;
-            document.querySelector("#login > form > div.Box-body.overflow-auto.auth-form-body > sudo-auth > sudo-password > div:nth-child(2) > button").click();
-        } else if (request.github_start_sms) {
-            document.querySelector("[id='two-factor'] > div > single-page-wizard > div:nth-of-type(2) > single-page-wizard-step:nth-of-type(1) > div > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(3) > two-factor-setup-type-selection > form > div:nth-of-type(2) > label > span:nth-of-type(1) > input").click();
-            document.querySelector("[id='two-factor'] > div > single-page-wizard > div:nth-of-type(2) > single-page-wizard-step:nth-of-type(1) > div > div:nth-of-type(2) > div:nth-of-type(2) > button:nth-of-type(3)").click();
-            chrome.runtime.sendMessage({
-                github_get_phone_number: true,
-            });
-        }  else if (request.github_start_totp) { 
-            document.querySelector("[id='two-factor'] > div > single-page-wizard > div:nth-of-type(2) > single-page-wizard-step:nth-of-type(1) > div > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(3) > two-factor-setup-type-selection > form > div:nth-of-type(1) > label > span:nth-of-type(1) > input").click();
-            document.querySelector("[id='two-factor'] > div > single-page-wizard > div:nth-of-type(2) > single-page-wizard-step:nth-of-type(1) > div > div:nth-of-type(2) > div:nth-of-type(2) > button:nth-of-type(3)").click()
-            setTimeout(() => {
-                chrome.runtime.sendMessage({
-                    github_get_code: true,
-                    totp_secret: document.querySelector("[id='two-factor'] > div > single-page-wizard > div:nth-of-type(2) > single-page-wizard-step:nth-of-type(2) > div > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(2) > two-factor-setup-verification > div:nth-of-type(1) > form > div > div:nth-of-type(1) > details > details-dialog > div:nth-of-type(2)").textContent.replace(/\s+/g, '')
-                });
-            }, 1000);
-            // document.querySelector("html > body > div:nth-of-type(15) > div > div > div > div > div:nth-of-type(3) > button").click();
-            // checkElement("[id='two-factor'] > div > single-page-wizard > div:nth-of-type(2) > single-page-wizard-step:nth-of-type(2) > div > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(2) > two-factor-setup-verification > div:nth-of-type(1) > form > div > div:nth-of-type(1) > details > summary")
-            // .then((element) => {
-            //     document.querySelector("[id='two-factor'] > div > single-page-wizard > div:nth-of-type(2) > single-page-wizard-step:nth-of-type(2) > div > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(2) > two-factor-setup-verification > div:nth-of-type(1) > form > div > div:nth-of-type(1) > details > summary").click();
-            //     console.log("click to get text QR");
-            // });
-            
-            // checkElement("[id='two-factor'] > div > single-page-wizard > div:nth-of-type(2) > single-page-wizard-step:nth-of-type(2) > div > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(2) > two-factor-setup-verification > div:nth-of-type(1) > form > div > div:nth-of-type(1) > details > details-dialog > div:nth-of-type(2)")
-            // .then((element) => {
-            //     console.log("qr code sent to extension");
-            //     console.log(document.querySelector("[id='two-factor'] > div > single-page-wizard > div:nth-of-type(2) > single-page-wizard-step:nth-of-type(2) > div > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(2) > two-factor-setup-verification > div:nth-of-type(1) > form > div > div:nth-of-type(1) > details > details-dialog > div:nth-of-type(2)").textContent);
-            //     chrome.runtime.sendMessage({
-            //         github_get_code: true,
-            //         totp_secret: document.querySelector("[id='two-factor'] > div > single-page-wizard > div:nth-of-type(2) > single-page-wizard-step:nth-of-type(2) > div > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(2) > two-factor-setup-verification > div:nth-of-type(1) > form > div > div:nth-of-type(1) > details > details-dialog > div:nth-of-type(2)").textContent.replace(/\s+/g, '')
-            //     });
-            // });
-            
+                }, 100);
+            }
         }
+    } else if (request.github_password) {
+        document.querySelector("[type=password]").value = request.password;
+        document.querySelector("[type=submit]").click();
+    } else if (request.github_start_sms) {
+        document.querySelector("input[value=sms][type=radio]").click();
+        getElementByXpath(document, "//button[contains(text(),'Continue')]").click();
+        chrome.runtime.sendMessage({
+            github_get_phone_number: true,
+        });
+    }  else if (request.github_start_totp) { 
+        document.querySelector("input[value=app][type=radio]").click();
+        getElementByXpath(document, "//button[contains(text(),'Continue')]").click();
+        console.log("In Start TOTP");
+        if (await waitUntilElementLoad(document, "[data-target='two-factor-setup-verification.mashedSecret']", 2)) {
+            await timer(500); // To wait for textContent to load in the div element
+            console.log(document.querySelector("[data-target='two-factor-setup-verification.mashedSecret']").innerHTML);
+            chrome.runtime.sendMessage({
+                github_get_code: true,
+                totp_secret: document.querySelector("[data-target='two-factor-setup-verification.mashedSecret']").textContent.replace(/\s+/g, '')
+            });
+        }
+    }
+}
+
+chrome.runtime.onMessage.addListener(
+    function(request, _) {
+        handleReceivedMessage(request).then();
     }
 );
 
-// if (window.location.href.includes("github.com/sessions/two-factor")) {
-//     chrome.runtime.sendMessage({
-//         github_error: true,
-//         message: "2FA already set up",
-//     });
-// } else
 
- if (window.location.href.includes("settings/two_factor_authentication/setup")) {
-    chrome.runtime.sendMessage({
-        github_get_type: true,
-    });
-} else { // either github.com/login or redirection to github.com
-    console.log("In login");
-    if (document.querySelector("[name=login]") != null) {
-        chrome.runtime.sendMessage({
-            github_log_in: true,
-        });
-    } else {
-        console.log("Already signed in");
-        window.location.href = "https://github.com/settings/two_factor_authentication/setup/intro";
-    } 
-}
-// else if (document.querySelector("#two-factor > div > div.border-top.pt-6.mt-6.clearfix > div.col-12.col-md-6.pl-md-3.float-left > form > button") != null) {
-//     //Initiate 2fa process (generate backup codes in github servers)
-//     document.querySelector("#two-factor > div > div.border-top.pt-6.mt-6.clearfix > div.col-12.col-md-6.pl-md-3.float-left > form > button").click();
-// } else if (document.querySelector("#js-pjax-container > div > form:nth-child(3) > button") !== null) {
-//     // Enable next button by clicking download button, then click next
-//     document.querySelector("#js-pjax-container > div > div > div.recovery-codes-saving-options > form > button").click();
-//     document.querySelector("#js-pjax-container > div > form:nth-child(3) > button").click();
-// } else if (document.querySelector("#sudo_password") !== null) {
-//     // Need "sudo" password (further authentication to change settings)
-//     chrome.runtime.sendMessage({
-//         github_get_password: true
-//     });
-// } else {
-//     // Check if signed in, this starts the automation
-//     chrome.runtime.sendMessage({
-//         github_logged_in: document.querySelector("#login_field") === null
-//     });
-// }
+(async () => {
+    try {
+        if (window.location.href.includes("settings/two_factor_authentication/setup")) {
+            if (document.querySelector("[type=password]")) {
+                chrome.runtime.sendMessage({
+                    github_get_password: true,
+                });
+            } else {
+                chrome.runtime.sendMessage({
+                    github_get_type: true,
+                });
+            }
+        } else { // either github.com/login or redirection to github.com
+            if (document.querySelector("[name=login]")) {
+                chrome.runtime.sendMessage({
+                    github_log_in: true,
+                });
+            } else {
+                console.log("Already signed in");
+                window.location.href = "https://github.com/settings/two_factor_authentication/setup/intro";
+            } 
+        }
+    } catch (e) {
+        console.log(e);
+        // Deal with the fact the chain failed
+    }
+})();

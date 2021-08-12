@@ -454,7 +454,8 @@ function initiate_github_setup() {
                             chrome.tabs.sendMessage(
                                 sender.tab.id, {
                                     github_code: true,
-                                    code: code
+                                    code: code,
+                                    totp_secret: request.totp_secret
                                 }
                             );
                         }
