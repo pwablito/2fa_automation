@@ -1,98 +1,191 @@
 console.log("linkedin.js setup script injected");
 
-chrome.runtime.onMessage.addListener(function(request, _) {
+function change(field, value) {
+    field.value = value;
+    field.dispatchEvent(new Event('input', { bubbles: true }));
+    field.dispatchEvent(new Event('change', { bubbles: true }));
+    field.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, cancelable: false, key: '', char: '' }));
+    field.dispatchEvent(new KeyboardEvent('keypress', { bubbles: true, cancelable: false, key: '', char: '' }));
+    field.dispatchEvent(new KeyboardEvent('keyup', { bubbles: true, cancelable: false, key: '', char: '' }));
+}
+
+function getElementByXpath(doc, xpath) {
+    return doc.evaluate(xpath, doc, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+}
+
+function timer(ms) { return new Promise(res => setTimeout(res, ms)); }
+
+async function waitUntilPageLoad(document,maxWait) {
+    for (let i = 0; i < maxWait*10; i++) {
+        if( document.readyState !== 'loading' ) { return true;}
+        console.log(i);
+        await timer(100); // then the created Promise can be awaited
+    }
+    return false;
+}
+
+async function waitUntilElementLoad(document, elemXPath,  maxWait) {
+    for (let i = 0; i < maxWait*10; i++) {
+        if(document.querySelector(elemXPath)) { return true;}
+        console.log(i);
+        await timer(100); // then the created Promise can be awaited
+    }
+    return false;
+}
+
+function exitScriptWithError() {
+    // When debugging comment out code of this function. This will stop closing of background pages.
+    chrome.runtime.sendMessage({
+        linkedin_error: true,
+        message: "Sorry! Something went wrong. ",
+        message_for_dev : window.location.href
+    });
+}
+
+async function handleReceivedMessage(request){
     if (request.linkedin_credentials) {
         document.querySelector("#username").value = request.username;
         document.querySelector("#password").value = request.password;
-        document.querySelector("html > body > div > main > div:nth-of-type(2) > div:nth-of-type(1) > form").submit();
+        getElementByXpath(document, "//button[contains(@aria-label, 'Sign in')]").click()
     } else if (request.linkedin_password) {
         document.querySelector("#verify-password").value = request.password;
-        document.querySelector("html > body > div > main > div:nth-of-type(2) > div > div > ul > li:nth-of-type(7) > div > div > div > section > div:nth-of-type(2) > span > form > div > button").click();
-        setTimeout(() => {
-            if (document.querySelector("html > body > div > main > div:nth-of-type(2) > div > div > ul > li:nth-of-type(7) > div > div > div > form > ol > li:nth-of-type(3) > img") !== null) {
-                chrome.runtime.sendMessage({
-                    linkedin_get_code: true,
-                    totp_url: document.querySelector("html > body > div > main > div:nth-of-type(2) > div > div > ul > li:nth-of-type(7) > div > div > div > form > ol > li:nth-of-type(3) > img").src,
-                });
-            } else {
-                chrome.runtime.sendMessage({
-                    linkedin_get_code: true
-                });
-            }
-        }, 2000);
+        getElementByXpath(document, "//button[contains(@class, 'submit')]").click();
+
+        if(await waitUntilElementLoad(document, "p[id='incorrect-password-error']", 2)){
+            chrome.runtime.sendMessage({
+                linkedin_incorrect_password:true
+            })
+        }
+       
+        //auth app
+        if (await waitUntilElementLoad(document, ".authenticator-QRImage", 2)){
+            chrome.runtime.sendMessage({
+                linkedin_get_code: true,
+                totp_url: document.querySelector(".authenticator-QRImage").src,
+            });
+        } 
+        //sms
+        if (await waitUntilElementLoad(document, "input[id='enter-code']", 2) && document.querySelector(".authenticator-QRImage")==null){
+            chrome.runtime.sendMessage({
+                linkedin_get_code: true
+            });
+        }
+       
     } else if (request.linkedin_start_totp) {
-        document.querySelector("html > body > div > main > div:nth-of-type(2) > div > div > ul > li:nth-of-type(7) > div > div > div > section > select").selectedIndex = 0;
-        document.querySelector("html > body > div > main > div:nth-of-type(2) > div > div > ul > li:nth-of-type(7) > div > div > div > section > div:nth-of-type(2) > button:nth-of-type(2)").click()
-        setTimeout(() => {
-            if (document.querySelector("#verify-password") !== null) {
-                chrome.runtime.sendMessage({
-                    linkedin_get_password: true,
-                });
-            } else {
-                setTimeout(() => {
-                    chrome.runtime.sendMessage({
-                        linkedin_get_code: true,
-                        totp_url: document.querySelector("html > body > div > main > div:nth-of-type(2) > div > div > ul > li:nth-of-type(7) > div > div > div > form > ol > li:nth-of-type(3) > img").src,
-                    });
-                }, 2000);
-            }
-        }, 2000);
+        getElementByXpath(document, "//select[contains(@id, 'two-step-method')]").selectedIndex = 0;
+        document.querySelector(".continue").click();
+
+        if(await waitUntilElementLoad(document, "#verify-password", 2)){
+            chrome.runtime.sendMessage({
+                linkedin_get_password: true,
+            });
+        } 
+        if(await waitUntilElementLoad(document, ".authenticator-QRImage", 2)){
+            chrome.runtime.sendMessage({
+                linkedin_get_code: true,
+                totp_url: document.querySelector(".authenticator-QRImage").src,
+            });
+        }
+
     } else if (request.linkedin_start_sms) {
-        document.querySelector("html > body > div > main > div:nth-of-type(2) > div > div > ul > li:nth-of-type(7) > div > div > div > section > select").selectedIndex = 1;
-        document.querySelector("html > body > div > main > div:nth-of-type(2) > div > div > ul > li:nth-of-type(7) > div > div > div > section > div:nth-of-type(2) > button:nth-of-type(2)").click()
-        setTimeout(() => {
-            if (document.querySelector("#verify-password") !== null) {
-                chrome.runtime.sendMessage({
-                    linkedin_get_password: true,
-                });
-            } else {
-                document.querySelector("html > body > div > main > div:nth-of-type(2) > div > div > ul > li:nth-of-type(7) > div > div > div > form > fieldset > ul > li > a").click();
-            }
-        }, 2000);
+        getElementByXpath(document, "//select[contains(@id, 'two-step-method')]").selectedIndex = 1;
+        document.querySelector(".continue").click();
+
+        if(await waitUntilElementLoad(document, "#verify-password", 2)){
+            chrome.runtime.sendMessage({
+                linkedin_get_password: true,
+            });
+        } 
+
     } else if (request.linkedin_code) {
         console.log("Got code");
         document.querySelector("#enter-code").value = request.code;
-        if (document.querySelector("html > body > div > main > div:nth-of-type(2) > div > div > ul > li:nth-of-type(7) > div > div > div > form > div:nth-of-type(2) > button:nth-of-type(2)") !== null) {
-            document.querySelector("html > body > div > main > div:nth-of-type(2) > div > div > ul > li:nth-of-type(7) > div > div > div > form > div:nth-of-type(2) > button:nth-of-type(2)").click();
-        } else {
-            document.querySelector("html > body > div > main > div:nth-of-type(2) > div > div > ul > li:nth-of-type(7) > div > div > div > form > div:nth-of-type(3) > button:nth-of-type(2)").click();
-        }
-        setTimeout(() => {
-            if (document.querySelector("html > body > div > main > div:nth-of-type(2) > div > div > ul > li:nth-of-type(7) > a > span:nth-of-type(2)").textContent === "On") {
+
+
+        
+        if(await waitUntilElementLoad(document, ".verify", 2)){
+            document.querySelector(".verify").click()
+            if(await waitUntilElementLoad(document, "p[id='checkpoint-error']", 2)){
+                chrome.runtime.sendMessage({
+                    linkedin_get_code: true,
+                    linkedin_incorrect_SMS_code: true
+                })
+            }
+        } 
+        if(await waitUntilElementLoad(document, ".continue", 2)){
+            document.querySelector(".continue").click()
+            if(await waitUntilElementLoad(document, "p[id='two-step-authenticator-error']", 2)){
+                chrome.runtime.sendMessage({
+                    linkedin_get_code: true,
+                    linkedin_incorrect_TOTP_code: true,
+                    totp_url: document.querySelector(".authenticator-QRImage").src,
+                })
+            }
+        } 
+       
+        if(await waitUntilElementLoad(document, "span[data-state-key='i18n_two_factor_auth_state_choice']",2 )){
+            if(document.querySelector("span[data-state-key='i18n_two_factor_auth_state_choice']").textContent == "On"){
                 chrome.runtime.sendMessage({
                     linkedin_finished: true,
                 });
-            } else {
-                chrome.runtime.sendMessage({
-                    linkedin_error: true,
-                    message: "Something went wrong",
-                });
             }
-        }, 2000);
-    }
-});
-if (window.location.href.includes("linkedin.com/psettings/two-step-verification")) {
-    setTimeout(() => {
-        if (document.querySelector("html > body > div > main > div:nth-of-type(2) > div > div > ul > li:nth-of-type(7) > a > span:nth-of-type(2)").textContent === "On") {
+            
+        } else {
+            exitScriptWithError();
             chrome.runtime.sendMessage({
                 linkedin_error: true,
-                message: "Already setup",
-            });
-        } else {
-            document.querySelector("html > body > div > main > div:nth-of-type(2) > div > div > ul > li:nth-of-type(7) > div > div > p:nth-of-type(1) > button").click()
-            chrome.runtime.sendMessage({
-                linkedin_get_type: true,
+                message: "Something went wrong",
             });
         }
-    }, 2000);
-} else if (window.location.href.includes("login-submit")) {
-    document.querySelector("html > body > div > main > div > section > footer > form:nth-of-type(1) > button").click();
-} else if (window.location.href.includes("login")) {
-    chrome.runtime.sendMessage({
-        linkedin_get_credentials: true,
-    });
-} else if (window.location.href.includes("psettings/phone/add")) {
-    chrome.runtime.sendMessage({
-        linkedin_get_phone: true,
-    });
+        
+    }
 }
+
+
+chrome.runtime.onMessage.addListener(
+    function(request, _) {
+        handleReceivedMessage(request).then()
+    }
+);
+
+
+(async () => {
+    try {
+        if (window.location.href.includes("linkedin.com/psettings/two-step-verification")) {
+            await waitUntilPageLoad(document, 2);
+            //await waitUntilElementLoad(document, )document.querySelector("button:nth-of-type(contains(@class, 'opt-in'))")
+            if(await waitUntilElementLoad(document, ".opt-in", 2)){
+                console.log("In first await")
+                document.querySelector(".opt-in").click()
+                chrome.runtime.sendMessage({
+                    linkedin_get_type: true,
+                });
+            } else if (await waitUntilElementLoad(document, ".opt-out", 2)) {
+                chrome.runtime.sendMessage({
+                    linkedin_error: true,
+                    message: "Already setup",
+                });
+            }
+        } else if (window.location.href.includes("login-submit")) {
+            if(await waitUntilElementLoad(document, ".member-profile-block", 2)){
+                document.querySelector(".member-profile-block").click();
+            }
+        } else if (window.location.href.includes("login")) {
+            if(await waitUntilElementLoad(document, ".member-profile-block", 2)){
+                document.querySelector(".member-profile-block").click();
+            } else {
+                chrome.runtime.sendMessage({
+                    linkedin_get_credentials: true,
+                });
+            }
+            
+        } else if (window.location.href.includes("psettings/phone/add")) {
+            chrome.runtime.sendMessage({
+                linkedin_get_phone: true,
+            });
+        }
+    } catch(e) {
+        console.log(e);
+        exitScriptWithError();
+    }
+})();
