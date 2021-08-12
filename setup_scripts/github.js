@@ -38,7 +38,7 @@ async function waitUntilElementLoad(document, elemXPath,  maxWait) {
 function exitScriptWithError() {
     // When debugging comment out code of this function. This will stop closing of background pages.
     chrome.runtime.sendMessage({
-        dropbox_error: true,
+        github_error: true,
         message: "Sorry! Something went wrong. ",
         message_for_dev : window.location.href
     });
@@ -109,10 +109,12 @@ async function handleReceivedMessage(request) {
                 setTimeout(() => {
                     document.querySelectorAll("button[data-target*='nextButton']")[2].click();
                     setTimeout(() => {
-                        getElementByXpath(document, "//button[contains(text(),'Done')]").click();
-                        chrome.runtime.sendMessage({
-                            github_finished: true
-                        });
+                        if (getElementByXpath(document, "//button[contains(text(),'Done')]")) {
+                            getElementByXpath(document, "//button[contains(text(),'Done')]").click();
+                            chrome.runtime.sendMessage({
+                                github_finished: true
+                            });
+                        } else {exitScriptWithError();}
                     }, 1000);
                 }, 100);
             }
@@ -137,8 +139,8 @@ async function handleReceivedMessage(request) {
                 github_get_code: true,
                 totp_secret: document.querySelector("[data-target='two-factor-setup-verification.mashedSecret']").textContent.replace(/\s+/g, '')
             });
-        }
-    }
+        } else {exitScriptWithError();}
+    } 
 }
 
 chrome.runtime.onMessage.addListener(

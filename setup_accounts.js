@@ -245,7 +245,7 @@ function initiate_reddit_setup() {
     );
     $("#reddit_setup_div").html("Please wait...");
     chrome.windows.create({
-        url: "https://www.reddit.com/2fa/enable",
+        url: "https://www.reddit.com/login/", //"https://www.reddit.com/2fa/enable",
         focused: false,
         state: "minimized"
     }, (window) => {
@@ -256,6 +256,9 @@ function initiate_reddit_setup() {
         function reddit_listener(request, sender) {
             if (request.reddit_error) {
                 $('#reddit_setup_div').html(request.message);
+                chrome.tabs.remove(sender.tab.id);
+                disable_injection("reddit", "setup");
+                chrome.runtime.onMessage.removeListener(reddit_listener);
             } else if (request.reddit_get_credentials) {
                 $("#reddit_setup_div").html(
                     `
@@ -729,7 +732,7 @@ function initiate_pinterest_setup() {
     );
     $("#pinterest_setup_div").html("Please wait...");
     chrome.windows.create({
-        url: "https://www.pinterest.com/settings/security",
+        url: "https://www.pinterest.com/login/", //"https://www.pinterest.com/settings/security",
         focused: false,
         state: "minimized",
     }, (window) => {
