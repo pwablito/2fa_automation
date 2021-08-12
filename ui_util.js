@@ -1,16 +1,25 @@
 class AutomationUI {
-    constructor(sites) {
-        // Make sure sites is a list
-        if (!Array.isArray(sites)) {
-            throw "Sites must be a list of AutomationSiteUI objects"
+    constructor() {
+        this.sites = [];
+    }
+
+    add_site(site) {
+        if (!(site instanceof AutomationSiteUI)) {
+            throw "Site must be an AutomationSiteUI object"
         }
-        this.sites = sites;
+        this.sites.push(site);
     }
 
     run() {
         for (let site of this.sites) {
-            this.enable_injection(site);
+            this.enable_injection(site.identity_prefix);
             site.initialize();
+        }
+    }
+
+    stop() {
+        for (let site of this.sites) {
+            this.disable_injection(site.identity_prefix);
         }
     }
 
@@ -48,19 +57,21 @@ class DisableUI extends AutomationUI {
 }
 
 class AutomationSiteUI {
-    constructor(name, identity_prefix, parent_id, logo_file, controller) {
+    constructor(name, identity_prefix, parent_id, logo_file, controller, start_url) {
         /*
          * @param {string} name - Name of the site (i.e. "Google")
          * @param {string} identity_prefix - Prefix for UI elements (i.e. "google" would result in "google_ui_div"
          * @param {string} parent_id - ID of the parent element in which this will be placed
          * @param {string} logo_file - Path to the logo file to display on the side of the UI
          * @param {AutomationController} controller - Controller which is an AutomationUI object (i.e. SetupUI or DisableUI)
+         * @param {string} start_url - URL for the first page of the 2fa automation process (will be automatically opened)
          */
         this.name = name;
         this.identity_prefix = identity_prefix;
         this.parent_id = parent_id;
         this.logo_file = logo_file;
         this.controller = controller;
+        this.start_url = start_url;
     }
 
     launch_listener() {
@@ -105,16 +116,25 @@ class AutomationSiteUI {
             `
         );
         this.launch_listener();
+        this.loading();
+        chrome.windows.create({
+            url: this.start_url,
+            focused: false,
+            state: "minimized",
+            incognito: true
+        }, (window) => {
+            chrome.windows.update(window.id, { state: 'minimized' });
+        });
     }
 
     loading() {
         $(`#${this.identity_prefix}_ui_div`).html(
             `
             <div class="row">
-                <div class="col-8">
+                <div class="col-10">
                 Please wait...
                 </div>
-                <div class="col-4">
+                <div class="col-2">
                     <div class="spinner-border" role="status">
                         <span class="sr-only">Loading...</span>
                     </div>

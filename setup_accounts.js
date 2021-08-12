@@ -1,50 +1,38 @@
-
 function timer(ms) { return new Promise(res => setTimeout(res, ms)); }
 
 var setup_processes = [];
+var automationUI = new SetupUI();
 $("#setup_accounts_button").click(() => {
     if (!$("#setup_accounts_button").hasClass("disabled")) {
         $("#select_accounts_div").hide();
         $("#setup_accounts_div").show();
+        let sites = [];
         let boxes = $(".checkbox");
         boxes.each((index) => {
             if (boxes[index].checked) {
                 service_name = $(boxes[index]).data("service");
-                setup_processes.push(service_name);
-                enable_injection(service_name, "setup");
-                urlToOpen = "";
                 if (service_name === "twitter") {
-                    urlToOpen = "https://twitter.com/settings/account/login_verification/enrollment";
-                    initiate_twitter_setup();
+                    automationUI.add_site(new AutomationSiteUI("Twitter", "twitter", "setup_processes_list", "logos/twitter.svg", automationUI, "https://twitter.com/settings/account/login_verification/enrollment"));
                 } else if (service_name === "reddit") {
-                    urlToOpen = "https://www.reddit.com/login/";
-                    initiate_reddit_setup();
+                    automationUI.add_site(new AutomationSiteUI("Reddit", "reddit", "setup_processes_list", "logos/reddit.svg", automationUI, "https://www.reddit.com/2fa/enable"));
                 } else if (service_name === "github") {
-                    urlToOpen = "https://github.com/login"
-                    initiate_github_setup();
+                    automationUI.add_site(new AutomationSiteUI("GitHub", "github", "setup_processes_list", "logos/github.svg", automationUI, "https://github.com/login"));
                 } else if (service_name === "google") {
-                    urlToOpen = "https://accounts.google.com/signin";
-                    initiate_google_setup();
+                    automationUI.add_site(new AutomationSiteUI("Google", "google", "setup_processes_list", "logos/google.svg", automationUI, "https://accounts.google.com/signin"));
                 } else if (service_name === "pinterest") {
-                    urlToOpen = "https://www.pinterest.com/login/";
-                    initiate_pinterest_setup();
+                    automationUI.add_site(new AutomationSiteUI("Pinterest", "pinterest", "setup_processes_list", "logos/pinterest.svg", automationUI, "https://www.pinterest.com/settings/security"));
                 } else if (service_name === "facebook") {
-                    urlToOpen = "https://www.facebook.com/security/2fac/setup/intro";
-                    initiate_facebook_setup();
+                    automationUI.add_site(new AutomationSiteUI("Google", "google", "setup_processes_list", "logos/facebook.svg", automationUI, "https://www.facebook.com/security/2fac/setup/intro"));
                 } else if (service_name === "amazon") {
-                    urlToOpen = "https://www.amazon.com/a/settings/approval/setup/register";
-                    initiate_amazon_setup();
+                    automationUI.add_site(new AutomationSiteUI("Amazon", "amazon", "setup_processes_list", "logos/amazon.svg", automationUI, "https://www.amazon.com/a/settings/approval/setup/register"));
                 } else if (service_name === "yahoo") {
-                    urlToOpen = "https://login.yahoo.com/myaccount/security/two-step-verification";
-                    initiate_yahoo_setup();
+                    automationUI.add_site(new AutomationSiteUI("Yahoo", "yahoo", "setup_processes_list", "logos/yahoo.svg", automationUI, "https://login.yahoo.com/myaccount/security/two-step-verification"));
                 } else if (service_name === "dropbox") {
-                    urlToOpen = "https://www.dropbox.com/login";
-                    initiate_dropbox_setup();
+                    automationUI.add_site(new AutomationSiteUI("Dropbox", "dropbox", "setup_processes_list", "logos/dropbox.svg", automationUI, "https://www.dropbox.com/login"));
                 } else if (service_name === "linkedin") {
-                    urlToOpen = "https://www.linkedin.com/psettings/two-step-verification";
-                    initiate_linkedin_setup();
+                    automationUI.add_site(new AutomationSiteUI("Linkedin", "linkedin", "setup_processes_list", "logos/linkedin.svg", automationUI, "https://www.linkedin.com/psettings/two-step-verification"));
                 } else {
-                    console.log("Undefined service: '" + service_name + "'");
+                    throw "Undefined service: '" + service_name + "'";
                 }
                 if (urlToOpen != "") {
                     chrome.runtime.sendMessage({
@@ -54,14 +42,12 @@ $("#setup_accounts_button").click(() => {
                 }
             }
         });
+        automationUI.run();
     }
 });
 
 $("#home_button").click(() => {
-    for (let service in setup_processes) {
-        disable_injection(service, "setup");
-    }
-    setup_processes = [];
+    automationUI.stop();
     window.location.href = "popup.html";
 });
 
@@ -1072,7 +1058,7 @@ function initiate_amazon_setup() {
                     $("#amazon_setup_div").html(`Please wait...`);
                 });
             } else if (request.amazon_get_password) {
-                if(request.amazon_password_incorrect){
+                if (request.amazon_password_incorrect) {
                     console.log("wrong password")
                     $("#amazon_setup_div").html(
                         `
@@ -1118,7 +1104,7 @@ function initiate_amazon_setup() {
                         $("#amazon_setup_div").html(`Please wait...`);
                     });
                 }
-                
+
             } else if (request.amazon_approve_login) {
                 $("#amazon_setup_div").html(
                     `
@@ -1127,7 +1113,7 @@ function initiate_amazon_setup() {
                     `
                 );
             } else if (request.amazon_get_phone_number) {
-                if(request.amazon_invalid_phone_number){
+                if (request.amazon_invalid_phone_number) {
                     $("#amazon_setup_div").html(
                         `
                         ${request.message != null ? "<p>" + request.message + "</p>" : ""}
@@ -1170,7 +1156,7 @@ function initiate_amazon_setup() {
                         }
                     });
                 }
-                
+
             } else if (request.amazon_get_email) {
                 $("#amazon_setup_div").html(
                     `
@@ -1193,7 +1179,7 @@ function initiate_amazon_setup() {
                     }
                 });
             } else if (request.amazon_get_code) {
-                if(request.amazon_incorrect_sms_code){
+                if (request.amazon_incorrect_sms_code) {
                     console.log("received incorrect sms code message")
                     $("#amazon_setup_div").html(
                         `
@@ -1244,7 +1230,7 @@ function initiate_amazon_setup() {
                         }
                         $("#amazon_setup_div").html(`Please wait...`);
                     });
-                } else if(request.totp_url) {
+                } else if (request.totp_url) {
                     $("#amazon_setup_div").html(
                         `
                         ${request.message != null ? "<p>" + request.message + "</p>" : ""}
@@ -1273,7 +1259,7 @@ function initiate_amazon_setup() {
                         }
                         $("#amazon_setup_div").html(`Please wait...`);
                     });
-                }else {
+                } else {
                     $("#amazon_setup_div").html(
                         `
                         ${request.message != null ? "<p>" + request.message + "</p>" : ""}
@@ -1355,20 +1341,21 @@ function initiate_yahoo_setup() {
     chrome.runtime.onMessage.addListener(
         function yahoo_listener(request, sender) {
             if (request.yahoo_error) {
-                if(request.message =="recaptcha required"){
+                if (request.message == "recaptcha required") {
                     $("#yahoo_setup_div").html(
                         `
 
                         <p>Yahoo requires you to prove that you're not a robot. Please complete the recaptcha when the tab opens.</p>
                         `
                     );
-    
-                    chrome.windows.update(sender.tab.windowId, {state: 'normal'});
-                } else if(request.yahoo_error_code == "incorrectTOTPCode"){
-                    console.log("Error with code, retrying");
-                    if(request.yahoo_totp_url){
-                        $("#yahoo_setup_div").html(
-                            `
+
+                    chrome.windows.update(sender.tab.windowId, { state: 'normal' });
+                } else if (request.yahoo_error_code == "incorrectTOTPCode") {
+                    if (request.yahoo_error_code == "incorrectTOTPCode") {
+                        console.log("Error with code, retrying");
+                        if (request.yahoo_totp_url) {
+                            $("#yahoo_setup_div").html(
+                                `
                             ${request.message != null ? "<p>" + request.message + "</p>" : ""}
                             <p style="color:red;"> The code you entered is not correct. Please try again. </p>
                             <p>Download Google Authenticator, scan this QR code, and enter the generated code</p>
@@ -1382,35 +1369,112 @@ function initiate_yahoo_setup() {
                                 </div>
                             </div>
                             `
-                        );
-                    
-                        $("#yahoo_code_button").click(() => {
-                            let code = $("#yahoo_code_input").val();
-                            console.log(code);
-                            if (code) {
-                                chrome.tabs.sendMessage(
-                                    sender.tab.id, {
-                                        yahoo_incorrect_totp: true,
-                                        yahoo_code: true,
-                                        yahoo_totp: true,
-                                        code: code,
-                                        totp_url: request.yahoo_totp_url
-                                    }
-                                );
-                            }
-                            $("#yahoo_setup_div").html(`Please wait...`);
-                        });
-                    } 
+                            );
 
-                } else if(request.yahoo_incorrect_phone_number){
-                    console.log("Error with phone number, retrying");
-                    $("#yahoo_setup_div").html(
-                        `
+                            $("#yahoo_code_button").click(() => {
+                                let code = $("#yahoo_code_input").val();
+                                console.log(code);
+                                if (code) {
+                                    chrome.tabs.sendMessage(
+                                        sender.tab.id, {
+                                            yahoo_incorrect_totp: true,
+                                            yahoo_code: true,
+                                            yahoo_totp: true,
+                                            code: code,
+                                            totp_url: request.yahoo_totp_url
+                                        }
+                                    );
+                                }
+                                $("#yahoo_setup_div").html(`Please wait...`);
+                            });
+                        }
+
+                    } else if (request.yahoo_incorrect_phone_number) {
+                        console.log("Error with phone number, retrying");
+                        $("#yahoo_setup_div").html(
+                            `
                         ${request.message != null ? "<p>" + request.message + "</p>" : ""}
                         <p style='color:red'> The phone number you entered is invalid. Please try again</p>
                         <input type=text id="yahoo_phone_number_input" placeholder="Phone number">
                         <button class="btn btn-success" id="yahoo_phone_number_button">Submit</button>
                         `
+                        );
+                        $("#yahoo_phone_number_button").click(() => {
+                            let number = $("#yahoo_phone_number_input").val();
+                            if (number) {
+                                chrome.tabs.sendMessage(
+                                    sender.tab.id, {
+                                        yahoo_phone_number: true,
+                                        number: number
+                                    }
+                                );
+                                $("#yahoo_setup_div").html(`Please wait...`);
+                            }
+                        });
+
+                    } else {
+                        $("#yahoo_setup_div").html(
+                            `
+                        <p>${request.message}</p>
+                        `
+                        );
+                        chrome.tabs.remove(sender.tab.id);
+                        disable_injection("yahoo", "setup");
+                        chrome.runtime.onMessage.removeListener(yahoo_listener);
+                    }
+
+                } else if (request.yahoo_get_email) {
+                    $("#yahoo_setup_div").html(
+                        `
+                    ${request.message != null ? "<p>" + request.message + "</p>" : ""}
+                    <p>Please enter your email address</p>
+                    <input type=text id="yahoo_email_input" placeholder="Email">
+                    <button class="btn btn-success" id="yahoo_email_button">Submit</button>
+                    `
+                    );
+                    $("#yahoo_email_button").click(() => {
+                        let email = $("#yahoo_email_input").val();
+                        if (email) {
+                            chrome.tabs.sendMessage(
+                                sender.tab.id, {
+                                    yahoo_email: true,
+                                    email: email
+                                }
+                            );
+                            $("#yahoo_setup_div").html(`Please wait...`);
+                        }
+                    });
+                } else if (request.yahoo_get_password) {
+
+                    chrome.windows.update(sender.tab.windowId, { state: 'minimized' });
+                    $("#yahoo_setup_div").html(
+                        `
+                    ${request.message != null ? "<p>" + request.message + "</p>" : ""}
+                    <p>Please enter your password</p>
+                    <input type=password id="yahoo_password_input" placeholder="Password">
+                    <button class="btn btn-success" id="yahoo_password_button">Submit</button>
+                    `
+                    );
+                    $("#yahoo_password_button").click(() => {
+                        let password = $("#yahoo_password_input").val();
+                        if (password) {
+                            chrome.tabs.sendMessage(
+                                sender.tab.id, {
+                                    yahoo_password: true,
+                                    password: password
+                                }
+                            );
+                        }
+                        $("#yahoo_setup_div").html(`Please wait...`);
+                    });
+                } else if (request.yahoo_get_phone_number) {
+                    $("#yahoo_setup_div").html(
+                        `
+                    ${request.message != null ? "<p>" + request.message + "</p>" : ""}
+                    <p>Please enter your phone number</p>
+                    <input type=text id="yahoo_phone_number_input" placeholder="Phone number">
+                    <button class="btn btn-success" id="yahoo_phone_number_button">Submit</button>
+                    `
                     );
                     $("#yahoo_phone_number_button").click(() => {
                         let number = $("#yahoo_phone_number_input").val();
@@ -1424,87 +1488,10 @@ function initiate_yahoo_setup() {
                             $("#yahoo_setup_div").html(`Please wait...`);
                         }
                     });
-
-                }else {
-                    $("#yahoo_setup_div").html(
-                        `
-                        <p>${request.message}</p>
-                        `
-                    );
-                    chrome.tabs.remove(sender.tab.id);
-                    disable_injection("yahoo", "setup");
-                    chrome.runtime.onMessage.removeListener(yahoo_listener);
-                }
-                
-            } else if (request.yahoo_get_email) {
-                $("#yahoo_setup_div").html(
-                    `
-                    ${request.message != null ? "<p>" + request.message + "</p>" : ""}
-                    <p>Please enter your email address</p>
-                    <input type=text id="yahoo_email_input" placeholder="Email">
-                    <button class="btn btn-success" id="yahoo_email_button">Submit</button>
-                    `
-                );
-                $("#yahoo_email_button").click(() => {
-                    let email = $("#yahoo_email_input").val();
-                    if (email) {
-                        chrome.tabs.sendMessage(
-                            sender.tab.id, {
-                                yahoo_email: true,
-                                email: email
-                            }
-                        );
-                        $("#yahoo_setup_div").html(`Please wait...`);
-                    }
-                });
-            } else if (request.yahoo_get_password) {
-
-                chrome.windows.update(sender.tab.windowId, {state: 'minimized'});
-                $("#yahoo_setup_div").html(
-                    `
-                    ${request.message != null ? "<p>" + request.message + "</p>" : ""}
-                    <p>Please enter your password</p>
-                    <input type=password id="yahoo_password_input" placeholder="Password">
-                    <button class="btn btn-success" id="yahoo_password_button">Submit</button>
-                    `
-                );
-                $("#yahoo_password_button").click(() => {
-                    let password = $("#yahoo_password_input").val();
-                    if (password) {
-                        chrome.tabs.sendMessage(
-                            sender.tab.id, {
-                                yahoo_password: true,
-                                password: password
-                            }
-                        );
-                    }
-                    $("#yahoo_setup_div").html(`Please wait...`);
-                });
-            } else if (request.yahoo_get_phone_number) {
-                $("#yahoo_setup_div").html(
-                    `
-                    ${request.message != null ? "<p>" + request.message + "</p>" : ""}
-                    <p>Please enter your phone number</p>
-                    <input type=text id="yahoo_phone_number_input" placeholder="Phone number">
-                    <button class="btn btn-success" id="yahoo_phone_number_button">Submit</button>
-                    `
-                );
-                $("#yahoo_phone_number_button").click(() => {
-                    let number = $("#yahoo_phone_number_input").val();
-                    if (number) {
-                        chrome.tabs.sendMessage(
-                            sender.tab.id, {
-                                yahoo_phone_number: true,
-                                number: number
-                            }
-                        );
-                        $("#yahoo_setup_div").html(`Please wait...`);
-                    }
-                });
-            } else if (request.yahoo_get_code) {
-                if(request.yahoo_totp_url){
-                    $("#yahoo_setup_div").html(
-                        `
+                } else if (request.yahoo_get_code) {
+                    if (request.yahoo_totp_url) {
+                        $("#yahoo_setup_div").html(
+                            `
                         ${request.message != null ? "<p>" + request.message + "</p>" : ""}
                         <p>Download Google Authenticator, scan this QR code, and enter the generated code</p>
                         <div class="row">
@@ -1517,49 +1504,49 @@ function initiate_yahoo_setup() {
                             </div>
                         </div>
                         `
-                    );
-                
-                    $("#yahoo_code_button").click(() => {
-                        let code = $("#yahoo_code_input").val();
-                        console.log(code);
-                        if (code) {
-                            chrome.tabs.sendMessage(
-                                sender.tab.id, {
-                                    yahoo_code: true,
-                                    yahoo_totp: true,
-                                    code: code,
-                                    totp_url: request.yahoo_totp_url
-                                }
-                            );
-                        }
-                        $("#yahoo_setup_div").html(`Please wait...`);
-                    });
-                } else {
-                    $("#yahoo_setup_div").html(
-                        `
+                        );
+
+                        $("#yahoo_code_button").click(() => {
+                            let code = $("#yahoo_code_input").val();
+                            console.log(code);
+                            if (code) {
+                                chrome.tabs.sendMessage(
+                                    sender.tab.id, {
+                                        yahoo_code: true,
+                                        yahoo_totp: true,
+                                        code: code,
+                                        totp_url: request.yahoo_totp_url
+                                    }
+                                );
+                            }
+                            $("#yahoo_setup_div").html(`Please wait...`);
+                        });
+                    } else {
+                        $("#yahoo_setup_div").html(
+                            `
                         ${request.message != null ? "<p>" + request.message + "</p>" : ""}
                         <p>Please enter the code sent to your phone</p>
                         <input type=text id="yahoo_code_input" placeholder="Code">
                         <button class="btn btn-success" id="yahoo_code_button">Submit</button>
                         `
-                    );
-                    $("#yahoo_code_button").click(() => {
-                        let code = $("#yahoo_code_input").val();
-                        if (code) {
-                            chrome.tabs.sendMessage(
-                                sender.tab.id, {
-                                    yahoo_code: true,
-                                    code: code
-                                }
-                            );
-                        }
-                        $("#yahoo_setup_div").html(`Please wait...`);
-                    });
-                }
-                
-            }else if (request.yahoo_get_type) {
-                $("#yahoo_setup_div").html(
-                    `
+                        );
+                        $("#yahoo_code_button").click(() => {
+                            let code = $("#yahoo_code_input").val();
+                            if (code) {
+                                chrome.tabs.sendMessage(
+                                    sender.tab.id, {
+                                        yahoo_code: true,
+                                        code: code
+                                    }
+                                );
+                            }
+                            $("#yahoo_setup_div").html(`Please wait...`);
+                        });
+                    }
+
+                } else if (request.yahoo_get_type) {
+                    $("#yahoo_setup_div").html(
+                        `
                     ${request.message != null ? "<p>" + request.message + "</p>" : ""}
                     <div class="row">
                         <div class="col-6">
@@ -1572,28 +1559,29 @@ function initiate_yahoo_setup() {
                         </div>
                     </div>
                     `
-                );
-                $("#yahoo_totp_button").click(() => {
-                    chrome.tabs.sendMessage(
-                        sender.tab.id, {
-                            yahoo_start_totp: true
-                        }
                     );
-                    $("#yahoo_setup_div").html(`Please wait...`);
-                });
-                $("#yahoo_sms_button").click(() => {
-                    chrome.tabs.sendMessage(
-                        sender.tab.id, {
-                            yahoo_start_sms: true,
-                        }
-                    );
-                    $("#yahoo_setup_div").html(`Please wait...`);
-                });
-            }else if (request.yahoo_finished) {
-                chrome.tabs.remove(sender.tab.id);
-                $("#yahoo_setup_div").html(`Finished setting up Yahoo`);
-                disable_injection("yahoo", "setup");
-                chrome.runtime.onMessage.removeListener(yahoo_listener);
+                    $("#yahoo_totp_button").click(() => {
+                        chrome.tabs.sendMessage(
+                            sender.tab.id, {
+                                yahoo_start_totp: true
+                            }
+                        );
+                        $("#yahoo_setup_div").html(`Please wait...`);
+                    });
+                    $("#yahoo_sms_button").click(() => {
+                        chrome.tabs.sendMessage(
+                            sender.tab.id, {
+                                yahoo_start_sms: true,
+                            }
+                        );
+                        $("#yahoo_setup_div").html(`Please wait...`);
+                    });
+                } else if (request.yahoo_finished) {
+                    chrome.tabs.remove(sender.tab.id);
+                    $("#yahoo_setup_div").html(`Finished setting up Yahoo`);
+                    disable_injection("yahoo", "setup");
+                    chrome.runtime.onMessage.removeListener(yahoo_listener);
+                }
             }
         }
     );
@@ -1832,7 +1820,7 @@ function initiate_linkedin_setup() {
                 disable_injection("linkedin", "setup");
                 chrome.runtime.onMessage.removeListener(linkedin_listener);
             } else if (request.linkedin_get_code) {
-                if(request.linkedin_incorrect_SMS_code){
+                if (request.linkedin_incorrect_SMS_code) {
                     $("#linkedin_setup_div").html(
                         `
                     ${request.message != null ? "<p>" + request.message + "</p>" : ""}
@@ -1853,7 +1841,7 @@ function initiate_linkedin_setup() {
                         }
                         $("#linkedin_setup_div").html(`Please wait...`);
                     });
-                } else if(request.linkedin_incorrect_TOTP_code){
+                } else if (request.linkedin_incorrect_TOTP_code) {
                     console.log("Invalid totp code");
                     $("#linkedin_setup_div").html(
                         `
@@ -1978,7 +1966,7 @@ function initiate_linkedin_setup() {
                         $("#linkedin_setup_div").html(`Please wait...`);
                     }
                 });
-            }  else if (request.linkedin_get_credentials) {
+            } else if (request.linkedin_get_credentials) {
                 $("#linkedin_setup_div").html(
                     `
                     ${request.message != null ? "<p>" + request.message + "</p>" : ""}
