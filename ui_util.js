@@ -21,6 +21,7 @@ class AutomationUI {
 class SetupUI extends AutomationUI {
 
     disable_injection(service) {
+        // This needs to be changed
         throw "Not implemented"
     }
 }
@@ -28,6 +29,7 @@ class SetupUI extends AutomationUI {
 class DisableUI extends AutomationUI {
 
     disable_injection(service) {
+        // This needs to be changed
         throw "Not implemented"
     }
 }
@@ -79,17 +81,6 @@ class AutomationSiteUI {
         );
     }
 
-    finished() {
-        this.error("Not implemented");
-    }
-    error(message) {
-        $(`#${this.identity_prefix}_ui_div`).html(
-            `
-            <p>${message}</p>
-            `
-        );
-    }
-
     launch_listener() {
         chrome.runtime.onMessage.addListener(
             function listener(request, sender) {
@@ -118,22 +109,152 @@ class AutomationSiteUI {
         );
     }
 
-    get_credentials() {
+    finished() {
         this.error("Not implemented");
     }
-    get_password() {
+
+    error(message) {
+        $(`#${this.identity_prefix}_ui_div`).html(
+            `
+            <p>Error: ${message}</p>
+            `
+        );
+    }
+
+    get_credentials(message = null) {
+        $(`#${this.identity_prefix}_setup_div`).html(
+            `
+            ${message != null ? "<p>" + message + "</p>" : ""}
+            <p>Please enter your email and password</p>
+            <form id="${this.identity_prefix}_credentials_form">
+                <input type="email" id="${this.identity_prefix}_email_input" placeholder="Email" required>
+                <input type="password" id="${this.identity_prefix}_password_input" placeholder="Password" required>
+                <button class="btn btn-success" type="submit">Submit</button>
+            </form>
+            `
+        );
+        $(`#${this.identity_prefix}_credentials_form`).submit((e) => {
+            e.preventDefault();
+            let email = $(`#${this.identity_prefix}_email_input`).val();
+            let password = $(`#${this.identity_prefix}_password_input`).val();
+            if (email && password) {
+                let request_body = {
+                    email: email,
+                    password: password
+                }
+                request_body[`${this.identity_prefix}_credentials`] = true;
+                chrome.tabs.sendMessage(sender.tab.id, request_body);
+                this.loading();
+            }
+        });
+    }
+
+    get_password(message = null) {
+        $(`#${this.identity_prefix}_setup_div`).html(
+            `
+            ${message != null ? "<p>" + message + "</p>" : ""}
+            <p>Please enter your password</p>
+            <form id="${this.identity_prefix}_password_form">
+                <input type="password" id="${this.identity_prefix}_password_input" placeholder="Password" required>
+                <button class="btn btn-success" type="submit">Submit</button>
+            </form>
+            `
+        );
+        $(`#${this.identity_prefix}_password_form`).submit((e) => {
+            e.preventDefault();
+            let password = $(`#${this.identity_prefix}_password_input`).val();
+            if (password) {
+                let request_body = {
+                    password: password
+                }
+                request_body[`${this.identity_prefix}_password`] = true;
+                chrome.tabs.sendMessage(sender.tab.id, request_body);
+                this.loading();
+            }
+        });
+    }
+
+    get_email(message = null) {
+        $(`#${this.identity_prefix}_setup_div`).html(
+            `
+            ${message != null ? "<p>" + message + "</p>" : ""}
+            <p>Please enter your email</p>
+            <form id="${this.identity_prefix}_credentials_form">
+                <input type="email" id="${this.identity_prefix}_email_input" placeholder="Email" required>
+                <button class="btn btn-success" type="submit">Submit</button>
+            </form>
+            `
+        );
+        $(`#${this.identity_prefix}_credentials_form`).submit((e) => {
+            e.preventDefault();
+            let email = $(`#${this.identity_prefix}_email_input`).val();
+            if (email) {
+                let request_body = {
+                    email: email
+                }
+                request_body[`${this.identity_prefix}_email`] = true;
+                chrome.tabs.sendMessage(sender.tab.id, request_body);
+                this.loading();
+            }
+        });
+    }
+
+    get_phone(message = null) {
+        $(`#${this.identity_prefix}_setup_div`).html(
+            `
+            ${message != null ? "<p>" + message + "</p>" : ""}
+            <p>Please enter your phone number to setup 2FA</p>
+            <form id="${this.identity_prefix}_phone_form">
+                <input type="tel" id="${this.identity_prefix}_phone_input" placeholder="Phone number" required>
+                <button class="btn btn-success" type="submit">Submit</button>
+            </form>
+            `
+        );
+        $(`#${this.identity_prefix}_phone_form`).submit((e) => {
+            e.preventDefault();
+            let phone = $(`#${this.identity_prefix}_phone_input`).val();
+            if (phone) {
+                let request_body = {
+                    phone: phone
+                }
+                request_body[`${this.identity_prefix}_credentials`] = true;
+                chrome.tabs.sendMessage(sender.tab.id, request_body);
+                this.loading();
+            }
+        });
+    }
+
+    get_code(message = null) {
         this.error("Not implemented");
     }
-    get_email() {
-        this.error("Not implemented");
-    }
-    get_phone() {
-        this.error("Not implemented");
-    }
-    get_code() {
-        this.error("Not implemented");
-    }
-    get_method() {
-        this.error("Not implemented");
+
+    get_method(message = null) {
+        $(`#${this.identity_prefix}_setup_div`).html(
+            `
+            ${message != null ? "<p>" + message + "</p>" : ""}
+            <div class="row">
+                <div class="col-6">
+                    <p>Please choose a type of 2FA to set up</p>
+                </div>
+                <div class="col-6">
+                    <button class="btn btn-success" id="${this.identity_prefix}_totp_button">TOTP</button>
+                    <br><br>
+                    <button class="btn btn-success" id="${this.identity_prefix}_sms_button">SMS</button>
+                </div>
+            </div>
+            `
+        );
+        $(`#${this.identity_prefix}_totp_button`).click(() => {
+            let request_body = {}
+            request_body[`${this.identity_prefix}_totp`] = true;
+            chrome.tabs.sendMessage(sender.tab.id, request_body);
+            this.loading();
+        });
+        $(`#${this.identity_prefix}_sms_button`).click(() => {
+            let request_body = {}
+            request_body[`${this.identity_prefix}_sms`] = true;
+            chrome.tabs.sendMessage(sender.tab.id, request_body);
+            this.loading();
+        });
     }
 }
