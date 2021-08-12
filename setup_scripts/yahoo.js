@@ -68,9 +68,16 @@ async function handleReceivedMessage(request){
     } else if (request.yahoo_code) {
         if(await waitUntilElementLoad(document, ".code-input-container", 2)){
             let elem = document.querySelector(".code-input-container");
+            // for(let i = 0; i < 5; i++){
+            //     console.log(i);
+            //     console.log(code[i]);
+            //     let selectorstring = "input[index='" + i + "']";
+            //     change(elem.querySelector(selectorstring), request.code[i]);
+               
+            // }
             for (let i = 0; i < 5; i++){
-                let selectorstring = "input[index='" + i + "']"
-                elem.querySelector(selectorstring).value=request.yahoo_code[i];
+                let selectorstring = "input[index='" + i + "']";
+                elem.querySelector(selectorstring).value=request.code[i];
             }
             document.querySelector("#btnTsvVerifyCode").click();
         }
