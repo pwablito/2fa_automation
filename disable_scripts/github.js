@@ -11,22 +11,13 @@ chrome.runtime.onMessage.addListener(
             document.querySelector("[type=password]").value = request.password;
             document.querySelector("[type=submit]").click()
         } 
-        // else if (request.github_code) {
-        //     document.querySelector("#otp").value = request.code;
-        //     document.querySelector("html > body > div:nth-of-type(3) > main > div > div:nth-of-type(5) > form").submit();
-        // }
     }
 );
 
 
 if (window.location.href.includes("github.com/settings/security")) {
-
     if (document.querySelector("[id='js-pjax-container'] > div > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(2) > div > form > input:nth-of-type(1)")) {
         document.querySelector("[id='js-pjax-container'] > div > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(2) > div > form > input:nth-of-type(1)").click(); 
-        
-        // chrome.runtime.sendMessage({
-        //     github_finished: true,
-        // })
     } else {
         //already disabled
         chrome.runtime.sendMessage({
@@ -35,11 +26,6 @@ if (window.location.href.includes("github.com/settings/security")) {
         });
     }
 } else if (window.location.href.includes("github.com/settings/two_factor_authentication")) {
-    console.log("In two_factor_authentication");
-    console.log("request password");
-    // chrome.runtime.sendMessage({
-    //     github_get_password: true,
-    // });
     if (document.querySelector("[type=password]")) {
         console.log("request password");
         chrome.runtime.sendMessage({
