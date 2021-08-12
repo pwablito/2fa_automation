@@ -125,8 +125,13 @@ class AutomationSiteUI {
     }
 
     finished() {
-        this.error("Not implemented");
         this.controller.disable_injection(this.identity_prefix);
+        $(`#${this.identity_prefix}_ui_div`).html(
+            `
+            ${message != null ? "<p>" + message + "</p>" : ""}
+            <p>Finished automation for ${this.name}</p>
+            `
+        );
     }
 
     error(message) {
@@ -139,7 +144,7 @@ class AutomationSiteUI {
     }
 
     get_credentials(message = null) {
-        $(`#${this.identity_prefix}_setup_div`).html(
+        $(`#${this.identity_prefix}_ui_div`).html(
             `
             ${message != null ? "<p>" + message + "</p>" : ""}
             <p>Please enter your email and password</p>
@@ -167,7 +172,7 @@ class AutomationSiteUI {
     }
 
     get_password(message = null) {
-        $(`#${this.identity_prefix}_setup_div`).html(
+        $(`#${this.identity_prefix}_ui_div`).html(
             `
             ${message != null ? "<p>" + message + "</p>" : ""}
             <p>Please enter your password</p>
@@ -192,7 +197,7 @@ class AutomationSiteUI {
     }
 
     get_email(message = null) {
-        $(`#${this.identity_prefix}_setup_div`).html(
+        $(`#${this.identity_prefix}_ui_div`).html(
             `
             ${message != null ? "<p>" + message + "</p>" : ""}
             <p>Please enter your email</p>
@@ -217,7 +222,7 @@ class AutomationSiteUI {
     }
 
     get_phone(message = null) {
-        $(`#${this.identity_prefix}_setup_div`).html(
+        $(`#${this.identity_prefix}_ui_div`).html(
             `
             ${message != null ? "<p>" + message + "</p>" : ""}
             <p>Please enter your phone number to setup 2FA</p>
@@ -246,7 +251,7 @@ class AutomationSiteUI {
     }
 
     get_method(message = null) {
-        $(`#${this.identity_prefix}_setup_div`).html(
+        $(`#${this.identity_prefix}_ui_div`).html(
             `
             ${message != null ? "<p>" + message + "</p>" : ""}
             <div class="row">
