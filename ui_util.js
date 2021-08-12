@@ -9,8 +9,13 @@ class AutomationUI {
 
     run() {
         for (let site of this.sites) {
+            this.enable_injection(site);
             site.initialize();
         }
+    }
+
+    enable_injection(service) {
+        throw "Must be overridden"
     }
 
     disable_injection(service) {
@@ -19,33 +24,71 @@ class AutomationUI {
 }
 
 class SetupUI extends AutomationUI {
+    enable_injection(service) {
+        // Calls the enable_injection function in `setup_util.js`
+        enable_injection(service, "setup")
+    }
 
     disable_injection(service) {
-        // This needs to be changed
-        throw "Not implemented"
+        // Calls the disable_injection function in `setup_util.js`
+        disable_injection(service, "setup")
     }
 }
 
 class DisableUI extends AutomationUI {
+    enable_injection(service) {
+        // Calls the enable_injection function in `setup_util.js`
+        enable_injection(service, "disable")
+    }
 
     disable_injection(service) {
-        // This needs to be changed
-        throw "Not implemented"
+        // Calls the disable_injection function in `setup_util.js`
+        disable_injection(service, "disable")
     }
 }
 
 class AutomationSiteUI {
-    constructor(name, identity_prefix, parent_id, logo_file) {
+    constructor(name, identity_prefix, parent_id, logo_file, controller) {
         /*
          * @param {string} name - Name of the site (i.e. "Google")
          * @param {string} identity_prefix - Prefix for UI elements (i.e. "google" would result in "google_ui_div"
          * @param {string} parent_id - ID of the parent element in which this will be placed
          * @param {string} logo_file - Path to the logo file to display on the side of the UI
+         * @param {AutomationController} controller - Controller which is an AutomationUI object (i.e. SetupUI or DisableUI)
          */
         this.name = name;
         this.identity_prefix = identity_prefix;
         this.parent_id = parent_id;
         this.logo_file = logo_file;
+        this.controller = controller;
+    }
+
+    launch_listener() {
+        chrome.runtime.onMessage.addListener(
+            function listener(request, sender) {
+                if (request[`${this.identity_prefix}_get_credentials`]) {
+                    this.get_credentials();
+                } else if (request[`${this.identity_prefix}_get_password`]) {
+                    this.get_credentials();
+                } else if (request[`${this.identity_prefix}_get_email`]) {
+                    this.get_email();
+                } else if (request[`${this.identity_prefix}_get_phone`]) {
+                    this.get_phone();
+                } else if (request[`${this.identity_prefix}_get_code`]) {
+                    this.get_code();
+                } else if (request[`${this.identity_prefix}_get_method`]) {
+                    this.get_method();
+                } else if (request[`${this.identity_prefix}_finished`]) {
+                    chrome.runtime.onMessage.removeListener(listener);
+                    this.finished();
+                } else if (request[`${this.identity_prefix}_error`]) {
+                    chrome.runtime.onMessage.removeListener(listener);
+                    this.error();
+                } else {
+                    this.error(`Got invalid request: ${request}`);
+                }
+            }
+        );
     }
 
     initialize() {
@@ -81,36 +124,9 @@ class AutomationSiteUI {
         );
     }
 
-    launch_listener() {
-        chrome.runtime.onMessage.addListener(
-            function listener(request, sender) {
-                if (request[`${this.identity_prefix}_get_credentials`]) {
-                    this.get_credentials();
-                } else if (request[`${this.identity_prefix}_get_password`]) {
-                    this.get_credentials();
-                } else if (request[`${this.identity_prefix}_get_email`]) {
-                    this.get_email();
-                } else if (request[`${this.identity_prefix}_get_phone`]) {
-                    this.get_phone();
-                } else if (request[`${this.identity_prefix}_get_code`]) {
-                    this.get_code();
-                } else if (request[`${this.identity_prefix}_get_method`]) {
-                    this.get_method();
-                } else if (request[`${this.identity_prefix}_finished`]) {
-                    chrome.runtime.onMessage.removeListener(listener);
-                    this.finished();
-                } else if (request[`${this.identity_prefix}_error`]) {
-                    chrome.runtime.onMessage.removeListener(listener);
-                    this.error();
-                } else {
-                    this.error(`Got invalid request: ${request}`);
-                }
-            }
-        );
-    }
-
     finished() {
         this.error("Not implemented");
+        this.controller.disable_injection(this.identity_prefix);
     }
 
     error(message) {
@@ -119,6 +135,7 @@ class AutomationSiteUI {
             <p>Error: ${message}</p>
             `
         );
+        this.controller.disable_injection(this.identity_prefix);
     }
 
     get_credentials(message = null) {
