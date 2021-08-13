@@ -146,10 +146,12 @@ chrome.runtime.onMessage.addListener(
             }
             
         } else if (document.querySelector("#ap_email") != null) {
+            console.log("Found ap email");
             chrome.runtime.sendMessage({
                 amazon_get_email: true
             });
         }
+    
     } else if (window.location.href.includes("amazon.com/a/settings/approval/setup/register") || window.location.href.includes("amazon.com/ap/profile/mobilephone?openid.assoc_handle")) {
         if(await waitUntilElementLoad(document, "#sia-select-otp-device-accordion", 2)) {
             chrome.runtime.sendMessage({
