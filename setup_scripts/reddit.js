@@ -37,17 +37,17 @@ async function waitUntilElementLoad(document, elemXPath,  maxWait) {
 
 function exitScriptWithError() {
     // When debugging comment out code of this function. This will stop closing of background pages.
-    chrome.runtime.sendMessage({
-        reddit_error: true,
-        message: "Sorry! Something went wrong. ",
-        message_for_dev : window.location.href
-    });
+    // chrome.runtime.sendMessage({
+    //     reddit_error: true,
+    //     message: "Sorry! Something went wrong. ",
+    //     message_for_dev : window.location.href
+    // });
 }
 
 async function handleReceivedMessage(request) {
     if (request.reddit_credentials) {
-        document.querySelector("#loginUsername").value = request.username;
-        document.querySelector("#loginPassword").value = request.password;
+        document.querySelector("#[name=username]").value = request.username;
+        document.querySelector("[type=password]").value = request.password;
         getElementByXpath(document, "//button[contains(text(),'Log In')]").click();
         setTimeout(() => {
             if (document.querySelector("[class$=errorMessage]").textContent !== "") {
@@ -58,7 +58,7 @@ async function handleReceivedMessage(request) {
             } 
         }, 2000);
     } else if (request.reddit_password) {
-        change(document.querySelector('#password'), request.password);
+        change(document.querySelector('[type=password]'), request.password);
         document.querySelector("[type=submit]").click();
         setTimeout(() => {
             if (document.querySelector("[class$=errorMessage][data-for=password]").textContent !== "") {
@@ -111,14 +111,15 @@ chrome.runtime.onMessage.addListener(
     try {
         if (window.location.href.includes("reddit.com/2fa/enable")) {
             await waitUntilPageLoad(document, 2);
-            if (document.querySelector("#password") != null) {
+            if (document.querySelector("[type=password]") != null) {
+                console.log("Send password request");
                 chrome.runtime.sendMessage({
                     reddit_get_password: true
                 });
             } else {exitScriptWithError();}
         } else if (window.location.href.includes("reddit.com/login")) {
             await waitUntilPageLoad(document, 2);
-            if (document.querySelector('#password')) {
+            if (document.querySelector("[type=password]")) {
                 chrome.runtime.sendMessage({
                     reddit_get_credentials: true,
                 });

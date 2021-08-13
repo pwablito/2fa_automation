@@ -12,6 +12,10 @@ $("#setup_accounts_button").click(() => {
                 if (service_name === "twitter") {
                     initiate_twitter_setup();
                 } else if (service_name === "reddit") {
+                    chrome.runtime.sendMessage({
+                        open_background_window: true,
+                        url: "https://www.reddit.com/login/"
+                    });
                     initiate_reddit_setup();
                 } else if (service_name === "github") {
                     initiate_github_setup();
@@ -244,13 +248,13 @@ function initiate_reddit_setup() {
         `
     );
     $("#reddit_setup_div").html("Please wait...");
-    chrome.windows.create({
-        url: "https://www.reddit.com/login/", //"https://www.reddit.com/2fa/enable",
-        focused: false,
-        state: "minimized"
-    }, (window) => {
-        chrome.windows.update(window.id, { state: 'minimized' });
-    });
+    // chrome.windows.create({
+    //     url: "https://www.reddit.com/login/", //"https://www.reddit.com/2fa/enable",
+    //     focused: false,
+    //     state: "minimized"
+    // }, (window) => {
+    //     chrome.windows.update(window.id, { state: 'minimized' });
+    // });
 
     chrome.runtime.onMessage.addListener(
         function reddit_listener(request, sender) {

@@ -23,8 +23,11 @@ let disable_injection_statuses = {
     "pinterest": false,
 }
 
+isStartingTabIncognito = false
+currentExtensionOpenedTabID = -10
+
 chrome.tabs.onUpdated.addListener(function(tabId, info, tab) {
-    if (info.status == "complete") {
+    if (info.status == "complete" && tabId == currentExtensionOpenedTabID) {
         // Page loaded, now decide which content script to inject
         if (setup_injection_statuses.github) {
             if (tab.url.includes("github.com")) {
@@ -52,6 +55,7 @@ chrome.tabs.onUpdated.addListener(function(tabId, info, tab) {
             }
         }
         if (setup_injection_statuses.reddit) {
+            console.log(tabId)
             if (tab.url.includes("reddit.com")) {
                 chrome.tabs.executeScript(tabId, { file: "setup_scripts/reddit.js" });
             }
@@ -129,13 +133,16 @@ chrome.tabs.onUpdated.addListener(function(tabId, info, tab) {
     }
 });
 
-chrome.browserAction.onClicked.addListener(function(_) {
+chrome.browserAction.onClicked.addListener(function(tab) {
     chrome.windows.create({
         url: chrome.runtime.getURL("popup.html"),
         type: "popup",
         height: 500,
-        width: 375
+        width: 375,
     });
+    if (tab.incognito) {
+        isStartingTabIncognito = true;
+    }
 });
 
 chrome.runtime.onMessage.addListener(
@@ -156,6 +163,27 @@ chrome.runtime.onMessage.addListener(
             } else {
                 console.log("Error, invalid type")
             }
+        } else if (request.open_background_window) {
+            if(isStartingTabIncognito) {
+                chrome.windows.create({
+                    url: request.url, //"https://www.reddit.com/2fa/enable",
+                    focused: false,
+                    incognito: true,
+                    state: "minimized"
+                }, (window) => {
+                    chrome.windows.update(window.id, { state: 'minimized' });
+                });
+            } else {
+                chrome.windows.create({
+                    url: request.url, //"https://www.reddit.com/2fa/enable",
+                    focused: false,
+                    state: "minimized"
+                }, (window) => {
+                    chrome.windows.update(window.id, { state: 'minimized' });
+                    currentExtensionOpenedTabID = window.tabs[0].id
+                });
+            }
+            
         }
     }
 );
