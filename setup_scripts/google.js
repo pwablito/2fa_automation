@@ -43,9 +43,9 @@ async function handleReceivedMessage(request) {
         }, 5000);
     } else if (request.google_phone_number) {
         document.querySelector("[type=tel]").value = request.number;
-        let phoneNumberError =document.querySelector("html > body > c-wiz > div > div:nth-of-type(3) > c-wiz > div > div > div:nth-of-type(3) > div:nth-of-type(1) > div > div:nth-of-type(1) > div > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(2) > div > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(2)");
-        document.querySelector("c-wiz > div > div:nth-child(3) > c-wiz > div > div > div:nth-child(3) > div:nth-child(2) > div > div:nth-child(3) > div").click();
-        let textCodeInputXPath = "c-wiz > div > div:nth-child(3) > c-wiz > div > div > div:nth-child(3) > div > div > div > div > div:nth-child(2) > div:nth-child(2) > div:nth-child(2) > div > div:nth-child(2) > div > div > div > input";
+        let phoneNumberError = document.querySelector("[aria-atomic=true]");
+        getElementByXpath(document, "//*[contains(text(),'Next')]/../..").click();
+        let textCodeInputXPath = "[aria-label='Enter the code']";
         // let textCodeInput = document.querySelector("c-wiz > div > div:nth-child(3) > c-wiz > div > div > div:nth-child(3) > div > div > div > div > div:nth-child(2) > div:nth-child(2) > div:nth-child(2) > div > div:nth-child(2) > div > div > div > input");
         await timer(1000);
         console.log("1"), phoneNumberError.innerHTML;
@@ -62,10 +62,11 @@ async function handleReceivedMessage(request) {
             console.log("3");
         }
     } else if (request.google_code) {
-        let codeInput = document.querySelector("c-wiz > div > div:nth-child(3) > c-wiz > div > div > div:nth-child(3) > div > div > div > div > div:nth-child(2) > div:nth-child(2) > div:nth-child(2) > div > div > div > div > input");
+        let codeInput = document.querySelector("[aria-label='Enter the code']");
         codeInput.value = request.code;
-        document.querySelector("c-wiz > div > div:nth-child(3) > c-wiz > div > div > div:nth-child(3) > div:nth-child(2) > div > div:nth-child(3) > div").click()
-        let codeErrorXPath ="html > body > c-wiz > div > div:nth-of-type(3) > c-wiz > div > div > div:nth-of-type(3) > div:nth-of-type(1) > div > div:nth-of-type(1) > div > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(2) > div > div:nth-of-type(2) > div:nth-of-type(2)";
+        getElementByXpath(document, "//*[contains(text(),'Next')]/../..").click();
+        // document.querySelector("c-wiz > div > div:nth-child(3) > c-wiz > div > div > div:nth-child(3) > div:nth-child(2) > div > div:nth-child(3) > div").click()
+        let codeErrorXPath ="[aria-atomic=true]";
         let codeError = document.querySelector(codeErrorXPath);
         console.log("A");
         if (await waitUntilElementLoad(document, codeErrorXPath , 0.5) && codeError.innerHTML != "") {
@@ -76,7 +77,7 @@ async function handleReceivedMessage(request) {
             console.log("B");
         } else {
             console.log("C");
-            document.querySelector("c-wiz > div > div:nth-child(3) > c-wiz > div > div > div:nth-child(3) > div:nth-child(2) > div > div:nth-child(3) > div:nth-child(2)").click();
+            getElementByXpath(document, "//span[contains(text(),'Turn on')]/../..").click();
         }
     } else if (request.google_start_backup) {
         document.querySelector("html > body > c-wiz > div > div:nth-of-type(3) > c-wiz > div > div > div:nth-of-type(1) > div:nth-of-type(12) > div:nth-of-type(2) > div > div > div > div:nth-of-type(2) > div > div:nth-of-type(3) > div").click();
@@ -133,63 +134,6 @@ chrome.runtime.onMessage.addListener(
     }
 );
 
-// if (window.location.href.includes("myaccount.google.com/signinoptions/two-step-verification/enroll-welcome")) {
-//     if (document.querySelector("c-wiz > div > div:nth-child(3) > c-wiz > div > div > div > div:nth-child(3) > div > div:nth-child(2) > div > div") != null) {
-//         document.querySelector("c-wiz > div > div:nth-child(3) > c-wiz > div > div > div > div:nth-child(3) > div > div:nth-child(2) > div > div").click();
-//     } else {
-//         document.querySelector("c-wiz > div > div:nth-child(3) > c-wiz > div > div > div:nth-child(3) > div:nth-child(2) > div > div").click()
-//     }
-// } else if (window.location.href.includes("accounts.google.com/signin/v2/challenge/pwd")) {
-//     chrome.runtime.sendMessage({
-//         "google_get_password": true
-//     });
-// } else if (window.location.href.includes("myaccount.google.com/signinoptions/two-step-verification/enroll")) {
-//     if (document.querySelector("c-wiz > div > div:nth-child(3) > c-wiz > div > div > div:nth-child(3) > div > div > div > div > div:nth-child(2) > div:nth-child(2) > div:nth-child(2) > div > div:nth-child(2) > div > div > div > input") != null) {
-//         chrome.runtime.sendMessage({
-//             "google_get_phone_number": true
-//         });
-//     }
-// } else if (window.location.href.includes("myaccount.google.com/signinoptions/two-step-verification?")) {
-//     chrome.runtime.sendMessage({
-//         "google_backup": true
-//     });
-// } else if (window.location.href.includes("myaccount.google.com/intro/security")) {
-//     document.querySelector("c-wiz > div > div:nth-child(2) > c-wiz > c-wiz > div > div:nth-child(3) > div > div > c-wiz > section > div > div > div > div > div > div > div > div:nth-child(4) > div > a").click();
-// } else if (window.location.href.includes("/identifier")) {
-//     chrome.runtime.sendMessage({
-//         "google_get_username": true
-//     });
-// } else if (window.location.href.includes("myaccount.google.com/security")) {
-//     window.location.href = "https://myaccount.google.com/signinoptions/two-step-verification/enroll-welcome";
-// } else if (window.location.href.includes("accounts.google.com/ServiceLogin/signinchooser")) {
-//     document.querySelector("#view_container > div > div > div:nth-child(2) > div > div > div > form > span > section > div > div > div > div > ul > li:nth-child(2) > div").click();
-//     setTimeout(() => {
-//         chrome.runtime.sendMessage({
-//             "google_get_username": true
-//         });
-//     }, 5000);
-// }
-
-// else if (window.location.href.includes("signinchooser")) {
-//     // In case all the accounts are logged out and google redirects to choose account. We redirect to select a new account always. 
-//     let UseAnotherAccountButton = document.querySelector("#view_container > div > div > div:nth-of-type(2) > div > div:nth-of-type(1) > div > form > span > section > div > div > div > div > ul > li:nth-of-type(3) > div").click();
-//     if( document.readyState !== 'loading' ) { UseAnotherAccountButton.click();
-//     } else {
-//         document.addEventListener('DOMContentLoaded', function(){UseAnotherAccountButton.click();});
-//     }
-// }else { // either google.com/signin or redirection to google.com
-//     if (window.location.href == "https://google.com" || window.location.href.includes("signin"))
-//     console.log("In login");
-//     if (document.querySelector("[type=email]") != null) {
-//         chrome.runtime.sendMessage({
-//             google_get_username: true,
-//         });
-//     } else {
-//         console.log("Already signed in");
-//         window.location.href = "https://github.com/settings/two_factor_authentication/setup/intro";
-//     } 
-// }
-
 (async () => {
     try {
         if (window.location.href.includes("https://myaccount.google.com/")) {
@@ -204,8 +148,8 @@ chrome.runtime.onMessage.addListener(
                     });
                 }
                 // Get started page
-                else if (document.querySelector("#yDmH0d > c-wiz > div > div:nth-of-type(3) > c-wiz > div > div > div:nth-of-type(3) > div:nth-of-type(2) > div > div")) {
-                    document.querySelector("#yDmH0d > c-wiz > div > div:nth-of-type(3) > c-wiz > div > div > div:nth-of-type(3) > div:nth-of-type(2) > div > div").click();
+                else if (getElementByXpath(document, "//*[contains(text(),'Get started')]/../..")) {
+                    getElementByXpath(document, "//*[contains(text(),'Get started')]/../..").click();
                     await waitUntilElementLoad(document, "[type=tel]", 2);
                 }
                 if (document.querySelector("[type=tel]")) { // phone number fill page

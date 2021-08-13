@@ -48,6 +48,13 @@ async function handleReceivedMessage(request) {
         change(document.querySelector("input[type='email']"), request.username);
         change(document.querySelector("input[type='password']"), request.password);
         getElementByXpath(document, "//button[./div = 'Sign in']").click();
+        if (await waitUntilElementLoad(document, "[class='error-message']", 1)) {
+            chrome.runtime.sendMessage({
+                dropbox_get_credentials: true,
+                message: "Invalid credential"
+            });
+        }
+
     } else if (request.dropbox_password) {
         change(document.querySelector("input[type='password']"), request.password);
         if(getElementByXpath(document, "//*[contains(text(),'Next')]/..")){
@@ -59,7 +66,7 @@ async function handleReceivedMessage(request) {
             chrome.runtime.sendMessage({
                 dropbox_get_type: true,
             });
-        } else if (await waitUntilElementLoad(document, errorMsgXPath, 2) && document.querySelector(errorMsgXPath) != "") {
+        } else if (await waitUntilElementLoad(document, errorMsgXPath, 2) && document.querySelector(errorMsgXPath).innerText != "") {
             chrome.runtime.sendMessage({
                 dropbox_get_password: true,
                 message: document.querySelector(errorMsgXPath).textContent
@@ -79,7 +86,7 @@ async function handleReceivedMessage(request) {
             chrome.runtime.sendMessage({
                 dropbox_get_code: true,
             });
-        } else if (await waitUntilElementLoad(document, errorMsgXPath, 2) && document.querySelector(errorMsgXPath) != "") {
+        } else if (await waitUntilElementLoad(document, errorMsgXPath, 2) && document.querySelector(errorMsgXPath).innerText != "") {
             chrome.runtime.sendMessage({
                 dropbox_get_phone_number: true,
                 message: document.querySelector(errorMsgXPath).textContent
