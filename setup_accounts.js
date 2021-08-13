@@ -1230,14 +1230,55 @@ function initiate_yahoo_setup() {
     chrome.runtime.onMessage.addListener(
         function yahoo_listener(request, sender) {
             if (request.yahoo_error) {
-                $("#yahoo_setup_div").html(
-                    `
-                    <p>${request.message}</p>
-                    `
-                );
-                chrome.tabs.remove(sender.tab.id);
-                disable_injection("yahoo", "setup");
-                chrome.runtime.onMessage.removeListener(yahoo_listener);
+                if(request.yahoo_error_code == "incorrectTOTPCode"){
+                    console.log("Error with code, retrying");
+                    if(request.yahoo_totp_url){
+                        $("#yahoo_setup_div").html(
+                            `
+                            ${request.message != null ? "<p>" + request.message + "</p>" : ""}
+                            <p style="color:red;"> The code you entered is not correct. Please try again. </p>
+                            <p>Download Google Authenticator, scan this QR code, and enter the generated code</p>
+                            <div class="row">
+                                <div class="col-6">
+                                    <input type=text id="yahoo_code_input" placeholder="Code">
+                                    <button class="btn btn-success" id="yahoo_code_button">Submit</button>
+                                </div>
+                                <div class="col-6">
+                                    <img src="${request.yahoo_totp_url}" style="width: 100%;">
+                                </div>
+                            </div>
+                            `
+                        );
+                    
+                        $("#yahoo_code_button").click(() => {
+                            let code = $("#yahoo_code_input").val();
+                            console.log(code);
+                            if (code) {
+                                chrome.tabs.sendMessage(
+                                    sender.tab.id, {
+                                        yahoo_incorrect_totp: true,
+                                        yahoo_code: true,
+                                        yahoo_totp: true,
+                                        code: code,
+                                        totp_url: request.yahoo_totp_url
+                                    }
+                                );
+                            }
+                            $("#yahoo_setup_div").html(`Please wait...`);
+                        });
+                    } 
+
+                } else {
+                    $("#yahoo_setup_div").html(
+                        `
+                        <p>${request.message}</p>
+                        `
+                    );
+                    chrome.tabs.remove(sender.tab.id);
+                    disable_injection("yahoo", "setup");
+                    chrome.runtime.onMessage.removeListener(yahoo_listener);
+                }
+                
             } else if (request.yahoo_get_email) {
                 $("#yahoo_setup_div").html(
                     `
@@ -1302,27 +1343,94 @@ function initiate_yahoo_setup() {
                     }
                 });
             } else if (request.yahoo_get_code) {
+                if(request.yahoo_totp_url){
+                    $("#yahoo_setup_div").html(
+                        `
+                        ${request.message != null ? "<p>" + request.message + "</p>" : ""}
+                        <p>Download Google Authenticator, scan this QR code, and enter the generated code</p>
+                        <div class="row">
+                            <div class="col-6">
+                                <input type=text id="yahoo_code_input" placeholder="Code">
+                                <button class="btn btn-success" id="yahoo_code_button">Submit</button>
+                            </div>
+                            <div class="col-6">
+                                <img src="${request.yahoo_totp_url}" style="width: 100%;">
+                            </div>
+                        </div>
+                        `
+                    );
+                
+                    $("#yahoo_code_button").click(() => {
+                        let code = $("#yahoo_code_input").val();
+                        console.log(code);
+                        if (code) {
+                            chrome.tabs.sendMessage(
+                                sender.tab.id, {
+                                    yahoo_code: true,
+                                    yahoo_totp: true,
+                                    code: code,
+                                    totp_url: request.yahoo_totp_url
+                                }
+                            );
+                        }
+                        $("#yahoo_setup_div").html(`Please wait...`);
+                    });
+                } else {
+                    $("#yahoo_setup_div").html(
+                        `
+                        ${request.message != null ? "<p>" + request.message + "</p>" : ""}
+                        <p>Please enter the code sent to your phone</p>
+                        <input type=text id="yahoo_code_input" placeholder="Code">
+                        <button class="btn btn-success" id="yahoo_code_button">Submit</button>
+                        `
+                    );
+                    $("#yahoo_code_button").click(() => {
+                        let code = $("#yahoo_code_input").val();
+                        if (code) {
+                            chrome.tabs.sendMessage(
+                                sender.tab.id, {
+                                    yahoo_code: true,
+                                    code: code
+                                }
+                            );
+                        }
+                        $("#yahoo_setup_div").html(`Please wait...`);
+                    });
+                }
+                
+            }else if (request.yahoo_get_type) {
                 $("#yahoo_setup_div").html(
                     `
                     ${request.message != null ? "<p>" + request.message + "</p>" : ""}
-                    <p>Please enter the code sent to your phone</p>
-                    <input type=text id="yahoo_code_input" placeholder="Code">
-                    <button class="btn btn-success" id="yahoo_code_button">Submit</button>
+                    <div class="row">
+                        <div class="col-6">
+                            <p>Please choose a type of 2FA to set up</p>
+                        </div>
+                        <div class="col-6">
+                            <button class="btn btn-success" id="yahoo_totp_button">TOTP</button>
+                            <br><br>
+                            <button class="btn btn-success" id="yahoo_sms_button">SMS</button>
+                        </div>
+                    </div>
                     `
                 );
-                $("#yahoo_code_button").click(() => {
-                    let code = $("#yahoo_code_input").val();
-                    if (code) {
-                        chrome.tabs.sendMessage(
-                            sender.tab.id, {
-                                yahoo_code: true,
-                                code: code
-                            }
-                        );
-                    }
+                $("#yahoo_totp_button").click(() => {
+                    chrome.tabs.sendMessage(
+                        sender.tab.id, {
+                            yahoo_start_totp: true
+                        }
+                    );
                     $("#yahoo_setup_div").html(`Please wait...`);
                 });
-            } else if (request.yahoo_finished) {
+                $("#yahoo_sms_button").click(() => {
+                    chrome.tabs.sendMessage(
+                        sender.tab.id, {
+                            yahoo_start_sms: true,
+                        }
+                    );
+                    $("#yahoo_setup_div").html(`Please wait...`);
+                });
+            }else if (request.yahoo_finished) {
                 chrome.tabs.remove(sender.tab.id);
                 $("#yahoo_setup_div").html(`Finished setting up Yahoo`);
                 disable_injection("yahoo", "setup");
