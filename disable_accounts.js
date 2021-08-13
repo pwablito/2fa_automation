@@ -10,28 +10,46 @@ $("#disable_accounts_button").click(() => {
                 service_name = $(boxes[index]).data("service");
                 disable_processes.push(service_name);
                 enable_injection(service_name, "disable");
+
+                urlToOpen = "";
                 if (service_name === "twitter") {
+                    urlToOpen = "https://twitter.com/settings/account/login_verification/enrollment";
                     initiate_twitter_disable();
                 } else if (service_name === "reddit") {
+                    urlToOpen = "https://www.reddit.com/2fa/enable";
                     initiate_reddit_disable();
                 } else if (service_name === "github") {
+                    urlToOpen = "https://github.com/login";
                     initiate_github_disable();
                 } else if (service_name === "google") {
+                    urlToOpen = "https://myaccount.google.com/security";
                     initiate_google_disable();
                 } else if (service_name === "pinterest") {
+                    urlToOpen = "";
                     initiate_pinterest_disable();
                 } else if (service_name === "facebook") {
+                    urlToOpen = "https://www.facebook.com/security/2fac/settings";
                     initiate_facebook_disable();
                 } else if (service_name === "amazon") {
+                    urlToOpen = "https://www.amazon.com/a/settings/approval";
                     initiate_amazon_disable();
                 } else if (service_name === "yahoo") {
+                    urlToOpen = "https://login.yahoo.com/myaccount/security/two-step-verification";
                     initiate_yahoo_disable();
                 } else if (service_name === "dropbox") {
+                    urlToOpen = "https://www.dropbox.com/account/security";
                     initiate_dropbox_disable();
                 } else if (service_name === "linkedin") {
+                    urlToOpen = "https://www.linkedin.com/psettings/two-step-verification";
                     initiate_linkedin_disable();
                 } else {
                     console.log("Undefined service: '" + service_name + "'");
+                }
+                if (urlToOpen != "") {
+                    chrome.runtime.sendMessage({
+                        open_background_window: true,
+                        url: urlToOpen
+                    });
                 }
             }
         });
@@ -61,12 +79,12 @@ function initiate_twitter_disable() {
         `
     );
     $("#twitter_disable_div").html(`Please wait...`);
-    chrome.windows.create({
-            url: "https://twitter.com/settings/account/login_verification/enrollment",
-            focused: true,
-            // state: "minimized",
-            incognito: true
-        },
+    // chrome.windows.create({
+    //         url: "https://twitter.com/settings/account/login_verification/enrollment",
+    //         focused: true,
+    //         // state: "minimized",
+    //         incognito: true
+    //     },
         // (window) => {
         //     chrome.windows.update(window.id, { state: "minimized" });
         // }
@@ -294,15 +312,15 @@ function initiate_reddit_disable() {
         `
     );
     $("#reddit_disable_div").html("Please wait...");
-    chrome.windows.create({
-            url: "https://www.reddit.com/2fa/enable",
-            focused: false,
-            state: "minimized",
-        },
-        (window) => {
-            chrome.windows.update(window.id, { state: "minimized" });
-        }
-    );
+    // chrome.windows.create({
+    //         url: "https://www.reddit.com/2fa/enable",
+    //         focused: false,
+    //         state: "minimized",
+    //     },
+    //     (window) => {
+    //         chrome.windows.update(window.id, { state: "minimized" });
+    //     }
+    // );
 
     chrome.runtime.onMessage.addListener(function reddit_listener(
         request,
@@ -360,15 +378,15 @@ function initiate_github_disable() {
         `
     );
     $("#github_disable_div").html(`Please wait...`);
-    chrome.windows.create({
-            url: "https://github.com/login",
-            focused: false,
-            state: "minimized",
-        },
-        (window) => {
-            chrome.windows.update(window.id, { state: "minimized" });
-        }
-    );
+    // chrome.windows.create({
+    //         url: "https://github.com/login",
+    //         focused: false,
+    //         state: "minimized",
+    //     },
+    //     (window) => {
+    //         chrome.windows.update(window.id, { state: "minimized" });
+    //     }
+    // );
 
     chrome.runtime.onMessage.addListener(function github_listener(
         request,
@@ -451,15 +469,15 @@ function initiate_google_disable() {
         `
     );
     $("#google_disable_div").html(`Please wait...`);
-    chrome.windows.create({
-            url: "https://myaccount.google.com/security",
-            focused: false,
-            state: "minimized",
-        },
-        (window) => {
-            chrome.windows.update(window.id, { state: "minimized" });
-        }
-    );
+    // chrome.windows.create({
+    //         url: "https://myaccount.google.com/security",
+    //         focused: false,
+    //         state: "minimized",
+    //     },
+    //     (window) => {
+    //         chrome.windows.update(window.id, { state: "minimized" });
+    //     }
+    // );
 
     chrome.runtime.onMessage.addListener(function google_listener(
         request,
@@ -534,15 +552,15 @@ function initiate_facebook_disable() {
         `
     );
     $("#facebook_disable_div").html(`Please wait...`);
-    chrome.windows.create({
-            url: "https://www.facebook.com/security/2fac/settings",
-            focused: false,
-            state: "minimized",
-        },
-        (window) => {
-            chrome.windows.update(window.id, { state: "minimized" });
-        }
-    );
+    // chrome.windows.create({
+    //         url: "https://www.facebook.com/security/2fac/settings",
+    //         focused: false,
+    //         state: "minimized",
+    //     },
+    //     (window) => {
+    //         chrome.windows.update(window.id, { state: "minimized" });
+    //     }
+    // );
 
     chrome.runtime.onMessage.addListener(function facebook_listener(
         request,
@@ -645,15 +663,15 @@ function initiate_amazon_disable() {
         `
     );
     $("#amazon_disable_div").html(`Please wait...`);
-    chrome.windows.create({
-            url: "https://www.amazon.com/a/settings/approval",
-            focused: false,
-            state: "minimized",
-        },
-        (window) => {
-            chrome.windows.update(window.id, { state: "minimized" });
-        }
-    );
+    // chrome.windows.create({
+    //         url: "https://www.amazon.com/a/settings/approval",
+    //         focused: false,
+    //         state: "minimized",
+    //     },
+    //     (window) => {
+    //         chrome.windows.update(window.id, { state: "minimized" });
+    //     }
+    // );
 
     chrome.runtime.onMessage.addListener(function amazon_listener(
         request,
@@ -820,15 +838,15 @@ function initiate_yahoo_disable() {
         `
     );
     $("#yahoo_disable_div").html(`Please wait...`);
-    chrome.windows.create({
-            url: "https://login.yahoo.com/myaccount/security/two-step-verification",
-            focused: false,
-            state: "minimized",
-        },
-        (window) => {
-            chrome.windows.update(window.id, { state: "minimized" });
-        }
-    );
+    // chrome.windows.create({
+    //         url: "https://login.yahoo.com/myaccount/security/two-step-verification",
+    //         focused: false,
+    //         state: "minimized",
+    //     },
+    //     (window) => {
+    //         chrome.windows.update(window.id, { state: "minimized" });
+    //     }
+    // );
 
     chrome.runtime.onMessage.addListener(function yahoo_listener(
         request,
@@ -969,15 +987,15 @@ function initiate_dropbox_disable() {
         `
     );
     $("#dropbox_disable_div").html(`Please wait...`);
-    chrome.windows.create({
-            url: "https://www.dropbox.com/account/security",
-            focused: false,
-            state: "minimized",
-        },
-        (window) => {
-            chrome.windows.update(window.id, { state: "minimized" });
-        }
-    );
+    // chrome.windows.create({
+    //         url: "https://www.dropbox.com/account/security",
+    //         focused: false,
+    //         state: "minimized",
+    //     },
+    //     (window) => {
+    //         chrome.windows.update(window.id, { state: "minimized" });
+    //     }
+    // );
 
     chrome.runtime.onMessage.addListener(function dropbox_listener(
         request,
@@ -1104,15 +1122,15 @@ function initiate_linkedin_disable() {
         `
     );
     $("#linkedin_disable_div").html(`Please wait...`);
-    chrome.windows.create({
-            url: "https://www.linkedin.com/psettings/two-step-verification",
-            focused: false,
-            state: "minimized",
-        },
-        (window) => {
-            chrome.windows.update(window.id, { state: "minimized" });
-        }
-    );
+    // chrome.windows.create({
+    //         url: "https://www.linkedin.com/psettings/two-step-verification",
+    //         focused: false,
+    //         state: "minimized",
+    //     },
+    //     (window) => {
+    //         chrome.windows.update(window.id, { state: "minimized" });
+    //     }
+    // );
 
     chrome.runtime.onMessage.addListener(function linkedin_listener(request, sender) {
         if (request.linkedin_get_code){
