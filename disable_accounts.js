@@ -660,7 +660,7 @@ function initiate_amazon_disable() {
         sender
     ) {
         console.log(request);
-        if (request.amazon_error) {
+        if (request.amazon_disable_error) {
             $("#amazon_disable_div").html(request.message);
             disable_injection("amazon", "disable");
             chrome.runtime.onMessage.removeListener(amazon_listener);
@@ -738,32 +738,59 @@ function initiate_amazon_disable() {
                 $("#amazon_disable_div").html(`Please wait...`);
             });
         } else if (request.amazon_get_password) {
-            $("#amazon_disable_div").html(
-                `
-                    ${
-                      request.message != null
-                        ? "<p>" + request.message + "</p>"
-                        : ""
-                    }
-                    <p>Please enter your password</p>
-                    <input type=password id="amazon_password_input" placeholder="Password">
-                    <button class="btn btn-success" id="amazon_password_button">Submit</button>
+            if(request.amazon_password_incorrect){
+                console.log("wrong password")
+                $("#amazon_disable_div").html(
                     `
-            );
-            $("#amazon_password_button").click(() => {
-                let password = $("#amazon_password_input").val();
-                if (password) {
-                    chrome.tabs.sendMessage(sender.tab.id, {
-                        amazon_password: true,
-                        password: password,
-                    });
-                }
-                $("#amazon_disable_div").html(`Please wait...`);
-            });
+                        ${
+                          request.message != null
+                            ? "<p>" + request.message + "</p>"
+                            : ""
+                        }
+                        <p style='color:red'>The password you entered is incorrect. Please try again</p>
+                        <input type=password id="amazon_password_input" placeholder="Password">
+                        <button class="btn btn-success" id="amazon_password_button">Submit</button>
+                        `
+                );
+                $("#amazon_password_button").click(() => {
+                    let password = $("#amazon_password_input").val();
+                    if (password) {
+                        chrome.tabs.sendMessage(sender.tab.id, {
+                            amazon_password: true,
+                            password: password,
+                        });
+                    }
+                    $("#amazon_disable_div").html(`Please wait...`);
+                });
+            }else {
+                $("#amazon_disable_div").html(
+                    `
+                        ${
+                          request.message != null
+                            ? "<p>" + request.message + "</p>"
+                            : ""
+                        }
+                        <p>Please enter your password</p>
+                        <input type=password id="amazon_password_input" placeholder="Password">
+                        <button class="btn btn-success" id="amazon_password_button">Submit</button>
+                        `
+                );
+                $("#amazon_password_button").click(() => {
+                    let password = $("#amazon_password_input").val();
+                    if (password) {
+                        chrome.tabs.sendMessage(sender.tab.id, {
+                            amazon_password: true,
+                            password: password,
+                        });
+                    }
+                    $("#amazon_disable_div").html(`Please wait...`);
+                });
+            }
+            
         } else if (request.amazon_finished) {
-            chrome.tabs.remove(sender.tab.id);
+            // chrome.tabs.remove(sender.tab.id);
             $("#amazon_disable_div").html(`Finished disabling amazon`);
-            disable_injection("amazon", "disable");
+             disable_injection("amazon", "disable");
             chrome.runtime.onMessage.removeListener(amazon_listener);
         } else if (request.amazon_approve_login) {
             console.log("Approve account please");

@@ -1052,26 +1052,53 @@ function initiate_amazon_setup() {
                     $("#amazon_setup_div").html(`Please wait...`);
                 });
             } else if (request.amazon_get_password) {
-                $("#amazon_setup_div").html(
-                    `
-                    ${request.message != null ? "<p>" + request.message + "</p>" : ""}
-                    <p>Please enter your password</p>
-                    <input type=password id="amazon_password_input" placeholder="Password">
-                    <button class="btn btn-success" id="amazon_password_button">Submit</button>
-                    `
-                );
-                $("#amazon_password_button").click(() => {
-                    let password = $("#amazon_password_input").val();
-                    if (password) {
-                        chrome.tabs.sendMessage(
-                            sender.tab.id, {
-                                amazon_password: true,
-                                password: password
+                if(request.amazon_password_incorrect){
+                    console.log("wrong password")
+                    $("#amazon_setup_div").html(
+                        `
+                            ${
+                                request.message != null
+                                ? "<p>" + request.message + "</p>"
+                                : ""
                             }
-                        );
-                    }
-                    $("#amazon_setup_div").html(`Please wait...`);
-                });
+                            <p style='color:red'>The password you entered is incorrect. Please try again</p>
+                            <input type=password id="amazon_password_input" placeholder="Password">
+                            <button class="btn btn-success" id="amazon_password_button">Submit</button>
+                            `
+                    );
+                    $("#amazon_password_button").click(() => {
+                        let password = $("#amazon_password_input").val();
+                        if (password) {
+                            chrome.tabs.sendMessage(sender.tab.id, {
+                                amazon_password: true,
+                                password: password,
+                            });
+                        }
+                        $("#amazon_setup_div").html(`Please wait...`);
+                    });
+                } else {
+                    $("#amazon_setup_div").html(
+                        `
+                        ${request.message != null ? "<p>" + request.message + "</p>" : ""}
+                        <p>Please enter your password</p>
+                        <input type=password id="amazon_password_input" placeholder="Password">
+                        <button class="btn btn-success" id="amazon_password_button">Submit</button>
+                        `
+                    );
+                    $("#amazon_password_button").click(() => {
+                        let password = $("#amazon_password_input").val();
+                        if (password) {
+                            chrome.tabs.sendMessage(
+                                sender.tab.id, {
+                                    amazon_password: true,
+                                    password: password
+                                }
+                            );
+                        }
+                        $("#amazon_setup_div").html(`Please wait...`);
+                    });
+                }
+                
             } else if (request.amazon_approve_login) {
                 $("#amazon_setup_div").html(
                     `
@@ -1080,26 +1107,50 @@ function initiate_amazon_setup() {
                     `
                 );
             } else if (request.amazon_get_phone_number) {
-                $("#amazon_setup_div").html(
-                    `
-                    ${request.message != null ? "<p>" + request.message + "</p>" : ""}
-                    <p>Please enter your phone number</p>
-                    <input type=text id="amazon_phone_number_input" placeholder="Phone number">
-                    <button class="btn btn-success" id="amazon_phone_number_button">Submit</button>
-                    `
-                );
-                $("#amazon_phone_number_button").click(() => {
-                    let phone_number = $("#amazon_phone_number_input").val();
-                    if (phone_number) {
-                        chrome.tabs.sendMessage(
-                            sender.tab.id, {
-                                amazon_phone_number: true,
-                                phone_number: phone_number
-                            }
-                        );
-                        $("#amazon_setup_div").html(`Please wait...`);
-                    }
-                });
+                if(request.amazon_invalid_phone_number){
+                    $("#amazon_setup_div").html(
+                        `
+                        ${request.message != null ? "<p>" + request.message + "</p>" : ""}
+                        <p style='color:red'>The phone number you entered is invalid. Please try again</p>
+                        <input type=text id="amazon_phone_number_input" placeholder="Phone number">
+                        <button class="btn btn-success" id="amazon_phone_number_button">Submit</button>
+                        `
+                    );
+                    $("#amazon_phone_number_button").click(() => {
+                        let phone_number = $("#amazon_phone_number_input").val();
+                        if (phone_number) {
+                            chrome.tabs.sendMessage(
+                                sender.tab.id, {
+                                    amazon_phone_number: true,
+                                    phone_number: phone_number
+                                }
+                            );
+                            $("#amazon_setup_div").html(`Please wait...`);
+                        }
+                    });
+                } else {
+                    $("#amazon_setup_div").html(
+                        `
+                        ${request.message != null ? "<p>" + request.message + "</p>" : ""}
+                        <p>Please enter your phone number</p>
+                        <input type=text id="amazon_phone_number_input" placeholder="Phone number">
+                        <button class="btn btn-success" id="amazon_phone_number_button">Submit</button>
+                        `
+                    );
+                    $("#amazon_phone_number_button").click(() => {
+                        let phone_number = $("#amazon_phone_number_input").val();
+                        if (phone_number) {
+                            chrome.tabs.sendMessage(
+                                sender.tab.id, {
+                                    amazon_phone_number: true,
+                                    phone_number: phone_number
+                                }
+                            );
+                            $("#amazon_setup_div").html(`Please wait...`);
+                        }
+                    });
+                }
+                
             } else if (request.amazon_get_email) {
                 $("#amazon_setup_div").html(
                     `
@@ -1122,7 +1173,58 @@ function initiate_amazon_setup() {
                     }
                 });
             } else if (request.amazon_get_code) {
-                if (request.totp_url) {
+                if(request.amazon_incorrect_sms_code){
+                    console.log("received incorrect sms code message")
+                    $("#amazon_setup_div").html(
+                        `
+                        ${request.message != null ? "<p>" + request.message + "</p>" : ""}
+                        <p style='color:red'>The code you entered is incorrect. Please try again</p>
+                        <input type=text id="amazon_code_input" placeholder="Code">
+                        <button class="btn btn-success" id="amazon_code_button">Submit</button>
+                        `
+                    );
+                    $("#amazon_code_button").click(() => {
+                        let code = $("#amazon_code_input").val();
+                        if (code) {
+                            chrome.tabs.sendMessage(
+                                sender.tab.id, {
+                                    amazon_sms_code: true,
+                                    code: code
+                                }
+                            );
+                        }
+                        $("#amazon_setup_div").html(`Please wait...`);
+                    });
+                } else if (request.totp_url && request.amazon_incorrect_totp_code) {
+                    $("#amazon_setup_div").html(
+                        `
+                        ${request.message != null ? "<p>" + request.message + "</p>" : ""}
+                        <p style='color:red'>The code you entered is incorrect. Please try again</p>
+                        <p>Download Google Authenticator, scan this QR code, and enter the generated code</p>
+                        <div class="row">
+                            <div class="col-6">
+                                <input type=text id="amazon_code_input" placeholder="Code">
+                                <button class="btn btn-success" id="amazon_code_button">Submit</button>
+                            </div>
+                            <div class="col-6">
+                                <img src="${request.totp_url}" style="width: 100%;">
+                            </div>
+                        </div>
+                        `
+                    );
+                    $("#amazon_code_button").click(() => {
+                        let code = $("#amazon_code_input").val();
+                        if (code) {
+                            chrome.tabs.sendMessage(
+                                sender.tab.id, {
+                                    amazon_totp_code: true,
+                                    code: code
+                                }
+                            );
+                        }
+                        $("#amazon_setup_div").html(`Please wait...`);
+                    });
+                } else if(request.totp_url) {
                     $("#amazon_setup_div").html(
                         `
                         ${request.message != null ? "<p>" + request.message + "</p>" : ""}
@@ -1151,7 +1253,7 @@ function initiate_amazon_setup() {
                         }
                         $("#amazon_setup_div").html(`Please wait...`);
                     });
-                } else {
+                }else {
                     $("#amazon_setup_div").html(
                         `
                         ${request.message != null ? "<p>" + request.message + "</p>" : ""}
