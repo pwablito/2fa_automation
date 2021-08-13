@@ -21,43 +21,66 @@ chrome.runtime.onMessage.addListener(function(request, _) {
 });
 
 if (window.location.href.includes("pinterest.com/settings/security")) {
-    if (document.querySelector("html > body > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(2) > div > div > div > div:nth-of-type(2) > div > div:nth-of-type(2) > div > div:nth-of-type(2) > div > span > a") !== null) {
-        chrome.runtime.sendMessage({
-            pinterest_error: true,
-            message: "Please verify your email before setting up 2fa",
-        });
-    } else {
+    // if (document.querySelector("html > body > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(2) > div > div > div > div:nth-of-type(2) > div > div:nth-of-type(2) > div > div:nth-of-type(2) > div > span > a") !== null) {
+    //     chrome.runtime.sendMessage({
+    //         pinterest_error: true,
+    //         message: "Please verify your email before setting up 2fa",
+    //     });
+    // } else
+    if (await waitUntilElementLoad(docuemnt, "#mfa_preference", 2)) {
         document.querySelector("#mfa_preference").click();
-        setTimeout(() => {
-            if (document.querySelector("html > body > div:nth-of-type(4) > div > div > div > div:nth-of-type(2) > div > div:nth-of-type(2) > div > span > div:nth-of-type(1) > input") === null) {
-                chrome.runtime.sendMessage({
-                    pinterest_error: true,
-                    message: "Something went wrong"
-                });
-            } else {
-                chrome.runtime.sendMessage({
-                    pinterest_get_password: true,
-                });
-            }
-        }, 1000);
+        if (await waitUntilElementLoad(document, "#password", 2)) {
+            chrome.runtime.sendMessage({
+                pinterest_get_password: true,
+            });
+        } else {exitScriptWithError();}
+        // setTimeout(() => {
+        //     if (document.querySelector("html > body > div:nth-of-type(4) > div > div > div > div:nth-of-type(2) > div > div:nth-of-type(2) > div > span > div:nth-of-type(1) > input") === null) {
+        //         chrome.runtime.sendMessage({
+        //             pinterest_error: true,
+        //             message: "Something went wrong"
+        //         });
+        //     } else {
+        //         chrome.runtime.sendMessage({
+        //             pinterest_get_password: true,
+        //         });
+        //     }
+        // }, 1000);
+    }
+} else if (window.location.href.includes("login")) {
+    await waitUntilPageLoad(document, 3);
+    if (document.querySelector("#password")) {
+        if (document.querySelector("#email")) {
+            chrome.runtime.sendMessage({
+                pinterest_get_credentials: true,
+            });
+        } else {
+            chrome.runtime.sendMessage({
+                pinterest_get_password: true,
+            });
+        }
     }
 } else {
-    setTimeout(() => {
-        if (document.querySelector("html > body > div:nth-of-type(2) > div:nth-of-type(1) > div > div > div > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > button") !== null) {
-            // On login page
-            document.querySelector("html > body > div:nth-of-type(2) > div:nth-of-type(1) > div > div > div > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > button").click()
-            setTimeout(() => {
-                // Move off of saved account page so we enter full credentials every time
-                if (document.querySelector("html > body > div:nth-of-type(2) > div:nth-of-type(1) > div > div > div > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div > div > div > div > div > div > div:nth-of-type(8) > div > div > a") !== null) {
-                    document.querySelector("html > body > div:nth-of-type(2) > div:nth-of-type(1) > div > div > div > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div > div > div > div > div > div > div:nth-of-type(8) > div > div > a").click();
-                }
-                chrome.runtime.sendMessage({
-                    pinterest_get_credentials: true,
-                });
-            }, 500);
-        } else {
-            // Navigate to security page
-            window.location.href = "https://pinterest.com/settings/security";
-        }
-    }, 1000);
+    window.location.href = "https://pinterest.com/settings/security";
 }
+
+// else {
+//     setTimeout(() => {
+//         if ( !== null) {
+//             // On login page
+// document.querySelector("html > body > div:nth-of-type(2) > div:nth-of-type(1) > div > div > div > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > button")            document.querySelector("html > body > div:nth-of-type(2) > div:nth-of-type(1) > div > div > div > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > button").click()
+//             setTimeout(() => {
+//                 // Move off of saved account page so we enter full credentials every time
+//                 if (document.querySelector("html > body > div:nth-of-type(2) > div:nth-of-type(1) > div > div > div > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div > div > div > div > div > div > div:nth-of-type(8) > div > div > a") !== null) {
+//                     document.querySelector("html > body > div:nth-of-type(2) > div:nth-of-type(1) > div > div > div > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div > div > div > div > div > div > div:nth-of-type(8) > div > div > a").click();
+//                 }
+//                 chrome.runtime.sendMessage({
+//                     pinterest_get_credentials: true,
+//                 });
+//             }, 500);
+//         } else {
+//             // Navigate to security page
+//             window.location.href = "https://pinterest.com/settings/security";
+//         }
+//     }, 1000);
+// }
