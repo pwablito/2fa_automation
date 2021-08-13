@@ -88,7 +88,11 @@ function initiate_twitter_disable() {
         // (window) => {
         //     chrome.windows.update(window.id, { state: "minimized" });
         // }
+<<<<<<< HEAD
     // );
+=======
+    //);
+>>>>>>> 2128d13bebd1dbc976aa54a7cff26c9ea0ac57ff
     chrome.runtime.onMessage.addListener(
         function twitter__listener(request, sender) {
             if (request.twitter_logged_in != null) {
