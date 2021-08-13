@@ -20,6 +20,7 @@ class AutomationUI {
     stop() {
         for (let site of this.sites) {
             this.disable_injection(site.identity_prefix);
+            site.close_window();
         }
     }
 
@@ -57,14 +58,15 @@ class DisableUI extends AutomationUI {
 }
 
 class AutomationSiteUI {
-    constructor(name, identity_prefix, parent_id, logo_file, controller, start_url) {
+    constructor(name, identity_prefix, parent_id, logo_file, controller, start_url, incognito = false) {
         /*
          * @param {string} name - Name of the site (i.e. "Google")
          * @param {string} identity_prefix - Prefix for UI elements (i.e. "google" would result in "google_ui_div"
          * @param {string} parent_id - ID of the parent element in which this will be placed
          * @param {string} logo_file - Path to the logo file to display on the side of the UI
-         * @param {AutomationController} controller - Controller which is an AutomationUI object (i.e. SetupUI or DisableUI)
+         * @param {AutomationUI} controller - Controller which is an AutomationUI object (i.e. SetupUI or DisableUI)
          * @param {string} start_url - URL for the first page of the 2fa automation process (will be automatically opened)
+         * @param {boolean} incognito - Whether or not to open the target site in incognito mode
          */
         this.name = name;
         this.identity_prefix = identity_prefix;
@@ -72,34 +74,8 @@ class AutomationSiteUI {
         this.logo_file = logo_file;
         this.controller = controller;
         this.start_url = start_url;
-    }
-
-    launch_listener() {
-        chrome.runtime.onMessage.addListener(
-            function listener(request, sender) {
-                if (request[`${this.identity_prefix}_get_credentials`]) {
-                    this.get_credentials();
-                } else if (request[`${this.identity_prefix}_get_password`]) {
-                    this.get_credentials();
-                } else if (request[`${this.identity_prefix}_get_email`]) {
-                    this.get_email();
-                } else if (request[`${this.identity_prefix}_get_phone`]) {
-                    this.get_phone();
-                } else if (request[`${this.identity_prefix}_get_code`]) {
-                    this.get_code();
-                } else if (request[`${this.identity_prefix}_get_method`]) {
-                    this.get_method();
-                } else if (request[`${this.identity_prefix}_finished`]) {
-                    chrome.runtime.onMessage.removeListener(listener);
-                    this.finished();
-                } else if (request[`${this.identity_prefix}_error`]) {
-                    chrome.runtime.onMessage.removeListener(listener);
-                    this.error();
-                } else {
-                    this.error(`Got invalid request: ${request}`);
-                }
-            }
-        );
+        this.incognito = incognito
+        this.window_id = null
     }
 
     initialize() {
@@ -115,16 +91,51 @@ class AutomationSiteUI {
             </div>
             `
         );
-        this.launch_listener();
+        this.launch_listener(this);
         this.loading();
         chrome.windows.create({
             url: this.start_url,
             focused: false,
             state: "minimized",
-            incognito: true
+            incognito: this.incognito,
         }, (window) => {
+            this.window_id = window.id;
             chrome.windows.update(window.id, { state: 'minimized' });
         });
+    }
+
+    launch_listener(ui) {
+        chrome.runtime.onMessage.addListener(
+            async function listener(request, sender) {
+                console.log(request);
+                if (request[`${ui.identity_prefix}_get_credentials`]) {
+                    ui.get_credentials(sender);
+                } else if (request[`${ui.identity_prefix}_get_password`]) {
+                    ui.get_password(sender);
+                } else if (request[`${ui.identity_prefix}_get_email`]) {
+                    ui.get_email(sender);
+                } else if (request[`${ui.identity_prefix}_get_phone`]) {
+                    ui.get_phone(sender);
+                } else if (request[`${ui.identity_prefix}_get_code`]) {
+                    ui.get_code(sender);
+                } else if (request[`${ui.identity_prefix}_get_method`]) {
+                    ui.get_method(sender);
+                } else if (request[`${ui.identity_prefix}_finished`]) {
+                    chrome.runtime.onMessage.removeListener(listener);
+                    ui.finished(sender);
+                } else if (request[`${ui.identity_prefix}_error`]) {
+                    chrome.runtime.onMessage.removeListener(listener);
+                    ui.error(request.message, sender);
+                } else {
+                    chrome.runtime.onMessage.removeListener(listener);
+                    ui.error(`Got invalid request: ${JSON.stringify(request)}`, sender);
+                }
+            }
+        );
+    }
+
+    close_window() {
+        if (this.window_id) chrome.windows.remove(this.window_id);
     }
 
     loading() {
@@ -144,26 +155,28 @@ class AutomationSiteUI {
         );
     }
 
-    finished() {
-        this.controller.disable_injection(this.identity_prefix);
+    finished(sender = null) {
         $(`#${this.identity_prefix}_ui_div`).html(
             `
             ${message != null ? "<p>" + message + "</p>" : ""}
             <p>Finished automation for ${this.name}</p>
             `
         );
+        this.controller.disable_injection(this.identity_prefix);
+        this.close_window();
     }
 
-    error(message) {
+    error(message, sender = null) {
         $(`#${this.identity_prefix}_ui_div`).html(
             `
             <p>Error: ${message}</p>
             `
         );
         this.controller.disable_injection(this.identity_prefix);
+        this.close_window();
     }
 
-    get_credentials(message = null) {
+    get_credentials(sender, message = null) {
         $(`#${this.identity_prefix}_ui_div`).html(
             `
             ${message != null ? "<p>" + message + "</p>" : ""}
@@ -191,7 +204,7 @@ class AutomationSiteUI {
         });
     }
 
-    get_password(message = null) {
+    get_password(sender, message = null) {
         $(`#${this.identity_prefix}_ui_div`).html(
             `
             ${message != null ? "<p>" + message + "</p>" : ""}
@@ -216,7 +229,7 @@ class AutomationSiteUI {
         });
     }
 
-    get_email(message = null) {
+    get_email(sender, message = null) {
         $(`#${this.identity_prefix}_ui_div`).html(
             `
             ${message != null ? "<p>" + message + "</p>" : ""}
@@ -241,7 +254,7 @@ class AutomationSiteUI {
         });
     }
 
-    get_phone(message = null) {
+    get_phone(sender, message = null) {
         $(`#${this.identity_prefix}_ui_div`).html(
             `
             ${message != null ? "<p>" + message + "</p>" : ""}
@@ -270,7 +283,7 @@ class AutomationSiteUI {
         this.error("Not implemented");
     }
 
-    get_method(message = null) {
+    get_method(sender, message = null) {
         $(`#${this.identity_prefix}_ui_div`).html(
             `
             ${message != null ? "<p>" + message + "</p>" : ""}

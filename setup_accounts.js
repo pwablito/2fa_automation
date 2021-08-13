@@ -12,7 +12,7 @@ $("#setup_accounts_button").click(() => {
             if (boxes[index].checked) {
                 service_name = $(boxes[index]).data("service");
                 if (service_name === "twitter") {
-                    automationUI.add_site(new AutomationSiteUI("Twitter", "twitter", "setup_processes_list", "logos/twitter.svg", automationUI, "https://twitter.com/settings/account/login_verification/enrollment"));
+                    automationUI.add_site(new AutomationSiteUI("Twitter", "twitter", "setup_processes_list", "logos/twitter.svg", automationUI, "https://twitter.com/settings/account/login_verification/enrollment", true));
                 } else if (service_name === "reddit") {
                     automationUI.add_site(new AutomationSiteUI("Reddit", "reddit", "setup_processes_list", "logos/reddit.svg", automationUI, "https://www.reddit.com/2fa/enable"));
                 } else if (service_name === "github") {
