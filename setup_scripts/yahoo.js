@@ -66,22 +66,100 @@ async function handleReceivedMessage(request){
             }
         }
     } else if (request.yahoo_code) {
-        if(await waitUntilElementLoad(document, ".code-input-container", 2)){
-            let elem = document.querySelector(".code-input-container");
-            // for(let i = 0; i < 5; i++){
-            //     console.log(i);
-            //     console.log(code[i]);
-            //     let selectorstring = "input[index='" + i + "']";
-            //     change(elem.querySelector(selectorstring), request.code[i]);
-               
-            // }
-            for (let i = 0; i < 5; i++){
-                let selectorstring = "input[index='" + i + "']";
-                elem.querySelector(selectorstring).value=request.code[i];
+        if(request.yahoo_incorrect_totp) {
+            if(await waitUntilElementLoad(document, "#btnTsvAuthenticatorVerifyCode", 2)){
+                let elem = document.querySelector(".code-input-container");
+                console.log(request.code);
+                for (let i = 0; i < 6; i++){
+                    console.log(request.code[i]);
+                    let selectorstring = "input[index='" + i + "']";
+                    change(elem.querySelector(selectorstring), request.code[i]);
+                    // elem.querySelector(selectorstring).value=request.code[i];
+                }
+                document.querySelector("#btnTsvAuthenticatorVerifyCode").click()
+                if(await waitUntilElementLoad(document, ".error-title", 2)){
+                    if(document.querySelector(".error-title").textContent == "Incorrect verification code"){
+                        chrome.runtime.sendMessage({
+                            yahoo_error: true,
+                            yahoo_error_code: "incorrectTOTPCode",
+                            yahoo_totp_url: request.yahoo_totp_url
+                        });
+                    }
+                }
             }
-            document.querySelector("#btnTsvVerifyCode").click();
+        } else if(request.yahoo_totp){
+            if(await waitUntilElementLoad(document, "#btnAuthenticatorSetup", 2)){
+                document.querySelector("#btnAuthenticatorSetup").click();
+                if(await waitUntilElementLoad(document, "#btnTsvAuthenticatorVerifyCode", 2)){
+                    let elem = document.querySelector(".code-input-container");
+                    console.log(request.code);
+                    for (let i = 0; i < 6; i++){
+                        console.log(request.code[i]);
+                        let selectorstring = "input[index='" + i + "']";
+                        change(elem.querySelector(selectorstring), request.code[i]);
+                        // elem.querySelector(selectorstring).value=request.code[i];
+                    }
+                    document.querySelector("#btnTsvAuthenticatorVerifyCode").click()
+                    if(await waitUntilElementLoad(document, ".error-title", 2)){
+                        if(document.querySelector(".error-title").textContent == "Incorrect verification code"){
+                            console.log("incorrect code, sending message");
+                            console.log(request.totp_url);
+                            chrome.runtime.sendMessage({
+                                yahoo_error: true,
+                                yahoo_error_code: "incorrectTOTPCode",
+                                yahoo_totp_url: request.totp_url
+                            });
+                        }
+                    }
+                }
+
+            }
+        } else {
+            if(await waitUntilElementLoad(document, ".code-input-container", 2)){
+                let elem = document.querySelector(".code-input-container");
+                // for(let i = 0; i < 5; i++){
+                //     console.log(i);
+                //     console.log(code[i]);
+                //     let selectorstring = "input[index='" + i + "']";
+                //     change(elem.querySelector(selectorstring), request.code[i]);
+                   
+                // }
+                for (let i = 0; i < 5; i++){
+                    let selectorstring = "input[index='" + i + "']";
+                    elem.querySelector(selectorstring).value=request.code[i];
+                }
+                document.querySelector("#btnTsvVerifyCode").click();
+                if(await waitUntilElementLoad(document, ".error-title", 2)){
+                    if(document.querySelector(".error-title").textContent == "Something went wrong, Try again"){
+                        chrome.runtime.sendMessage({
+                            yahoo_error: true,
+                            yahoo_error_code: "incorrectCode",
+                        });
+                    }
+                }
+            }
         }
-        
+    } else if (request.yahoo_start_sms){
+        document.querySelector("#tsvPhone").click();
+        if(await waitUntilElementLoad(document, "#lnkBtnShowSendCodeForm", 2)){
+            document.querySelector("#lnkBtnShowSendCodeForm").click();
+            chrome.runtime.sendMessage({
+                yahoo_get_phone_number: true,
+            });
+        }
+    } else if (request.yahoo_start_totp){
+        console.log("Told to start totp");
+        document.querySelector("#tsvTOTP").click();
+        if(await waitUntilElementLoad(document, "#btnAuthenticatorIntro", 2)){
+            document.querySelector("#btnAuthenticatorIntro").click();
+            if(await waitUntilElementLoad(document,".tsv-authenticator-setup-qr",2)){
+                chrome.runtime.sendMessage({
+                    yahoo_get_code: true,
+                    yahoo_totp_url: document.querySelector("img[alt='qr code']").src
+                });
+            }
+            
+        }
     }
 }
 
@@ -108,13 +186,9 @@ chrome.runtime.onMessage.addListener(
                     if(await waitUntilElementLoad(document, "#btnTsvIntro", 2)){
                         document.querySelector("#btnTsvIntro").click();
                         if(await waitUntilElementLoad(document, "#tsvPhone",2 )){
-                            document.querySelector("#tsvPhone").click();
-                            if(await waitUntilElementLoad(document, "#lnkBtnShowSendCodeForm", 2)){
-                                document.querySelector("#lnkBtnShowSendCodeForm").click();
-                                chrome.runtime.sendMessage({
-                                    yahoo_get_phone_number: true,
-                                });
-                            }
+                            chrome.runtime.sendMessage({
+                                yahoo_get_type: true,
+                            });
                         }
                     }
                 } else {

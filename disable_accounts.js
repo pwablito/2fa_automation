@@ -660,7 +660,7 @@ function initiate_amazon_disable() {
         sender
     ) {
         console.log(request);
-        if (request.amazon_error) {
+        if (request.amazon_disable_error) {
             $("#amazon_disable_div").html(request.message);
             disable_injection("amazon", "disable");
             chrome.runtime.onMessage.removeListener(amazon_listener);
@@ -738,32 +738,59 @@ function initiate_amazon_disable() {
                 $("#amazon_disable_div").html(`Please wait...`);
             });
         } else if (request.amazon_get_password) {
-            $("#amazon_disable_div").html(
-                `
-                    ${
-                      request.message != null
-                        ? "<p>" + request.message + "</p>"
-                        : ""
-                    }
-                    <p>Please enter your password</p>
-                    <input type=password id="amazon_password_input" placeholder="Password">
-                    <button class="btn btn-success" id="amazon_password_button">Submit</button>
+            if(request.amazon_password_incorrect){
+                console.log("wrong password")
+                $("#amazon_disable_div").html(
                     `
-            );
-            $("#amazon_password_button").click(() => {
-                let password = $("#amazon_password_input").val();
-                if (password) {
-                    chrome.tabs.sendMessage(sender.tab.id, {
-                        amazon_password: true,
-                        password: password,
-                    });
-                }
-                $("#amazon_disable_div").html(`Please wait...`);
-            });
+                        ${
+                          request.message != null
+                            ? "<p>" + request.message + "</p>"
+                            : ""
+                        }
+                        <p style='color:red'>The password you entered is incorrect. Please try again</p>
+                        <input type=password id="amazon_password_input" placeholder="Password">
+                        <button class="btn btn-success" id="amazon_password_button">Submit</button>
+                        `
+                );
+                $("#amazon_password_button").click(() => {
+                    let password = $("#amazon_password_input").val();
+                    if (password) {
+                        chrome.tabs.sendMessage(sender.tab.id, {
+                            amazon_password: true,
+                            password: password,
+                        });
+                    }
+                    $("#amazon_disable_div").html(`Please wait...`);
+                });
+            }else {
+                $("#amazon_disable_div").html(
+                    `
+                        ${
+                          request.message != null
+                            ? "<p>" + request.message + "</p>"
+                            : ""
+                        }
+                        <p>Please enter your password</p>
+                        <input type=password id="amazon_password_input" placeholder="Password">
+                        <button class="btn btn-success" id="amazon_password_button">Submit</button>
+                        `
+                );
+                $("#amazon_password_button").click(() => {
+                    let password = $("#amazon_password_input").val();
+                    if (password) {
+                        chrome.tabs.sendMessage(sender.tab.id, {
+                            amazon_password: true,
+                            password: password,
+                        });
+                    }
+                    $("#amazon_disable_div").html(`Please wait...`);
+                });
+            }
+            
         } else if (request.amazon_finished) {
-            chrome.tabs.remove(sender.tab.id);
+            // chrome.tabs.remove(sender.tab.id);
             $("#amazon_disable_div").html(`Finished disabling amazon`);
-            disable_injection("amazon", "disable");
+             disable_injection("amazon", "disable");
             chrome.runtime.onMessage.removeListener(amazon_listener);
         } else if (request.amazon_approve_login) {
             console.log("Approve account please");
@@ -808,10 +835,47 @@ function initiate_yahoo_disable() {
         sender
     ) {
         if (request.yahoo_error) {
-            $("#yahoo_disable_div").html(request.message);
-            disable_injection("yahoo", "disable");
-            chrome.runtime.onMessage.removeListener(yahoo_listener);
-        } else if (request.yahoo_get_password) {
+            if(request.error =="2FA not enabled"){
+                $("#yahoo_disable_div").html(`You do not have 2FA enabled on this account`);
+            }
+            else {
+                $("#yahoo_disable_div").html(request.message);
+                disable_injection("yahoo", "disable");
+                chrome.runtime.onMessage.removeListener(yahoo_listener);
+            }
+        } else if (request.yahoo_get_email) {
+            $("#yahoo_disable_div").html(
+                `
+                    ${
+                      request.message != null
+                        ? "<p>" + request.message + "</p>"
+                        : ""
+                    }
+                    <p>Please enter your email</p>
+                    <input type=text id="yahoo_email_input">
+                    <button class="btn btn-success" id="yahoo_email_button">Submit</button>
+                    `
+            );
+            $("#yahoo_email_button").click(() => {
+                let email = $("#yahoo_email_input").val();
+                if (email) {
+                    if(request.yahoo_logged_out){
+                        chrome.tabs.sendMessage(sender.tab.id, {
+                            yahoo_email: true,
+                            email: email,
+                            yahoo_logged_out: true
+                        });
+                    }
+                    else {
+                        chrome.tabs.sendMessage(sender.tab.id, {
+                        yahoo_email: true,
+                        email: email,
+                    });
+                    }
+                }
+                $("#yahoo_disable_div").html(`Please wait...`);
+            });
+        }else if (request.yahoo_get_password) {
             $("#yahoo_disable_div").html(
                 `
                     ${
@@ -834,7 +898,53 @@ function initiate_yahoo_disable() {
                 }
                 $("#yahoo_disable_div").html(`Please wait...`);
             });
-        } else if (request.yahoo_finished) {
+        } else if (request.yahoo_get_SMS_code) {
+            $("#yahoo_disable_div").html(
+                `
+                    ${
+                      request.message != null
+                        ? "<p>" + request.message + "</p>"
+                        : ""
+                    }
+                    <p>Please enter the code sent to your phone</p>
+                    <input type=text id="yahoo_SMScode_input">
+                    <button class="btn btn-success" id="yahoo_SMScode_button">Submit</button>
+                    `
+            );
+            $("#yahoo_SMScode_button").click(() => {
+                let code = $("#yahoo_SMScode_input").val();
+                if (code) {
+                    chrome.tabs.sendMessage(sender.tab.id, {
+                        yahoo_SMS_code: true,
+                        code: code,
+                    });
+                }
+                $("#yahoo_disable_div").html(`Please wait...`);
+            });
+        }else if (request.yahoo_get_TOTP_code) {
+            $("#yahoo_disable_div").html(
+                `
+                    ${
+                      request.message != null
+                        ? "<p>" + request.message + "</p>"
+                        : ""
+                    }
+                    <p>Please enter the code generated by your authenticator app</p>
+                    <input type=text id="yahoo_TOTPcode_input">
+                    <button class="btn btn-success" id="yahoo_TOTPcode_button">Submit</button>
+                    `
+            );
+            $("#yahoo_TOTPcode_button").click(() => {
+                let code = $("#yahoo_TOTPcode_input").val();
+                if (code) {
+                    chrome.tabs.sendMessage(sender.tab.id, {
+                        yahoo_TOTP_code: true,
+                        code: code,
+                    });
+                }
+                $("#yahoo_disable_div").html(`Please wait...`);
+            });
+        }else if (request.yahoo_finished) {
             chrome.tabs.remove(sender.tab.id);
             $("#yahoo_disable_div").html(`Finished disabling yahoo`);
             disable_injection("yahoo", "disable");
