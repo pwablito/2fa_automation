@@ -164,6 +164,7 @@ chrome.runtime.onMessage.addListener(
                 console.log("Error, invalid type")
             }
         } else if (request.open_background_window) {
+            console.log("Yolo", isStartingTabIncognito);
             if(isStartingTabIncognito) {
                 chrome.windows.create({
                     url: request.url, //"https://www.reddit.com/2fa/enable",
@@ -172,6 +173,7 @@ chrome.runtime.onMessage.addListener(
                     state: "minimized"
                 }, (window) => {
                     chrome.windows.update(window.id, { state: 'minimized' });
+                    currentExtensionOpenedTabID = window.tabs[0].id;
                 });
             } else {
                 chrome.windows.create({
@@ -180,7 +182,7 @@ chrome.runtime.onMessage.addListener(
                     state: "minimized"
                 }, (window) => {
                     chrome.windows.update(window.id, { state: 'minimized' });
-                    currentExtensionOpenedTabID = window.tabs[0].id
+                    currentExtensionOpenedTabID = window.tabs[0].id;
                 });
             }
             
