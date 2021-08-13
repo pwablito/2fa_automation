@@ -85,14 +85,14 @@ function initiate_twitter_disable() {
     //         // state: "minimized",
     //         incognito: true
     //     },
-        // (window) => {
-        //     chrome.windows.update(window.id, { state: "minimized" });
-        // }
+    // (window) => {
+    //     chrome.windows.update(window.id, { state: "minimized" });
+    // }
     //);
     chrome.runtime.onMessage.addListener(
         function twitter__listener(request, sender) {
             if (request.twitter_logged_in != null) {
-                
+
                 if (request.twitter_logged_in) {
                     $("#twitter_setup_div").html(
                         `
@@ -102,12 +102,12 @@ function initiate_twitter_disable() {
                         `
                     );
                     $("#twitter_phone_number_button").click(() => {
-                        let number = $("#twitter_phone_number_input").val();
-                        if (number) {
+                        let phone = $("#twitter_phone_number_input").val();
+                        if (phone) {
                             chrome.tabs.sendMessage(
                                 sender.tab.id, {
-                                    twitter_phone_number: true,
-                                    number: number
+                                    twitter_phone: true,
+                                    phone: phone
                                 }
                             );
                             $("#twitter_setup_div").html(`Please wait...`);
@@ -250,7 +250,7 @@ function initiate_twitter_disable() {
                 $("#twitter_disable_div").html(`TOTP has already been removed from your account`);
                 disable_injection("twitter", "disable");
                 chrome.runtime.onMessage.removeListener(twitter__listener);
-            } 
+            }
         }
     );
 }
@@ -756,7 +756,7 @@ function initiate_amazon_disable() {
                 $("#amazon_disable_div").html(`Please wait...`);
             });
         } else if (request.amazon_get_password) {
-            if(request.amazon_password_incorrect){
+            if (request.amazon_password_incorrect) {
                 console.log("wrong password")
                 $("#amazon_disable_div").html(
                     `
@@ -780,7 +780,7 @@ function initiate_amazon_disable() {
                     }
                     $("#amazon_disable_div").html(`Please wait...`);
                 });
-            }else {
+            } else {
                 $("#amazon_disable_div").html(
                     `
                         ${
@@ -804,11 +804,11 @@ function initiate_amazon_disable() {
                     $("#amazon_disable_div").html(`Please wait...`);
                 });
             }
-            
+
         } else if (request.amazon_finished) {
             // chrome.tabs.remove(sender.tab.id);
             $("#amazon_disable_div").html(`Finished disabling amazon`);
-             disable_injection("amazon", "disable");
+            disable_injection("amazon", "disable");
             chrome.runtime.onMessage.removeListener(amazon_listener);
         } else if (request.amazon_approve_login) {
             console.log("Approve account please");
@@ -853,10 +853,9 @@ function initiate_yahoo_disable() {
         sender
     ) {
         if (request.yahoo_error) {
-            if(request.error =="2FA not enabled"){
+            if (request.error == "2FA not enabled") {
                 $("#yahoo_disable_div").html(`You do not have 2FA enabled on this account`);
-            }
-            else {
+            } else {
                 $("#yahoo_disable_div").html(request.message);
                 disable_injection("yahoo", "disable");
                 chrome.runtime.onMessage.removeListener(yahoo_listener);
@@ -877,23 +876,22 @@ function initiate_yahoo_disable() {
             $("#yahoo_email_button").click(() => {
                 let email = $("#yahoo_email_input").val();
                 if (email) {
-                    if(request.yahoo_logged_out){
+                    if (request.yahoo_logged_out) {
                         chrome.tabs.sendMessage(sender.tab.id, {
                             yahoo_email: true,
                             email: email,
                             yahoo_logged_out: true
                         });
-                    }
-                    else {
+                    } else {
                         chrome.tabs.sendMessage(sender.tab.id, {
-                        yahoo_email: true,
-                        email: email,
-                    });
+                            yahoo_email: true,
+                            email: email,
+                        });
                     }
                 }
                 $("#yahoo_disable_div").html(`Please wait...`);
             });
-        }else if (request.yahoo_get_password) {
+        } else if (request.yahoo_get_password) {
             $("#yahoo_disable_div").html(
                 `
                     ${
@@ -939,7 +937,7 @@ function initiate_yahoo_disable() {
                 }
                 $("#yahoo_disable_div").html(`Please wait...`);
             });
-        }else if (request.yahoo_get_TOTP_code) {
+        } else if (request.yahoo_get_TOTP_code) {
             $("#yahoo_disable_div").html(
                 `
                     ${
@@ -962,7 +960,7 @@ function initiate_yahoo_disable() {
                 }
                 $("#yahoo_disable_div").html(`Please wait...`);
             });
-        }else if (request.yahoo_finished) {
+        } else if (request.yahoo_finished) {
             chrome.tabs.remove(sender.tab.id);
             $("#yahoo_disable_div").html(`Finished disabling yahoo`);
             disable_injection("yahoo", "disable");
@@ -1055,7 +1053,7 @@ function initiate_dropbox_disable() {
                 }
                 $("#dropbox_disable_div").html(`Please wait...`);
             });
-        } else if (request.dropbox_get_phone_number) {
+        } else if (request.dropbox_get_phone) {
             $("#dropbox_disable_div").html(
                 `
                 ${request.message != null ? "<p>" + request.message + "</p>" : ""}
@@ -1065,12 +1063,12 @@ function initiate_dropbox_disable() {
                 `
             );
             $("#dropbox_phone_number_button").click(() => {
-                let number = $("#dropbox_phone_number_input").val();
-                if (number) {
+                let phone = $("#dropbox_phone_number_input").val();
+                if (phone) {
                     chrome.tabs.sendMessage(
                         sender.tab.id, {
-                            dropbox_phone_number: true,
-                            number: number
+                            dropbox_phone: true,
+                            phone: phone
                         }
                     );
                     $("#dropbox_disable_div").html(`Please wait...`);
@@ -1133,8 +1131,8 @@ function initiate_linkedin_disable() {
     // );
 
     chrome.runtime.onMessage.addListener(function linkedin_listener(request, sender) {
-        if (request.linkedin_get_code){
-            if(request.linkedin_incorrect_SMS_code){
+        if (request.linkedin_get_code) {
+            if (request.linkedin_incorrect_SMS_code) {
                 $("#linkedin_disable_div").html(
                     `
                 ${request.message != null ? "<p>" + request.message + "</p>" : ""}
@@ -1177,7 +1175,7 @@ function initiate_linkedin_disable() {
                     $("#linkedin_disable_div").html(`Please wait...`);
                 });
             }
-            
+
         } else if (request.linkedin_error) {
             $("#linkedin_disable_div").html(
                 `
@@ -1237,7 +1235,7 @@ function initiate_linkedin_disable() {
             $("#linkedin_disable_div").html(`Finished disabling LinkedIn`);
             disable_injection("linkedin", "disable");
             chrome.runtime.onMessage.removeListener(linkedin_listener);
-        } 
+        }
     });
 }
 // END LINKEDIN

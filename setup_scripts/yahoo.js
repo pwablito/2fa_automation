@@ -8,24 +8,25 @@ function change(field, value) {
     field.dispatchEvent(new KeyboardEvent('keypress', { bubbles: true, cancelable: false, key: '', char: '' }));
     field.dispatchEvent(new KeyboardEvent('keyup', { bubbles: true, cancelable: false, key: '', char: '' }));
 }
+
 function getElementByXpath(doc, xpath) {
     return doc.evaluate(xpath, doc, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
 }
 
 function timer(ms) { return new Promise(res => setTimeout(res, ms)); }
 
-async function waitUntilPageLoad(document,maxWait) {
-    for (let i = 0; i < maxWait*10; i++) {
-        if( document.readyState !== 'loading' ) { return true;}
+async function waitUntilPageLoad(document, maxWait) {
+    for (let i = 0; i < maxWait * 10; i++) {
+        if (document.readyState !== 'loading') { return true; }
         console.log(i);
         await timer(100); // then the created Promise can be awaited
     }
     return false;
 }
 
-async function waitUntilElementLoad(document, elemXPath,  maxWait) {
-    for (let i = 0; i < maxWait*10; i++) {
-        if(document.querySelector(elemXPath)) { return true;}
+async function waitUntilElementLoad(document, elemXPath, maxWait) {
+    for (let i = 0; i < maxWait * 10; i++) {
+        if (document.querySelector(elemXPath)) { return true; }
         console.log(i);
         await timer(100); // then the created Promise can be awaited
     }
@@ -37,11 +38,11 @@ function exitScriptWithError() {
     chrome.runtime.sendMessage({
         linkedin_error: true,
         message: "Sorry! Something went wrong. ",
-        message_for_dev : window.location.href
+        message_for_dev: window.location.href
     });
 }
 
-async function handleReceivedMessage(request){
+async function handleReceivedMessage(request) {
     if (request.yahoo_email) {
         document.querySelector("#login-username").value = request.email;
         document.querySelector("#login-signin").click();
@@ -49,12 +50,12 @@ async function handleReceivedMessage(request){
         document.querySelector("#login-passwd").value = request.password;
         document.querySelector("#login-signin").click();
     } else if (request.yahoo_phone_number) {
-        change(document.querySelector("#txtPhoneNumber"), request.number);
-        if(await waitUntilElementLoad(document, "#btnTsvSendCode", 2)){
+        change(document.querySelector("#txtPhoneNumber"), request.phone);
+        if (await waitUntilElementLoad(document, "#btnTsvSendCode", 2)) {
             document.querySelector("#btnTsvSendCode").click()
-            if(await waitUntilElementLoad(document, ".error-title", 2)){
-                console.log("Found an error");    
-                if(document.querySelector(".error-title").textContent == "Daily limit exceeded, please try again later"){
+            if (await waitUntilElementLoad(document, ".error-title", 2)) {
+                console.log("Found an error");
+                if (document.querySelector(".error-title").textContent == "Daily limit exceeded, please try again later") {
                     chrome.runtime.sendMessage({
                         yahoo_error: true,
                         message: "Hit maximum attempts per day with this number"
@@ -73,19 +74,19 @@ async function handleReceivedMessage(request){
             }
         }
     } else if (request.yahoo_code) {
-        if(request.yahoo_incorrect_totp) {
-            if(await waitUntilElementLoad(document, "#btnTsvAuthenticatorVerifyCode", 2)){
+        if (request.yahoo_incorrect_totp) {
+            if (await waitUntilElementLoad(document, "#btnTsvAuthenticatorVerifyCode", 2)) {
                 let elem = document.querySelector(".code-input-container");
                 console.log(request.code);
-                for (let i = 0; i < 6; i++){
+                for (let i = 0; i < 6; i++) {
                     console.log(request.code[i]);
                     let selectorstring = "input[index='" + i + "']";
                     change(elem.querySelector(selectorstring), request.code[i]);
                     // elem.querySelector(selectorstring).value=request.code[i];
                 }
                 document.querySelector("#btnTsvAuthenticatorVerifyCode").click()
-                if(await waitUntilElementLoad(document, ".error-title", 2)){
-                    if(document.querySelector(".error-title").textContent == "Incorrect verification code"){
+                if (await waitUntilElementLoad(document, ".error-title", 2)) {
+                    if (document.querySelector(".error-title").textContent == "Incorrect verification code") {
                         chrome.runtime.sendMessage({
                             yahoo_error: true,
                             yahoo_error_code: "incorrectTOTPCode",
@@ -94,21 +95,21 @@ async function handleReceivedMessage(request){
                     }
                 }
             }
-        } else if(request.yahoo_totp){
-            if(await waitUntilElementLoad(document, "#btnAuthenticatorSetup", 2)){
+        } else if (request.yahoo_totp) {
+            if (await waitUntilElementLoad(document, "#btnAuthenticatorSetup", 2)) {
                 document.querySelector("#btnAuthenticatorSetup").click();
-                if(await waitUntilElementLoad(document, "#btnTsvAuthenticatorVerifyCode", 2)){
+                if (await waitUntilElementLoad(document, "#btnTsvAuthenticatorVerifyCode", 2)) {
                     let elem = document.querySelector(".code-input-container");
                     console.log(request.code);
-                    for (let i = 0; i < 6; i++){
+                    for (let i = 0; i < 6; i++) {
                         console.log(request.code[i]);
                         let selectorstring = "input[index='" + i + "']";
                         change(elem.querySelector(selectorstring), request.code[i]);
                         // elem.querySelector(selectorstring).value=request.code[i];
                     }
                     document.querySelector("#btnTsvAuthenticatorVerifyCode").click()
-                    if(await waitUntilElementLoad(document, ".error-title", 2)){
-                        if(document.querySelector(".error-title").textContent == "Incorrect verification code"){
+                    if (await waitUntilElementLoad(document, ".error-title", 2)) {
+                        if (document.querySelector(".error-title").textContent == "Incorrect verification code") {
                             console.log("incorrect code, sending message");
                             console.log(request.totp_url);
                             chrome.runtime.sendMessage({
@@ -122,22 +123,23 @@ async function handleReceivedMessage(request){
 
             }
         } else {
-            if(await waitUntilElementLoad(document, ".code-input-container", 2)){
+            if (await waitUntilElementLoad(document, ".code-input-container", 2)) {
                 let elem = document.querySelector(".code-input-container");
                 // for(let i = 0; i < 5; i++){
                 //     console.log(i);
                 //     console.log(code[i]);
                 //     let selectorstring = "input[index='" + i + "']";
                 //     change(elem.querySelector(selectorstring), request.code[i]);
-                   
+
                 // }
-                for (let i = 0; i < 5; i++){
+                for (let i = 0; i < 5; i++) {
                     let selectorstring = "input[index='" + i + "']";
                     change(elem.querySelector(selectorstring), request.code[i]);
+
                 }
                 document.querySelector("#btnTsvVerifyCode").click();
-                if(await waitUntilElementLoad(document, ".error-title", 2)){
-                    if(document.querySelector(".error-title").textContent == "Something went wrong, Try again"){
+                if (await waitUntilElementLoad(document, ".error-title", 2)) {
+                    if (document.querySelector(".error-title").textContent == "Something went wrong, Try again") {
                         chrome.runtime.sendMessage({
                             yahoo_error: true,
                             yahoo_error_code: "incorrectCode",
@@ -146,26 +148,26 @@ async function handleReceivedMessage(request){
                 }
             }
         }
-    } else if (request.yahoo_start_sms){
+    } else if (request.yahoo_start_sms) {
         document.querySelector("#tsvPhone").click();
-        if(await waitUntilElementLoad(document, "#lnkBtnShowSendCodeForm", 2)){
+        if (await waitUntilElementLoad(document, "#lnkBtnShowSendCodeForm", 2)) {
             document.querySelector("#lnkBtnShowSendCodeForm").click();
             chrome.runtime.sendMessage({
-                yahoo_get_phone_number: true,
+                yahoo_get_phone: true,
             });
         }
-    } else if (request.yahoo_start_totp){
+    } else if (request.yahoo_start_totp) {
         console.log("Told to start totp");
         document.querySelector("#tsvTOTP").click();
-        if(await waitUntilElementLoad(document, "#btnAuthenticatorIntro", 2)){
+        if (await waitUntilElementLoad(document, "#btnAuthenticatorIntro", 2)) {
             document.querySelector("#btnAuthenticatorIntro").click();
-            if(await waitUntilElementLoad(document,".tsv-authenticator-setup-qr",2)){
+            if (await waitUntilElementLoad(document, ".tsv-authenticator-setup-qr", 2)) {
                 chrome.runtime.sendMessage({
                     yahoo_get_code: true,
                     yahoo_totp_url: document.querySelector("img[alt='qr code']").src
                 });
             }
-            
+
         }
     }
 }
@@ -177,7 +179,7 @@ chrome.runtime.onMessage.addListener(
     }
 );
 
-(async () => {
+(async() => {
     try {
         if (window.location.href.includes("login.yahoo.com")) {
             if (document.querySelector("#login-username") !== null) {
@@ -190,9 +192,9 @@ chrome.runtime.onMessage.addListener(
                 })
             } else if (window.location.href.includes("myaccount/security")) {
                 if (window.location.href.includes("two-step-verification")) {
-                    if(await waitUntilElementLoad(document, "#btnTsvIntro", 2)){
+                    if (await waitUntilElementLoad(document, "#btnTsvIntro", 2)) {
                         document.querySelector("#btnTsvIntro").click();
-                        if(await waitUntilElementLoad(document, "#tsvPhone",2 )){
+                        if (await waitUntilElementLoad(document, "#tsvPhone", 2)) {
                             chrome.runtime.sendMessage({
                                 yahoo_get_type: true,
                             });
@@ -208,22 +210,21 @@ chrome.runtime.onMessage.addListener(
                     yahoo_error: true,
                     message: "2FA already enabled"
                 });
-            } else if(window.location.href.includes("recaptcha")){
+            } else if (window.location.href.includes("recaptcha")) {
                 chrome.runtime.sendMessage({
                     yahoo_error: true,
                     message: "recaptcha required"
                 });
             } else if (window.location.href.includes("account/challenge/challenge-selector")) {
                 document.querySelector("button[type='submit']").click()
-            }
-            else {
+            } else {
                 chrome.runtime.sendMessage({
                     yahoo_get_email: true,
                 });
             }
         }
 
-    }catch(e){
+    } catch (e) {
         console.log(e)
         exitScriptWithError();
     }

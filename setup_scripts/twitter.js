@@ -21,7 +21,7 @@ chrome.runtime.onMessage.addListener(
             getElementByXpath(document, "/html/body/div/div/div/div[2]/main/div/div/div[2]/form/div/div[3]/div").click();
         }
         if (request.twitter_phone_number) {
-            document.querySelector("#phone_number").value = request.number;
+            document.querySelector("#phone_number").value = request.phone;
             document.querySelector("body > div.PageContainer > div > form > input.EdgeButton.EdgeButton--primary").click();
         }
         if (request.twitter_code) {

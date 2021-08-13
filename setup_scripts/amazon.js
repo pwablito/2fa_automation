@@ -12,20 +12,21 @@ function change(field, value) {
     field.dispatchEvent(new KeyboardEvent('keypress', { bubbles: true, cancelable: false, key: '', char: '' }));
     field.dispatchEvent(new KeyboardEvent('keyup', { bubbles: true, cancelable: false, key: '', char: '' }));
 }
+
 function timer(ms) { return new Promise(res => setTimeout(res, ms)); }
 
-async function waitUntilPageLoad(document,maxWait) {
-    for (let i = 0; i < maxWait*10; i++) {
-        if( document.readyState !== 'loading' ) { return true;}
+async function waitUntilPageLoad(document, maxWait) {
+    for (let i = 0; i < maxWait * 10; i++) {
+        if (document.readyState !== 'loading') { return true; }
         console.log(i);
         await timer(100); // then the created Promise can be awaited
     }
     return false;
 }
 
-async function waitUntilElementLoad(document, elemXPath,  maxWait) {
-    for (let i = 0; i < maxWait*10; i++) {
-        if(document.querySelector(elemXPath)) { return true;}
+async function waitUntilElementLoad(document, elemXPath, maxWait) {
+    for (let i = 0; i < maxWait * 10; i++) {
+        if (document.querySelector(elemXPath)) { return true; }
         console.log(i);
         await timer(100); // then the created Promise can be awaited
     }
@@ -37,11 +38,11 @@ function exitScriptWithError() {
     chrome.runtime.sendMessage({
         linkedin_error: true,
         message: "Sorry! Something went wrong. ",
-        message_for_dev : window.location.href
+        message_for_dev: window.location.href
     });
 }
 
-async function handleReceivedMessage(request){
+async function handleReceivedMessage(request) {
     if (request.amazon_password) {
         if (window.location.href.includes("amazon.com/ap/cnep")) {
             document.querySelector("#ap_password").value = request.password;
@@ -58,23 +59,23 @@ async function handleReceivedMessage(request){
         document.querySelector("input#continue").click()
     } else if (request.amazon_phone_number) {
         if (document.querySelector("#mfa-cvf-embedded-content") != null) {
-            document.querySelector("input[name='cvf_phone_num']").value = request.phone_number;
+            document.querySelector("input[name='cvf_phone_num']").value = request.phone;
             document.querySelector("input[name='cvf_action']").click();
-            if(await waitUntilElementLoad(document, "input[name='code']", 2)){
+            if (await waitUntilElementLoad(document, "input[name='code']", 2)) {
                 chrome.runtime.sendMessage({
                     amazon_get_code: true,
                 });
-            } else if(await waitUntilElementLoad(document, ".cvf-widget-alert-message", 2)){
+            } else if (await waitUntilElementLoad(document, ".cvf-widget-alert-message", 2)) {
                 chrome.runtime.sendMessage({
-                    amazon_get_phone_number: true,
-                    amazon_invalid_phone_number: true
+                    amazon_get_phone: true,
+                    error: "Invalid phone number"
                 });
             }
-           
+
         } else {
-            document.querySelector("#ap_phone_number").value = request.phone_number;
+            document.querySelector("#ap_phone_number").value = request.phone;
             document.querySelector("#auth-continue").click();
-            if(await waitUntilElementLoad(document, "#auth-verification-ok-announce", 2)){
+            if (await waitUntilElementLoad(document, "#auth-verification-ok-announce", 2)) {
                 document.querySelector("#auth-verification-ok-announce").click();
             }
         }
@@ -89,7 +90,7 @@ async function handleReceivedMessage(request){
             console.log("entered sms code");
             document.querySelector("input[name='code']").value = request.code;
             document.querySelector("input[name='cvf_action']").click();
-            if(await waitUntilElementLoad(document, ".cvf-alert-section", 2)){
+            if (await waitUntilElementLoad(document, ".cvf-alert-section", 2)) {
                 console.log("Sending message")
                 chrome.runtime.sendMessage({
                     amazon_get_code: true,
@@ -100,28 +101,28 @@ async function handleReceivedMessage(request){
     } else if (request.amazon_totp_code) {
         document.querySelector("#ch-auth-app-code-input").value = request.code;
         document.querySelector("#ch-auth-app-submit").click();
-        if(await waitUntilElementLoad(document, "#ch-auth-app-form-error", 2)){
+        if (await waitUntilElementLoad(document, "#ch-auth-app-form-error", 2)) {
             console.log("incorrect code");
             chrome.runtime.sendMessage({
                 amazon_get_code: true,
                 amazon_incorrect_totp_code: true,
                 totp_url: document.querySelector("div.a-accordion-active img").src
-            }); 
+            });
         }
     } else if (request.amazon_start_sms) {
         chrome.runtime.sendMessage({
-            amazon_get_phone_number: true,
+            amazon_get_phone: true,
         });
     } else if (request.amazon_start_totp) {
-        let elem =  document.querySelector("#sia-otp-accordion-totp-header");
+        let elem = document.querySelector("#sia-otp-accordion-totp-header");
         elem.querySelector(".a-accordion-radio").click();
-        if(await waitUntilElementLoad(document, "div.a-accordion-active img", 2)){
+        if (await waitUntilElementLoad(document, "div.a-accordion-active img", 2)) {
             chrome.runtime.sendMessage({
                 amazon_get_code: true,
                 totp_url: document.querySelector("div.a-accordion-active img").src
-            }); 
+            });
         }
-        
+
     }
 }
 
@@ -131,10 +132,10 @@ chrome.runtime.onMessage.addListener(
     }
 );
 
-(async () => {
+(async() => {
     if (window.location.href.includes("amazon.com/ap/signin")) {
         if (document.querySelector("#ap_password") != null) {
-            if(document.querySelector(".a-alert-heading").textContent == "There was a problem"){
+            if (document.querySelector(".a-alert-heading").textContent == "There was a problem") {
                 chrome.runtime.sendMessage({
                     amazon_get_password: true,
                     amazon_password_incorrect: true
@@ -144,16 +145,16 @@ chrome.runtime.onMessage.addListener(
                     amazon_get_password: true
                 });
             }
-            
+
         } else if (document.querySelector("#ap_email") != null) {
             console.log("Found ap email");
             chrome.runtime.sendMessage({
                 amazon_get_email: true
             });
         }
-    
+
     } else if (window.location.href.includes("amazon.com/a/settings/approval/setup/register") || window.location.href.includes("amazon.com/ap/profile/mobilephone?openid.assoc_handle")) {
-        if(await waitUntilElementLoad(document, "#sia-select-otp-device-accordion", 2)) {
+        if (await waitUntilElementLoad(document, "#sia-select-otp-device-accordion", 2)) {
             chrome.runtime.sendMessage({
                 amazon_get_type: true
             });
@@ -161,7 +162,7 @@ chrome.runtime.onMessage.addListener(
             console.log("2FA already enabled?")
             exitScriptWithError();
         }
-            
+
     } else if (window.location.href.includes("amazon.com/a/settings/approval/setup/howto")) {
         chrome.runtime.sendMessage({
             amazon_finished: true
@@ -194,4 +195,3 @@ chrome.runtime.onMessage.addListener(
         window.location.href = "https://www.amazon.com/a/settings/approval/setup/register";
     }
 })();
-

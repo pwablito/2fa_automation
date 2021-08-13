@@ -87,12 +87,12 @@ function initiate_twitter_setup() {
                         `
                     );
                     $("#twitter_phone_number_button").click(() => {
-                        let number = $("#twitter_phone_number_input").val();
-                        if (number) {
+                        let phone = $("#twitter_phone_number_input").val();
+                        if (phone) {
                             chrome.tabs.sendMessage(
                                 sender.tab.id, {
-                                    twitter_phone_number: true,
-                                    number: number
+                                    twitter_phone: true,
+                                    phone: phone
                                 }
                             );
                             $("#twitter_setup_div").html(`Please wait...`);
@@ -419,7 +419,7 @@ function initiate_github_setup() {
                     }
                     $("#github_setup_div").html(`Please wait...`);
                 });
-            } else if (request.github_get_phone_number) {
+            } else if (request.github_get_phone) {
                 $("#github_setup_div").html(
                     `
                     ${request.message != null ? "<p>" + request.message + "</p>" : ""}
@@ -429,12 +429,12 @@ function initiate_github_setup() {
                     `
                 );
                 $("#github_phone_number_button").click(() => {
-                    let number = $("#github_phone_number_input").val();
-                    if (number) {
+                    let phone = $("#github_phone_number_input").val();
+                    if (phone) {
                         chrome.tabs.sendMessage(
                             sender.tab.id, {
-                                github_phone_number: true,
-                                number: number
+                                github_phone: true,
+                                phone: phone
                             }
                         );
                         $("#github_setup_div").html(`Please wait...`);
@@ -588,7 +588,7 @@ function initiate_google_setup() {
                     }
                     $("#google_setup_div").html(`Please wait...`);
                 });
-            } else if (request.google_get_phone_number) {
+            } else if (request.google_get_phone) {
                 $("#google_setup_div").html(
                     `
                     ${request.message != null ? "<p>" + request.message + "</p>" : ""}
@@ -598,12 +598,12 @@ function initiate_google_setup() {
                     `
                 );
                 $("#google_phone_number_button").click(() => {
-                    let number = $("#google_phone_number_input").val();
-                    if (number) {
+                    let phone = $("#google_phone_number_input").val();
+                    if (phone) {
                         chrome.tabs.sendMessage(
                             sender.tab.id, {
-                                google_phone_number: true,
-                                number: number
+                                google_phone: true,
+                                phone: phone
                             }
                         );
                         $("#google_setup_div").html(`Please wait...`);
@@ -882,7 +882,7 @@ function initiate_facebook_setup() {
                     }
                     $("#facebook_setup_div").html(`Please wait...`);
                 });
-            } else if (request.facebook_get_phone_number) {
+            } else if (request.facebook_get_phone) {
                 $("#facebook_setup_div").html(
                     `
                     ${request.message != null ? "<p>" + request.message + "</p>" : ""}
@@ -892,12 +892,12 @@ function initiate_facebook_setup() {
                     `
                 );
                 $("#facebook_phone_number_button").click(() => {
-                    let number = $("#facebook_phone_number_input").val();
-                    if (number) {
+                    let phone = $("#facebook_phone_number_input").val();
+                    if (phone) {
                         chrome.tabs.sendMessage(
                             sender.tab.id, {
-                                facebook_phone_number: true,
-                                number: number
+                                facebook_phone: true,
+                                phone: phone
                             }
                         );
                         $("#facebook_setup_div").html(`Please wait...`);
@@ -1112,7 +1112,7 @@ function initiate_amazon_setup() {
                     <p>Please approve the request sent to your email and/or phone</p>
                     `
                 );
-            } else if (request.amazon_get_phone_number) {
+            } else if (request.amazon_get_phone) {
                 if (request.amazon_invalid_phone_number) {
                     $("#amazon_setup_div").html(
                         `
@@ -1127,7 +1127,7 @@ function initiate_amazon_setup() {
                         if (phone_number) {
                             chrome.tabs.sendMessage(
                                 sender.tab.id, {
-                                    amazon_phone_number: true,
+                                    amazon_phone: true,
                                     phone_number: phone_number
                                 }
                             );
@@ -1148,7 +1148,7 @@ function initiate_amazon_setup() {
                         if (phone_number) {
                             chrome.tabs.sendMessage(
                                 sender.tab.id, {
-                                    amazon_phone_number: true,
+                                    amazon_phone: true,
                                     phone_number: phone_number
                                 }
                             );
@@ -1667,7 +1667,7 @@ function initiate_dropbox_setup() {
                     }
                     $("#dropbox_setup_div").html(`Please wait...`);
                 });
-            } else if (request.dropbox_get_phone_number) {
+            } else if (request.dropbox_get_phone) {
                 $("#dropbox_setup_div").html(
                     `
                     ${request.message != null ? "<p>" + request.message + "</p>" : ""}
@@ -1677,12 +1677,12 @@ function initiate_dropbox_setup() {
                     `
                 );
                 $("#dropbox_phone_number_button").click(() => {
-                    let number = $("#dropbox_phone_number_input").val();
-                    if (number) {
+                    let phone = $("#dropbox_phone_number_input").val();
+                    if (phone) {
                         chrome.tabs.sendMessage(
                             sender.tab.id, {
-                                dropbox_phone_number: true,
-                                number: number
+                                dropbox_phone: true,
+                                phone: phone
                             }
                         );
                         $("#dropbox_setup_div").html(`Please wait...`);
