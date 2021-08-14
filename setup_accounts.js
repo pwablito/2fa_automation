@@ -22,7 +22,7 @@ $("#setup_accounts_button").click(() => {
                 } else if (service_name === "pinterest") {
                     automationUI.add_site(new AutomationSiteUI("Pinterest", "pinterest", "setup_processes_list", "logos/pinterest.svg", automationUI, "https://www.pinterest.com/settings/security"));
                 } else if (service_name === "facebook") {
-                    automationUI.add_site(new AutomationSiteUI("Google", "google", "setup_processes_list", "logos/facebook.svg", automationUI, "https://www.facebook.com/security/2fac/setup/intro"));
+                    automationUI.add_site(new AutomationSiteUI("Facebook", "facebook", "setup_processes_list", "logos/facebook.svg", automationUI, "https://www.facebook.com/security/2fac/setup/intro"));
                 } else if (service_name === "amazon") {
                     automationUI.add_site(new AutomationSiteUI("Amazon", "amazon", "setup_processes_list", "logos/amazon.svg", automationUI, "https://www.amazon.com/a/settings/approval/setup/register"));
                 } else if (service_name === "yahoo") {
