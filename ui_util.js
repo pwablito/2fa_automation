@@ -107,28 +107,37 @@ class AutomationSiteUI {
     launch_listener(ui) {
         chrome.runtime.onMessage.addListener(
             async function listener(request, sender) {
-                console.log(request);
-                if (request[`${ui.identity_prefix}_get_credentials`]) {
-                    ui.get_credentials(sender);
-                } else if (request[`${ui.identity_prefix}_get_password`]) {
-                    ui.get_password(sender, login = request.login !== null ? request.login : null);
-                } else if (request[`${ui.identity_prefix}_get_email`]) {
-                    ui.get_email(sender);
-                } else if (request[`${ui.identity_prefix}_get_phone`]) {
-                    ui.get_phone(sender);
-                } else if (request[`${ui.identity_prefix}_get_code`]) {
-                    ui.get_code(sender);
-                } else if (request[`${ui.identity_prefix}_get_method`]) {
-                    ui.get_method(sender);
-                } else if (request[`${ui.identity_prefix}_finished`]) {
-                    chrome.runtime.onMessage.removeListener(listener);
-                    ui.finished(sender);
-                } else if (request[`${ui.identity_prefix}_error`]) {
-                    chrome.runtime.onMessage.removeListener(listener);
-                    ui.error(request.message, sender);
-                } else {
-                    chrome.runtime.onMessage.removeListener(listener);
-                    ui.error(`Got invalid request: ${JSON.stringify(request)}`, sender);
+                let is_this_site = false;
+                for (const [key, value] of Object.entries(request)) {
+                    if (key.includes(ui.identity_prefix)) {
+                        is_this_site = true;
+                        break;
+                    }
+                }
+                if (is_this_site) {
+                    console.log(request);
+                    if (request[`${ui.identity_prefix}_get_credentials`]) {
+                        ui.get_credentials(sender);
+                    } else if (request[`${ui.identity_prefix}_get_password`]) {
+                        ui.get_password(sender, login = request.login !== null ? request.login : null);
+                    } else if (request[`${ui.identity_prefix}_get_email`]) {
+                        ui.get_email(sender);
+                    } else if (request[`${ui.identity_prefix}_get_phone`]) {
+                        ui.get_phone(sender);
+                    } else if (request[`${ui.identity_prefix}_get_code`]) {
+                        ui.get_code(sender);
+                    } else if (request[`${ui.identity_prefix}_get_method`]) {
+                        ui.get_method(sender);
+                    } else if (request[`${ui.identity_prefix}_finished`]) {
+                        chrome.runtime.onMessage.removeListener(listener);
+                        ui.finished(sender);
+                    } else if (request[`${ui.identity_prefix}_error`]) {
+                        chrome.runtime.onMessage.removeListener(listener);
+                        ui.error(request.message, sender);
+                    } else {
+                        chrome.runtime.onMessage.removeListener(listener);
+                        ui.error(`Got invalid request: ${JSON.stringify(request)}`, sender);
+                    }
                 }
             }
         );
