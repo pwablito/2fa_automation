@@ -190,6 +190,7 @@ function initiate_twitter_setup() {
                 });
             } else if (request.twitter_get_code) {
                 if (request.totp_otpauth_url) {
+                    //TODO implement this without using an API
                     $("#twitter_setup_div").html(
                         `
                         ${request.message != null ? "<p>" + request.message + "</p>" : ""}
