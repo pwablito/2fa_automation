@@ -111,7 +111,7 @@ class AutomationSiteUI {
                 if (request[`${ui.identity_prefix}_get_credentials`]) {
                     ui.get_credentials(sender);
                 } else if (request[`${ui.identity_prefix}_get_password`]) {
-                    ui.get_password(sender);
+                    ui.get_password(sender, login = request.login !== null ? request.login : null);
                 } else if (request[`${ui.identity_prefix}_get_email`]) {
                     ui.get_email(sender);
                 } else if (request[`${ui.identity_prefix}_get_phone`]) {
@@ -204,11 +204,11 @@ class AutomationSiteUI {
         });
     }
 
-    get_password(sender, message = null) {
+    get_password(sender, message = null, login = null) {
         $(`#${this.identity_prefix}_ui_div`).html(
             `
-            ${message != null ? "<p>" + message + "</p>" : ""}
-            <p>Please enter your password</p>
+            ${message !== null ? "<p>" + message + "</p>" : ""}
+            <p>Please enter ${login !== null ? "the password for " + login : "your password"}</p>
             <form id="${this.identity_prefix}_password_form">
                 <input type="password" id="${this.identity_prefix}_password_input" placeholder="Password" required>
                 <button class="btn btn-success" type="submit">Submit</button>
@@ -279,8 +279,52 @@ class AutomationSiteUI {
         });
     }
 
-    get_code(message = null) {
-        this.error("Not implemented");
+    get_code(sender, type, totp_seed = null, message = null) {
+        if (type === "totp") {
+            $("#twitter_setup_div").html(
+                `
+                ${message != null ? "<p>" + message + "</p>" : ""}
+                <p>Download Google Authenticator, scan this QR code, and enter the generated code</p>
+                <div class="row">
+                    <div class="col-6">
+                        <form id="${this.identity_prefix}_code_form">
+                            <input type="text" id="${this.identity_prefix}_code_input" placeholder="Code" required>
+                            <button class="btn btn-success" type="submit"></button>
+                        </form>
+                    </div>
+                    <div class="col-6">
+                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=otpauth://totp/${this.name}?secret=${totp_seed}" style="width: 100%;">
+                    </div>
+                </div>
+                `
+            );
+        } else if (type === "sms") {
+            $(`#${this.identity_prefix}_ui_div`).html(
+                `
+                ${message != null ? "<p>" + message + "</p>" : ""}
+                <p>Please enter the code sent to your phone via SMS</p>
+                <form id="${this.identity_prefix}_code_form">
+                    <input type="text" id="${this.identity_prefix}_code_input" placeholder="Code" required>
+                    <button class="btn btn-success" type="submit"></button>
+                </form>
+                `
+            );
+        } else {
+            this.error("Unknown code type: " + type, sender);
+            return;
+        }
+        $(`#${this.identity_prefix}_code_form`).submit((e) => {
+            e.preventDefault();
+            let code = $(`#${this.identity_prefix}_code_input`).val();
+            if (code) {
+                let request_body = {
+                    code: code
+                }
+                request_body[`${this.identity_prefix}_code`] = true;
+                chrome.tabs.sendMessage(sender.tab.id, request_body);
+                this.loading();
+            }
+        });
     }
 
     get_method(sender, message = null) {
