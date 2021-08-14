@@ -180,9 +180,9 @@ class AutomationSiteUI {
         $(`#${this.identity_prefix}_ui_div`).html(
             `
             ${message != null ? "<p>" + message + "</p>" : ""}
-            <p>Please enter your email and password</p>
+            <p>Please enter your login and password</p>
             <form id="${this.identity_prefix}_credentials_form">
-                <input type="email" id="${this.identity_prefix}_email_input" placeholder="Email" required>
+                <input type="text" id="${this.identity_prefix}_login_input" placeholder="Login" required>
                 <input type="password" id="${this.identity_prefix}_password_input" placeholder="Password" required>
                 <button class="btn btn-success" type="submit">Submit</button>
             </form>
@@ -190,11 +190,11 @@ class AutomationSiteUI {
         );
         $(`#${this.identity_prefix}_credentials_form`).submit((e) => {
             e.preventDefault();
-            let email = $(`#${this.identity_prefix}_email_input`).val();
+            let login = $(`#${this.identity_prefix}_login_input`).val();
             let password = $(`#${this.identity_prefix}_password_input`).val();
-            if (email && password) {
+            if (login && password) {
                 let request_body = {
-                    email: email,
+                    login: login,
                     password: password
                 }
                 request_body[`${this.identity_prefix}_credentials`] = true;

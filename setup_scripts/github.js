@@ -46,7 +46,7 @@ function exitScriptWithError() {
 
 async function handleReceivedMessage(request) {
     if (request.github_credentials) {
-        document.querySelector("[name=login]").value = request.username;
+        document.querySelector("[name=login]").value = request.login;
         document.querySelector("[name=password]").value = request.password;
         document.querySelector("[value='Sign in']").click();
         setTimeout(() => {

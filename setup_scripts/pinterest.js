@@ -11,7 +11,7 @@ function change(field, value) {
 
 chrome.runtime.onMessage.addListener(function(request, _) {
     if (request.pinterest_credentials) {
-        change(document.querySelector("#email"), request.email);
+        change(document.querySelector("#email"), request.login);
         change(document.querySelector("#password"), request.password);
         document.querySelector("html > body > div:nth-of-type(2) > div:nth-of-type(1) > div > div > div > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div > div > div > div > div > div > div > div:nth-of-type(4) > form").submit();
     } else if (request.pinterest_password) {
@@ -33,7 +33,7 @@ if (window.location.href.includes("pinterest.com/settings/security")) {
             chrome.runtime.sendMessage({
                 pinterest_get_password: true,
             });
-        } else {exitScriptWithError();}
+        } else { exitScriptWithError(); }
         // setTimeout(() => {
         //     if (document.querySelector("html > body > div:nth-of-type(4) > div > div > div > div:nth-of-type(2) > div > div:nth-of-type(2) > div > span > div:nth-of-type(1) > input") === null) {
         //         chrome.runtime.sendMessage({

@@ -45,7 +45,7 @@ function exitScriptWithError() {
 
 async function handleReceivedMessage(request) {
     if (request.dropbox_credentials) {
-        change(document.querySelector("input[type='email']"), request.username);
+        change(document.querySelector("input[type='email']"), request.login);
         change(document.querySelector("input[type='password']"), request.password);
         getElementByXpath(document, "//button[./div = 'Sign in']").click();
         if (await waitUntilElementLoad(document, "[class='error-message']", 1)) {

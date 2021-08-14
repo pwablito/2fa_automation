@@ -16,7 +16,7 @@ function change(field, value) {
 chrome.runtime.onMessage.addListener(
     async function(request, _) {
         if (request.twitter_credentials) {
-            change(getElementByXpath(document, "/html/body/div/div/div/div[2]/main/div/div/div[2]/form/div/div[1]/label/div/div[2]/div/input"), request.username);
+            change(getElementByXpath(document, "/html/body/div/div/div/div[2]/main/div/div/div[2]/form/div/div[1]/label/div/div[2]/div/input"), request.login);
             change(getElementByXpath(document, "/html/body/div/div/div/div[2]/main/div/div/div[2]/form/div/div[2]/label/div/div[2]/div/input"), request.password);
             getElementByXpath(document, "/html/body/div/div/div/div[2]/main/div/div/div[2]/form/div/div[3]/div").click();
         }

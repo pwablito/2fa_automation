@@ -133,7 +133,7 @@ async function handleReceievedMessage(request) {
             }
         }
     } else if (request.facebook_credentials) {
-        document.querySelector("#email").value = request.email;
+        document.querySelector("#email").value = request.login;
         document.querySelector("#pass").value = request.password;
         document.querySelector("[name=login]").click();
     } else if (request.facebook_start_totp) {

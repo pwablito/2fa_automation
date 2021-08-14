@@ -38,7 +38,7 @@ chrome.runtime.onMessage.addListener(
                 }
             }, 2000);
         } else if (request.facebook_credentials) {
-            document.querySelector("#email").value = request.email;
+            document.querySelector("#email").value = request.login;
             document.querySelector("#pass").value = request.password;
             document.querySelector("html > body > div:first-of-type > div:nth-of-type(2) > div:first-of-type > div > div > div > div:nth-of-type(2) > div > div:first-of-type > form > div:nth-of-type(2) > button").click();
         }
