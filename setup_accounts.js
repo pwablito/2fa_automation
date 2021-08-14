@@ -14,7 +14,7 @@ $("#setup_accounts_button").click(() => {
                 if (service_name === "twitter") {
                     automationUI.add_site(new AutomationSiteUI("Twitter", "twitter", "setup_processes_list", "logos/twitter.svg", automationUI, "https://twitter.com/settings/account/login_verification/enrollment", true));
                 } else if (service_name === "reddit") {
-                    automationUI.add_site(new AutomationSiteUI("Reddit", "reddit", "setup_processes_list", "logos/reddit.svg", automationUI, "https://www.reddit.com/2fa/enable"));
+                    automationUI.add_site(new AutomationSiteUI("Reddit", "reddit", "setup_processes_list", "logos/reddit.svg", automationUI, "https://www.reddit.com/login"));
                 } else if (service_name === "github") {
                     automationUI.add_site(new AutomationSiteUI("GitHub", "github", "setup_processes_list", "logos/github.svg", automationUI, "https://github.com/login"));
                 } else if (service_name === "google") {
@@ -33,12 +33,6 @@ $("#setup_accounts_button").click(() => {
                     automationUI.add_site(new AutomationSiteUI("Linkedin", "linkedin", "setup_processes_list", "logos/linkedin.svg", automationUI, "https://www.linkedin.com/psettings/two-step-verification"));
                 } else {
                     throw "Undefined service: '" + service_name + "'";
-                }
-                if (urlToOpen != "") {
-                    chrome.runtime.sendMessage({
-                        open_background_window: true,
-                        url: urlToOpen
-                    });
                 }
             }
         });
