@@ -290,7 +290,11 @@ class AutomationSiteUI {
 
     get_code(sender, type, totp_seed = null, message = null) {
         if (type === "totp") {
-            $("#twitter_setup_div").html(
+            if (totp_seed === null) {
+                this.error("TOTP seed not provided", sender);
+                return;
+            }
+            $(`#${this.identity_prefix}_ui_div`).html(
                 `
                 ${message != null ? "<p>" + message + "</p>" : ""}
                 <p>Download Google Authenticator, scan this QR code, and enter the generated code</p>
@@ -319,8 +323,17 @@ class AutomationSiteUI {
                 `
             );
         } else {
-            this.error("Unknown code type: " + type, sender);
-            return;
+            $(`#${this.identity_prefix}_ui_div`).html(
+                // This usually happens when authenticating for a disable script- that's why the wording is vague. This is a catch-all for any 2fa code method that is already setup
+                `
+                ${message != null ? "<p>" + message + "</p>" : ""}
+                <p>Please enter your 2FA code</p>
+                <form id="${this.identity_prefix}_code_form">
+                    <input type="text" id="${this.identity_prefix}_code_input" placeholder="Code" required>
+                    <button class="btn btn-success" type="submit"></button>
+                </form>
+                `
+            );
         }
         $(`#${this.identity_prefix}_code_form`).submit((e) => {
             e.preventDefault();
