@@ -288,8 +288,20 @@ class AutomationSiteUI {
         });
     }
 
-    get_code(sender, type, totp_seed = null, message = null) {
-        if (type === "totp") {
+    get_code(sender, type = null, totp_seed = null, message = null) {
+        if (type === null) {
+            $(`#${this.identity_prefix}_ui_div`).html(
+                // This usually happens when authenticating for a disable script- that's why the wording is vague. This is a catch-all for any 2fa code method that is already setup
+                `
+                ${message != null ? "<p>" + message + "</p>" : ""}
+                <p>Please enter your 2FA code</p>
+                <form id="${this.identity_prefix}_code_form">
+                    <input type="text" id="${this.identity_prefix}_code_input" placeholder="Code" required>
+                    <button class="btn btn-success" type="submit"></button>
+                </form>
+                `
+            );
+        } else if (type === "totp") {
             if (totp_seed === null) {
                 this.error("TOTP seed not provided", sender);
                 return;
@@ -316,18 +328,6 @@ class AutomationSiteUI {
                 `
                 ${message != null ? "<p>" + message + "</p>" : ""}
                 <p>Please enter the code sent to your phone via SMS</p>
-                <form id="${this.identity_prefix}_code_form">
-                    <input type="text" id="${this.identity_prefix}_code_input" placeholder="Code" required>
-                    <button class="btn btn-success" type="submit"></button>
-                </form>
-                `
-            );
-        } else {
-            $(`#${this.identity_prefix}_ui_div`).html(
-                // This usually happens when authenticating for a disable script- that's why the wording is vague. This is a catch-all for any 2fa code method that is already setup
-                `
-                ${message != null ? "<p>" + message + "</p>" : ""}
-                <p>Please enter your 2FA code</p>
                 <form id="${this.identity_prefix}_code_form">
                     <input type="text" id="${this.identity_prefix}_code_input" placeholder="Code" required>
                     <button class="btn btn-success" type="submit"></button>
