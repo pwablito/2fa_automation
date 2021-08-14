@@ -53,7 +53,10 @@ async function handleReceivedMessage(request){
             document.querySelector("#login-signin").click();
         }
     } else if(request.yahoo_SMS_code){
-        //TODO
+        if(await waitUntilElementLoad(document, "#verification-code-field", 2)){
+            document.querySelector("#verification-code-field").value = request.code;
+            document.querySelector("#verify-code-button").click()
+        }
     } else if(request.yahoo_TOTP_code){
         if(await waitUntilElementLoad(document, "#verification-code-field", 2)){
             document.querySelector("#verification-code-field").value= request.code;
@@ -87,6 +90,7 @@ chrome.runtime.onMessage.addListener(
                         });
                     }
                 } else {
+                    console.log("in this loop");
                     chrome.runtime.sendMessage({
                         yahoo_get_email: true,
                     });
@@ -110,6 +114,8 @@ chrome.runtime.onMessage.addListener(
                 chrome.runtime.sendMessage({
                     yahoo_get_SMS_code: true,
                 });
+            } else if (window.location.href.includes("account/challenge/challenge-selector")) {
+                document.querySelector("button[type='submit']").click()
             }
         }
 

@@ -47,15 +47,31 @@ async function handleReceivedMessage(request){
         document.querySelector("#username").value = request.username;
         document.querySelector("#password").value = request.password;
         getElementByXpath(document, "//button[contains(@aria-label, 'Sign in')]").click()
-    } else if (request.linkedin_password) {
-        document.querySelector("#verify-password").value = request.password;
-        getElementByXpath(document, "//button[contains(@class, 'submit')]").click();
-
-        if(await waitUntilElementLoad(document, "p[id='incorrect-password-error']", 2)){
+        if(await waitUntilElementLoad(document, "#error-for-password" , 2)){
             chrome.runtime.sendMessage({
                 linkedin_incorrect_password:true
             })
         }
+    } else if (request.linkedin_password) {
+        if(document.querySelector("#verify-password")){
+            document.querySelector("#verify-password").value = request.password;
+            getElementByXpath(document, "//button[contains(@class, 'submit')]").click();
+    
+            if(await waitUntilElementLoad(document, "p[id='incorrect-password-error']", 2)){
+                chrome.runtime.sendMessage({
+                    linkedin_incorrect_password:true
+                })
+            }
+        } else {
+            document.querySelector("#password").value = request.password;
+            getElementByXpath(document, "//button[contains(@aria-label, 'Sign in')]").click()
+        if(await waitUntilElementLoad(document, "#error-for-password" , 2)){
+            chrome.runtime.sendMessage({
+                linkedin_incorrect_password:true
+            })
+        }
+        }
+        
        
         //auth app
         if (await waitUntilElementLoad(document, ".authenticator-QRImage", 2)){
@@ -170,7 +186,15 @@ chrome.runtime.onMessage.addListener(
             if(await waitUntilElementLoad(document, ".member-profile-block", 2)){
                 document.querySelector(".member-profile-block").click();
             }
-        } else if (window.location.href.includes("login")) {
+        }  else if (window.location.href.includes("linkedin.com/signup")){
+            if(await waitUntilElementLoad(document, ".main__sign-in-link", 2)){
+                document.querySelector(".main__sign-in-link").click()
+            }
+        }else if (window.location.href.includes("psettings/phone/add")) {
+            chrome.runtime.sendMessage({
+                linkedin_get_phone: true,
+            });
+        }else if (window.location.href.includes("login")) {
             if(await waitUntilElementLoad(document, ".member-profile-block", 2)){
                 document.querySelector(".member-profile-block").click();
             } else {
@@ -179,10 +203,6 @@ chrome.runtime.onMessage.addListener(
                 });
             }
             
-        } else if (window.location.href.includes("psettings/phone/add")) {
-            chrome.runtime.sendMessage({
-                linkedin_get_phone: true,
-            });
         }
     } catch(e) {
         console.log(e);
