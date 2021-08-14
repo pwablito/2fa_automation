@@ -45,7 +45,7 @@ function exitScriptWithError() {
 
 
 async function handleReceievedMessage(request) {
-    if (request.facebook_phone_number) {
+    if (request.facebook_phone) {
         change(document.querySelector("[placeholder='Mobile phone number']"), request.phone);
         await timer(100);
         getElementByXpath(document, "//*[contains(text(),'Continue')]/../..").click();
@@ -58,6 +58,7 @@ async function handleReceievedMessage(request) {
             } else {
                 chrome.runtime.sendMessage({
                     facebook_get_code: true,
+                    type: "sms",
                 });
             }
         }, 1000);
@@ -73,6 +74,8 @@ async function handleReceievedMessage(request) {
         } else if (await waitUntilElementLoad(document, "[src*= 'https://www.facebook.com/qr/show/code']", 2)) {
             chrome.runtime.sendMessage({
                 facebook_get_code: true,
+                type: "totp",
+                // TODO change this to `totp_seed`: see issue #7
                 totp_url: document.querySelector("[src*= 'https://www.facebook.com/qr/show/code']").src
             });
             getElementByXpath(document, "//*[contains(text(),'Continue')]/../..").click();
@@ -86,6 +89,7 @@ async function handleReceievedMessage(request) {
         if (request.code.length != 6) {
             chrome.runtime.sendMessage({
                 facebook_get_code: true,
+                type: "sms",
                 message: "Invalid code"
             });
         } else {
@@ -98,6 +102,7 @@ async function handleReceievedMessage(request) {
             if (document.querySelector("[data-key='0']")) {
                 chrome.runtime.sendMessage({
                     facebook_get_code: true,
+                    // TODO What kind of code is this? Add `type` parameter here
                     message: "Invalid code"
                 });
             } else {
@@ -111,6 +116,8 @@ async function handleReceievedMessage(request) {
         if (request.code.length != 6) {
             chrome.runtime.sendMessage({
                 facebook_get_code: true,
+                type: "totp",
+                // TODO change this to `totp_seed`: see issue #7
                 totp_url: request.totp_url,
                 message: "Invalid code"
             });
@@ -123,6 +130,8 @@ async function handleReceievedMessage(request) {
             if (document.querySelector("[data-key='0']")) {
                 chrome.runtime.sendMessage({
                     facebook_get_code: true,
+                    type: "totp",
+                    // TODO change this to `totp_seed`: see issue #7
                     totp_url: request.totp_url,
                     message: "Invalid code"
                 });
@@ -136,11 +145,13 @@ async function handleReceievedMessage(request) {
         document.querySelector("#email").value = request.login;
         document.querySelector("#pass").value = request.password;
         document.querySelector("[name=login]").click();
-    } else if (request.facebook_start_totp) {
+    } else if (request.facebook_totp) {
         getElementByXpath(document, "//*[contains(text(),'Use Authentication App')]").click();
         if (await waitUntilElementLoad(document, "[src*= 'https://www.facebook.com/qr/show/code']", 2)) {
             chrome.runtime.sendMessage({
                 facebook_get_code: true,
+                type: "totp",
+                // TODO change this to `totp_seed`: see issue #7
                 totp_url: document.querySelector("[src*= 'https://www.facebook.com/qr/show/code']").src
             });
             getElementByXpath(document, "//*[contains(text(),'Continue')]/../..").click();
@@ -149,7 +160,7 @@ async function handleReceievedMessage(request) {
                 facebook_get_password: true
             });
         }
-    } else if (request.facebook_start_sms) {
+    } else if (request.facebook_sms) {
         getElementByXpath(document, "//*[contains(text(),'Use Text Message')]").click();
         if (await waitUntilElementLoad(document, "[placeholder='Mobile phone number']", 1)) {
             chrome.runtime.sendMessage({
@@ -196,7 +207,7 @@ chrome.runtime.onMessage.addListener(
             if (window.location.href.includes("?cquick=")) {
                 // Inside iframe
                 chrome.runtime.sendMessage({
-                    facebook_get_type: true,
+                    facebook_get_method: true,
                 });
             } else {
                 let iFrameXPath = "iframe[src*=https]";

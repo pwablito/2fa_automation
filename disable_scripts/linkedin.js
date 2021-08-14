@@ -51,7 +51,8 @@ async function handleReceivedMessage(request) {
         getElementByXpath(document, "//button[contains(@aria-label, 'Sign in')]").click()
         if (await waitUntilElementLoad(document, "#error-for-password", 2)) {
             chrome.runtime.sendMessage({
-                linkedin_incorrect_password: true
+                linkedin_password: true,
+                message: "Incorrect password, try again"
             })
         }
     } else if (request.linkedin_code) {
@@ -61,13 +62,13 @@ async function handleReceivedMessage(request) {
             console.log("Incorrect pin")
             chrome.runtime.sendMessage({
                 linkedin_get_code: true,
-                linkedin_incorrect_SMS_code: true
+                message: "Incorrect code, try again"
             });
         } else if (await waitUntilElementLoad(document, "span[role='alert'", 2)) {
             if (document.querySelector("span[role='alert'").textContent == "The verification code you entered isn't valid. Please check the code and try again.") {
                 chrome.runtime.sendMessage({
                     linkedin_get_code: true,
-                    linkedin_incorrect_SMS_code: true
+                    message: "Incorrect code, try again"
                 });
             }
         }
@@ -146,12 +147,6 @@ chrome.runtime.onMessage.addListener(
             chrome.runtime.sendMessage({
                 linkedin_get_phone: true,
             });
-        } else if (window.location.href.includes("checkpoint/challenge")) {
-            chrome.runtime.sendMessage({
-                linkedin_get_code: true,
-            });
-
-            //see if SMS is the same URL as TOTP 
         } else if (window.location.href.includes("checkpoint/challenge")) {
             chrome.runtime.sendMessage({
                 linkedin_get_code: true,

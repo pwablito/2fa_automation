@@ -63,7 +63,8 @@ async function handleReceivedMessage(request) {
             });
         } else {
             chrome.runtime.sendMessage({
-                github_get_code: true
+                github_get_code: true,
+                type: "sms",
             });
         }
     } else if (request.github_code) {
@@ -71,10 +72,13 @@ async function handleReceivedMessage(request) {
             if (request.totp_secret) {
                 chrome.runtime.sendMessage({
                     github_get_code: true,
+                    type: "totp",
                     message: "Invalid code",
-                    totp_secret: request.totp_secret
+                    totp_seed: request.totp_seed
+                        // TODO Fix issue #8 to get this to work
                 });
             } else {
+                // TODO clean this up to use the new backend api for codes
                 chrome.runtime.sendMessage({
                     github_get_code: true,
                     message: "Invalid code",

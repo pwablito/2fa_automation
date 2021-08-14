@@ -51,7 +51,7 @@ async function handleReceivedMessage(request) {
         if (await waitUntilElementLoad(document, "[class='error-message']", 1)) {
             chrome.runtime.sendMessage({
                 dropbox_get_credentials: true,
-                message: "Invalid credential"
+                message: "Invalid credentials"
             });
         }
 
@@ -116,11 +116,12 @@ async function handleReceivedMessage(request) {
         } else if (getElementByXpath(document, "//*[contains(text(),'Invalid')]")) {
             chrome.runtime.sendMessage({
                 dropbox_get_code: true,
+                type: "totp",
                 message: getElementByXpath(document, "//*[contains(text(),'Invalid')]").innerHTML,
-                totp_secret: request.totp_secret // in case of totp, we need to recieve the QR code value from the extnesion to send it back for next retry/
+                totp_seed: request.totp_seed // in case of totp, we need to recieve the QR code value from the extnesion to send it back for next retry/
             });
         } else { exitScriptWithError(); }
-    } else if (request.dropbox_start_sms) {
+    } else if (request.dropbox_sms) {
         document.querySelector("#use-sms").click();
         if (getElementByXpath(document, "//*[contains(text(),'Next')]/..")) {
             getElementByXpath(document, "//*[contains(text(),'Next')]/..").click();
@@ -128,7 +129,7 @@ async function handleReceivedMessage(request) {
         chrome.runtime.sendMessage({
             dropbox_get_phone: true,
         });
-    } else if (request.dropbox_start_totp) {
+    } else if (request.dropbox_totp) {
         document.querySelector("#use-app").click();
         if (getElementByXpath(document, "//*[contains(text(),'Next')]/..")) {
             getElementByXpath(document, "//*[contains(text(),'Next')]/..").click();
@@ -142,7 +143,8 @@ async function handleReceivedMessage(request) {
         await waitUntilElementLoad(document, QRcodeSecretXPath, 2);
         chrome.runtime.sendMessage({
             dropbox_get_code: true,
-            totp_secret: document.querySelector(QRcodeSecretXPath).textContent.replace(/\s+/g, '')
+            type: "totp",
+            totp_seed: document.querySelector(QRcodeSecretXPath).textContent.replace(/\s+/g, '')
         });
         if (getElementByXpath(document, "//*[contains(text(),'Next')]/..")) {
             getElementByXpath(document, "//*[contains(text(),'Next')]/..").click();
@@ -180,7 +182,7 @@ chrome.runtime.onMessage.addListener(
                 } else { exitScriptWithError(); }
             } else if (labelTurnedOn) {
                 chrome.runtime.sendMessage({
-                    dropbox_finished: true,
+                    dropbox_error: true,
                     message: "2FA is already enabled"
                 });
             } else {

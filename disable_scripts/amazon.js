@@ -15,18 +15,18 @@ function getElementByXpath(doc, xpath) {
 
 function timer(ms) { return new Promise(res => setTimeout(res, ms)); }
 
-async function waitUntilPageLoad(document,maxWait) {
-    for (let i = 0; i < maxWait*10; i++) {
-        if( document.readyState !== 'loading' ) { return true;}
+async function waitUntilPageLoad(document, maxWait) {
+    for (let i = 0; i < maxWait * 10; i++) {
+        if (document.readyState !== 'loading') { return true; }
         console.log(i);
         await timer(100); // then the created Promise can be awaited
     }
     return false;
 }
 
-async function waitUntilElementLoad(document, elemXPath,  maxWait) {
-    for (let i = 0; i < maxWait*10; i++) {
-        if(document.querySelector(elemXPath)) { return true;}
+async function waitUntilElementLoad(document, elemXPath, maxWait) {
+    for (let i = 0; i < maxWait * 10; i++) {
+        if (document.querySelector(elemXPath)) { return true; }
         console.log(i);
         await timer(100); // then the created Promise can be awaited
     }
@@ -38,11 +38,11 @@ function exitScriptWithError() {
     chrome.runtime.sendMessage({
         linkedin_error: true,
         message: "Sorry! Something went wrong. ",
-        message_for_dev : window.location.href
+        message_for_dev: window.location.href
     });
 }
 
-async function handleReceivedMessage(request){
+async function handleReceivedMessage(request) {
     if (request.amazon_code) {
         document.querySelector("#auth-mfa-otpcode").value = request.code;
         document.querySelector("#auth-signin-button").click();
@@ -61,28 +61,28 @@ chrome.runtime.onMessage.addListener(
     }
 );
 
-(async () => {
+(async() => {
     try {
         if (window.location.href.includes("amazon.com/a/settings/approval")) {
             if (await waitUntilElementLoad(document, "#ch-delete-auth-app-link", 2)) {
                 document.querySelector("#ch-delete-auth-app-link").click();
-                if(await waitUntilElementLoad(document, "#chimera-remove-auth-app-popover", 2)){
+                if (await waitUntilElementLoad(document, "#chimera-remove-auth-app-popover", 2)) {
                     document.querySelector("#confirm-removeAuthApp-submit").click();
                 }
-            } else if(await waitUntilElementLoad(document, ".ch-settings-remove-phone", 2)) {
+            } else if (await waitUntilElementLoad(document, ".ch-settings-remove-phone", 2)) {
                 document.querySelector(".ch-settings-remove-phone").click();
-                if(await waitUntilElementLoad(document, "#chimera-remove-phone-popover", 2)){
+                if (await waitUntilElementLoad(document, "#chimera-remove-phone-popover", 2)) {
                     document.querySelector("#confirm-remove-dialog-backup-0-submit").click();
                 }
 
-            }else if(await waitUntilElementLoad(document, "#alert-box", 2)){
+            } else if (await waitUntilElementLoad(document, "#alert-box", 2)) {
                 chrome.runtime.sendMessage({
                     amazon_finished: true,
                 })
-                
-            }else if(await waitUntilElementLoad(document, "#disable-button", 2)) {
+
+            } else if (await waitUntilElementLoad(document, "#disable-button", 2)) {
                 document.querySelector("#disable-button").click()
-                if(await waitUntilElementLoad(document,"#remove-devices-checkbox-input", 2)){
+                if (await waitUntilElementLoad(document, "#remove-devices-checkbox-input", 2)) {
                     document.querySelector("#remove-devices-checkbox-input").click();
                     document.querySelector("#confirm-disable-dialog-modal-submit").click();
                     chrome.runtime.sendMessage({
@@ -90,13 +90,13 @@ chrome.runtime.onMessage.addListener(
                     })
                 }
 
-            }else {
+            } else {
                 chrome.runtime.sendMessage({
                     amazon_disable_error: true,
                     message: "2FA is already disabled for this account"
                 })
             }
-        
+
         } else if (window.location.href.includes("amazon.com/ap/signin")) {
             if (document.querySelector(".cvf-account-switcher")) {
                 console.log("Signing out");
@@ -117,6 +117,7 @@ chrome.runtime.onMessage.addListener(
         } else if (window.location.href.includes("amazon.com/ap/mfa")) {
             chrome.runtime.sendMessage({
                 amazon_get_code: true,
+                type: "sms"
             });
         } else if (window.location.href.includes("amazon.com/ap/cvf")) {
             console.log("Needs approval");
@@ -124,10 +125,8 @@ chrome.runtime.onMessage.addListener(
                 amazon_approve_login: true
             });
         }
-        
-    }catch(e){
+
+    } catch (e) {
         console.log(e);
     }
 })();
-
-
