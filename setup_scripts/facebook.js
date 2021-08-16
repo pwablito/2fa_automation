@@ -16,18 +16,18 @@ function getElementByXpath(doc, xpath) {
 function timer(ms) { return new Promise(res => setTimeout(res, ms)); }
 
 // maxWait is in seconds
-async function waitUntilPageLoad(document,maxWait) {
-    for (let i = 0; i < maxWait*10; i++) {
-        if( document.readyState !== 'loading' ) { return true;}
+async function waitUntilPageLoad(document, maxWait) {
+    for (let i = 0; i < maxWait * 10; i++) {
+        if (document.readyState !== 'loading') { return true; }
         console.log(i);
         await timer(100); // then the created Promise can be awaited
     }
     return false;
 }
 
-async function waitUntilElementLoad(document, elemXPath,  maxWait) {
-    for (let i = 0; i < maxWait*10; i++) {
-        if(document.querySelector(elemXPath)) { return true;}
+async function waitUntilElementLoad(document, elemXPath, maxWait) {
+    for (let i = 0; i < maxWait * 10; i++) {
+        if (document.querySelector(elemXPath)) { return true; }
         console.log(i);
         await timer(100); // then the created Promise can be awaited
     }
@@ -36,28 +36,29 @@ async function waitUntilElementLoad(document, elemXPath,  maxWait) {
 
 function exitScriptWithError() {
     // When debugging comment out code of this function. This will stop closing of background pages.
-    // chrome.runtime.sendMessage({
-    //     facebook_error: true,
-    //     message: "Sorry! Something went wrong. ",
-    //     message_for_dev : window.location.href
-    // });
+    chrome.runtime.sendMessage({
+        facebook_error: true,
+        message: "Sorry! Something went wrong. ",
+        message_for_dev: window.location.href
+    });
 }
 
 
 async function handleReceievedMessage(request) {
-    if (request.facebook_phone_number) {
-        change(document.querySelector("[placeholder='Mobile phone number']"), request.number);
+    if (request.facebook_phone) {
+        change(document.querySelector("[placeholder='Mobile phone number']"), request.phone);
         await timer(100);
         getElementByXpath(document, "//*[contains(text(),'Continue')]/../..").click();
         setTimeout(() => {
             if (document.querySelector("[placeholder='Mobile phone number']")) {
                 chrome.runtime.sendMessage({
-                    facebook_get_phone_number: true,
+                    facebook_get_phone: true,
                     message: "Invalid phone number",
                 });
             } else {
                 chrome.runtime.sendMessage({
                     facebook_get_code: true,
+                    type: "sms",
                 });
             }
         }, 1000);
@@ -68,11 +69,13 @@ async function handleReceievedMessage(request) {
         getElementByXpath(document, "//button[contains(text(),'Submit')]").click();
         if (await waitUntilElementLoad(document, "[placeholder='Mobile phone number']", 2)) {
             chrome.runtime.sendMessage({
-                facebook_get_phone_number: true,
+                facebook_get_phone: true,
             });
         } else if (await waitUntilElementLoad(document, "[src*= 'https://www.facebook.com/qr/show/code']", 2)) {
             chrome.runtime.sendMessage({
                 facebook_get_code: true,
+                type: "totp",
+                // TODO change this to `totp_seed`: see issue #7
                 totp_url: document.querySelector("[src*= 'https://www.facebook.com/qr/show/code']").src
             });
             getElementByXpath(document, "//*[contains(text(),'Continue')]/../..").click();
@@ -81,23 +84,25 @@ async function handleReceievedMessage(request) {
                 facebook_get_password: true,
                 message: "Incorrect password",
             });
-        } else {exitScriptWithError();}
+        } else { exitScriptWithError(); }
     } else if (request.facebook_sms_code) {
         if (request.code.length != 6) {
             chrome.runtime.sendMessage({
                 facebook_get_code: true,
+                type: "sms",
                 message: "Invalid code"
             });
         } else {
             for (let index = 0; index < 6; index++) {
                 // change(document.querySelector(`html > body > div:nth-of-type(6) > div:nth-of-type(2) > div > div > div > div > div > div > div:nth-of-type(2) > div > div > div > div:nth-of-type(2) > div > div > form > input:nth-of-type(${index + 1})`), request.code[index]);
-                change(document.querySelector("[data-key='"+ index +"']"), request.code[index]);
+                change(document.querySelector("[data-key='" + index + "']"), request.code[index]);
             }
             getElementByXpath(document, "//*[contains(text(),'Continue')]/../..").click();
             await timer(500);
             if (document.querySelector("[data-key='0']")) {
                 chrome.runtime.sendMessage({
                     facebook_get_code: true,
+                    // TODO What kind of code is this? Add `type` parameter here
                     message: "Invalid code"
                 });
             } else {
@@ -111,18 +116,22 @@ async function handleReceievedMessage(request) {
         if (request.code.length != 6) {
             chrome.runtime.sendMessage({
                 facebook_get_code: true,
+                type: "totp",
+                // TODO change this to `totp_seed`: see issue #7
                 totp_url: request.totp_url,
                 message: "Invalid code"
             });
         } else {
             for (let index = 0; index < 6; index++) {
-                change(document.querySelector("[data-key='"+ index +"']"), request.code[index]);
+                change(document.querySelector("[data-key='" + index + "']"), request.code[index]);
             }
             getElementByXpath(document, "//*[contains(text(),'Continue')]/../..").click();
             await timer(500);
             if (document.querySelector("[data-key='0']")) {
                 chrome.runtime.sendMessage({
                     facebook_get_code: true,
+                    type: "totp",
+                    // TODO change this to `totp_seed`: see issue #7
                     totp_url: request.totp_url,
                     message: "Invalid code"
                 });
@@ -133,29 +142,31 @@ async function handleReceievedMessage(request) {
             }
         }
     } else if (request.facebook_credentials) {
-        document.querySelector("#email").value = request.email;
+        document.querySelector("#email").value = request.login;
         document.querySelector("#pass").value = request.password;
         document.querySelector("[name=login]").click();
-    } else if (request.facebook_start_totp) {
+    } else if (request.facebook_totp) {
         getElementByXpath(document, "//*[contains(text(),'Use Authentication App')]").click();
         if (await waitUntilElementLoad(document, "[src*= 'https://www.facebook.com/qr/show/code']", 2)) {
             chrome.runtime.sendMessage({
                 facebook_get_code: true,
+                type: "totp",
+                // TODO change this to `totp_seed`: see issue #7
                 totp_url: document.querySelector("[src*= 'https://www.facebook.com/qr/show/code']").src
             });
             getElementByXpath(document, "//*[contains(text(),'Continue')]/../..").click();
-        } else if ( document.querySelector("[type=password]")) {
+        } else if (document.querySelector("[type=password]")) {
             chrome.runtime.sendMessage({
                 facebook_get_password: true
             });
         }
-    } else if (request.facebook_start_sms) {
+    } else if (request.facebook_sms) {
         getElementByXpath(document, "//*[contains(text(),'Use Text Message')]").click();
         if (await waitUntilElementLoad(document, "[placeholder='Mobile phone number']", 1)) {
             chrome.runtime.sendMessage({
-                facebook_get_phone_number: true
+                facebook_get_phone: true
             });
-        } else if ( document.querySelector("[type=password]")) {
+        } else if (document.querySelector("[type=password]")) {
             chrome.runtime.sendMessage({
                 facebook_get_password: true
             });
@@ -164,15 +175,15 @@ async function handleReceievedMessage(request) {
             getElementByXpath(document, "//*[contains(text(),'Continue')]/../..").click();
             if (await waitUntilElementLoad(document, "[placeholder='Mobile phone number']", 1)) {
                 chrome.runtime.sendMessage({
-                    facebook_get_phone_number: true
+                    facebook_get_phone: true
                 });
-            } else if ( document.querySelector("[type=password]")) {
+            } else if (document.querySelector("[type=password]")) {
                 chrome.runtime.sendMessage({
                     facebook_get_password: true
                 });
-            } else {exitScriptWithError();}
+            } else { exitScriptWithError(); }
 
-        } else {exitScriptWithError();}
+        } else { exitScriptWithError(); }
     }
 }
 
@@ -184,7 +195,7 @@ chrome.runtime.onMessage.addListener(
 );
 
 
-(async () => {
+(async() => {
     try {
         if (window.location.href.includes("facebook.com/security/2fac/settings")) {
             // chrome.runtime.sendMessage({
@@ -196,13 +207,13 @@ chrome.runtime.onMessage.addListener(
             if (window.location.href.includes("?cquick=")) {
                 // Inside iframe
                 chrome.runtime.sendMessage({
-                    facebook_get_type: true,
+                    facebook_get_method: true,
                 });
             } else {
                 let iFrameXPath = "iframe[src*=https]";
-                if(await waitUntilElementLoad(document, iFrameXPath, 2)) {
+                if (await waitUntilElementLoad(document, iFrameXPath, 2)) {
                     window.location = document.querySelector(iFrameXPath).src;
-                } else {exitScriptWithError();}
+                } else { exitScriptWithError(); }
             }
         } else if (window.location.href.includes("facebook.com/login/reauth.php")) {
             console.log("In reauth");

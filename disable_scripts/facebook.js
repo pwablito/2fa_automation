@@ -33,12 +33,12 @@ chrome.runtime.onMessage.addListener(
                     });
                 } else {
                     chrome.runtime.sendMessage({
-                        facebook_get_phone_number: true,
+                        facebook_get_phone: true,
                     });
                 }
             }, 2000);
         } else if (request.facebook_credentials) {
-            document.querySelector("#email").value = request.email;
+            document.querySelector("#email").value = request.login;
             document.querySelector("#pass").value = request.password;
             document.querySelector("html > body > div:first-of-type > div:nth-of-type(2) > div:first-of-type > div > div > div > div:nth-of-type(2) > div > div:first-of-type > form > div:nth-of-type(2) > button").click();
         }
@@ -52,20 +52,20 @@ setTimeout(() => {
             // Inside iframe
             document.querySelector("html > body > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div > a").click();
             setTimeout(() => {
-                if(document.querySelector("html > body > div:nth-of-type(7) > div:nth-of-type(2) > div > div > div > div > div > div > div:nth-of-type(3) > span:nth-of-type(2) > div > div:nth-of-type(2) > button > div > div") != null){
+                if (document.querySelector("html > body > div:nth-of-type(7) > div:nth-of-type(2) > div > div > div > div > div > div > div:nth-of-type(3) > span:nth-of-type(2) > div > div:nth-of-type(2) > button > div > div") != null) {
                     document.querySelector("html > body > div:nth-of-type(7) > div:nth-of-type(2) > div > div > div > div > div > div > div:nth-of-type(3) > span:nth-of-type(2) > div > div:nth-of-type(2) > button > div > div").click()
                     chrome.runtime.sendMessage({
                         facebook_finished: true
                     });
-                } else if(document.querySelector("html > body > div:nth-of-type(6) > div:nth-of-type(2) > div > div > div > div > div > div > div:nth-of-type(3) > span:nth-of-type(2) > div > div:nth-of-type(2) > button > div > div") != null){
+                } else if (document.querySelector("html > body > div:nth-of-type(6) > div:nth-of-type(2) > div > div > div > div > div > div > div:nth-of-type(3) > span:nth-of-type(2) > div > div:nth-of-type(2) > button > div > div") != null) {
                     document.querySelector("html > body > div:nth-of-type(6) > div:nth-of-type(2) > div > div > div > div > div > div > div:nth-of-type(3) > span:nth-of-type(2) > div > div:nth-of-type(2) > button > div > div").click();
                     chrome.runtime.sendMessage({
                         facebook_finished: true
                     });
                 }
-                
+
             }, 2000);
-                
+
         } else {
             if (document.querySelector("body > div > div > div > div > div:nth-child(6) > div > div > div > div > iframe") != null) {
                 // logged in- open iframe
@@ -74,10 +74,9 @@ setTimeout(() => {
             } else {}
         }
 
-        
 
-    }  
-    else if (window.location.href.includes("facebook.com/login/reauth.php")) {
+
+    } else if (window.location.href.includes("facebook.com/login/reauth.php")) {
         console.log("reauth asking");
         if (document.querySelector("html > body > div:first-of-type > div:first-of-type > div:first-of-type > div > form > div > div:nth-of-type(2) > table > tbody > tr:first-of-type > td > input") != null) {
             chrome.runtime.sendMessage({

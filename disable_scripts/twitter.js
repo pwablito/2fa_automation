@@ -16,12 +16,12 @@ function change(field, value) {
 chrome.runtime.onMessage.addListener(
     async function(request, _) {
         if (request.twitter_credentials) {
-            change(getElementByXpath(document, "/html/body/div/div/div/div[2]/main/div/div/div[2]/form/div/div[1]/label/div/div[2]/div/input"), request.username);
+            change(getElementByXpath(document, "/html/body/div/div/div/div[2]/main/div/div/div[2]/form/div/div[1]/label/div/div[2]/div/input"), request.login);
             change(getElementByXpath(document, "/html/body/div/div/div/div[2]/main/div/div/div[2]/form/div/div[2]/label/div/div[2]/div/input"), request.password);
             getElementByXpath(document, "/html/body/div/div/div/div[2]/main/div/div/div[2]/form/div/div[3]/div").click();
         }
         if (request.twitter_phone_number) {
-            // document.querySelector("#phone_number").value = request.number;
+            // document.querySelector("#phone_number").value = request.phone;
             // document.querySelector("body > div.PageContainer > div > form > input.EdgeButton.EdgeButton--primary").click();
         }
 
@@ -101,7 +101,7 @@ if (window.location.href.includes("twitter.com/account/access?feature=two_factor
     });
 } else if (window.location.href.includes("twitter.com/account/login_verification")) {
     console.log("Looking for code")
-    if (document.querySelector("#challenge_response")!= null){
+    if (document.querySelector("#challenge_response") != null) {
         chrome.runtime.sendMessage({
             twitter_get_code: true
         })
@@ -110,26 +110,26 @@ if (window.location.href.includes("twitter.com/account/access?feature=two_factor
 } else if (window.location.href.includes("twitter.com/settings/account/login_verification")) {
     setTimeout(() => {
         elem = document.querySelector("html > body > div:nth-of-type(1) > div > div > div:nth-of-type(2) > main > div > div > div > section:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(3) > div > div > label > div > div:nth-of-type(2) > input")
-        if (elem != null){
+        if (elem != null) {
             console.log("elem not null")
-            if (elem.checked){
+            if (elem.checked) {
                 console.log("elem checked")
                 elem.click()
-                if(document.querySelector("html > body > div > div > div > div:nth-of-type(1) > div:nth-of-type(2) > div > div > div > div > div > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(2)") != null){
-                    document.querySelector("html > body > div > div > div > div:nth-of-type(1) > div:nth-of-type(2) > div > div > div > div > div > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(2)").click() 
-                    console.log("popup exists and clicked once") 
+                if (document.querySelector("html > body > div > div > div > div:nth-of-type(1) > div:nth-of-type(2) > div > div > div > div > div > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(2)") != null) {
+                    document.querySelector("html > body > div > div > div > div:nth-of-type(1) > div:nth-of-type(2) > div > div > div > div > div > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(2)").click()
+                    console.log("popup exists and clicked once")
                     setTimeout(() => {
-                        if(document.querySelector("html > body > div > div > div > div:nth-of-type(1) > div:nth-of-type(2) > div > div > div > div > div > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(2) > div > span > span") != null){
+                        if (document.querySelector("html > body > div > div > div > div:nth-of-type(1) > div:nth-of-type(2) > div > div > div > div > div > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(2) > div > span > span") != null) {
                             console.log("Second popup exists and clicked")
                             document.querySelector("html > body > div > div > div > div:nth-of-type(1) > div:nth-of-type(2) > div > div > div > div > div > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(2) > div > span > span").click()
                         }
                         chrome.runtime.sendMessage({
                             twitter_totp_disabled: true
                         })
-                    }, 2000)              
+                    }, 2000)
                 }
-                
-                          
+
+
             } else {
                 chrome.runtime.sendMessage({
                     twitter_totp_not_enabled: true
@@ -139,7 +139,7 @@ if (window.location.href.includes("twitter.com/account/access?feature=two_factor
             console.log("elem is null")
         }
     }, 2000);
-    
+
 
 } else if (window.location.href.includes("twitter.com/home")) {
     // window.location.href = "https://twitter.com/settings/account/login_verification/enrollment";

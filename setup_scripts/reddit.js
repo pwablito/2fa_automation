@@ -17,18 +17,18 @@ function getElementByXpath(doc, xpath) {
 function timer(ms) { return new Promise(res => setTimeout(res, ms)); }
 
 // maxWait is in seconds
-async function waitUntilPageLoad(document,maxWait) {
-    for (let i = 0; i < maxWait*10; i++) {
-        if( document.readyState !== 'loading' ) { return true;}
+async function waitUntilPageLoad(document, maxWait) {
+    for (let i = 0; i < maxWait * 10; i++) {
+        if (document.readyState !== 'loading') { return true; }
         console.log(i);
         await timer(100); // then the created Promise can be awaited
     }
     return false;
 }
 
-async function waitUntilElementLoad(document, elemXPath,  maxWait) {
-    for (let i = 0; i < maxWait*10; i++) {
-        if(document.querySelector(elemXPath)) { return true;}
+async function waitUntilElementLoad(document, elemXPath, maxWait) {
+    for (let i = 0; i < maxWait * 10; i++) {
+        if (document.querySelector(elemXPath)) { return true; }
         console.log(i);
         await timer(100); // then the created Promise can be awaited
     }
@@ -46,7 +46,7 @@ function exitScriptWithError() {
 
 async function handleReceivedMessage(request) {
     if (request.reddit_credentials) {
-        document.querySelector("#[name=username]").value = request.username;
+        document.querySelector("#[name=username]").value = request.login;
         document.querySelector("[type=password]").value = request.password;
         getElementByXpath(document, "//button[contains(text(),'Log In')]").click();
         setTimeout(() => {
@@ -55,7 +55,7 @@ async function handleReceivedMessage(request) {
                     reddit_get_credentials: true,
                     message: "Invalid credentials"
                 });
-            } 
+            }
         }, 2000);
     } else if (request.reddit_password) {
         change(document.querySelector('[type=password]'), request.password);
@@ -76,9 +76,9 @@ async function handleReceivedMessage(request) {
                 chrome.runtime.sendMessage({
                     reddit_error: true,
                     message: "2FA is already enabled.",
-                    message_for_dev : window.location.href
+                    message_for_dev: window.location.href
                 });
-            } else {exitScriptWithError();}
+            } else { exitScriptWithError(); }
         }, 2000);
     } else if (request.reddit_code) {
         change(document.querySelector("#otp"), request.code);
@@ -107,7 +107,7 @@ chrome.runtime.onMessage.addListener(
     }
 );
 
-(async () => {
+(async() => {
     try {
         if (window.location.href.includes("reddit.com/2fa/enable")) {
             await waitUntilPageLoad(document, 2);
@@ -116,7 +116,7 @@ chrome.runtime.onMessage.addListener(
                 chrome.runtime.sendMessage({
                     reddit_get_password: true
                 });
-            } else {exitScriptWithError();}
+            } else { exitScriptWithError(); }
         } else if (window.location.href.includes("reddit.com/login")) {
             await waitUntilPageLoad(document, 2);
             if (document.querySelector("[type=password]")) {
@@ -128,7 +128,7 @@ chrome.runtime.onMessage.addListener(
             }
         } else if (window.location.href === "https://www.reddit.com/") {
             window.location.href = "https://www.reddit.com/2fa/enable";
-        }else { exitScriptWithError();}
+        } else { exitScriptWithError(); }
     } catch (e) {
         console.log(e);
         // Deal with the fact the chain failed

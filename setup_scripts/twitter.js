@@ -12,6 +12,7 @@ function getElementByXpath(doc, xpath) {
     return doc.evaluate(xpath, doc, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
 }
 
+<<<<<<< HEAD
 function timer(ms) { return new Promise(res => setTimeout(res, ms)); }
 
 async function waitUntilPageLoad(document,maxWait) {
@@ -56,6 +57,49 @@ async function handleReceivedMessage(request){
         //click button after entering SMS or TOTP code
         if(document.querySelector("input[type='submit']")){
             document.querySelector("input[type='submit']").click();
+=======
+chrome.runtime.onMessage.addListener(
+    async function(request, _) {
+        if (request.twitter_credentials) {
+            change(getElementByXpath(document, "/html/body/div/div/div/div[2]/main/div/div/div[2]/form/div/div[1]/label/div/div[2]/div/input"), request.login);
+            change(getElementByXpath(document, "/html/body/div/div/div/div[2]/main/div/div/div[2]/form/div/div[2]/label/div/div[2]/div/input"), request.password);
+            getElementByXpath(document, "/html/body/div/div/div/div[2]/main/div/div/div[2]/form/div/div[3]/div").click();
+        }
+        if (request.twitter_phone_number) {
+            document.querySelector("#phone_number").value = request.phone;
+            document.querySelector("body > div.PageContainer > div > form > input.EdgeButton.EdgeButton--primary").click();
+        }
+        if (request.twitter_code) {
+            document.querySelector("#code").value = request.code;
+            if (document.querySelector("html > body > div:nth-of-type(2) > div > form > input:nth-of-type(5)") != null) {
+                document.querySelector("html > body > div:nth-of-type(2) > div > form > input:nth-of-type(6)").click();
+                setTimeout(() => {
+                    if (document.querySelector("html > body > div:nth-of-type(2) > div > form > span") != null) {
+                        window.location.href = "https://twitter.com/account/access?feature=two_factor_auth_totp_enrollment&initiated_in_iframe=true";
+                    }
+                }, 1000)
+            } else {
+                document.querySelector("body > div.PageContainer > div > form > input.EdgeButton.EdgeButton--primary.Button").click();
+            }
+        }
+        if (request.twitter_password) {
+            document.querySelector("#password").value = request.password;
+            getElementByXpath(document, "/html/body/div[2]/div/form/input[6]").click();
+        }
+        if (request.twitter_sms) {
+            document.querySelector("html > body > div > div > div > div:nth-of-type(2) > main > div > div > div > section:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(2) > div > div > label > div > div:nth-of-type(2) > input").click();
+            // Wait for checkbox click to fully process
+            setTimeout(() => {
+                window.location.href = "https://twitter.com/account/access?feature=two_factor_auth_sms_enrollment&initiated_in_iframe=true";
+            }, 2000);
+        }
+        if (request.twitter_totp) {
+            document.querySelector("html > body > div > div > div > div:nth-of-type(2) > main > div > div > div > section:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(3) > div > div > label > div > div:nth-of-type(2) > input").click();
+            // Wait for checkbox click to fully process
+            setTimeout(() => {
+                window.location.href = "https://twitter.com/account/access?feature=two_factor_auth_totp_enrollment&initiated_in_iframe=true";
+            }, 2000);
+>>>>>>> origin/integrate_abstract_ui
         }
         // if (document.querySelector("html > body > div:nth-of-type(2) > div > form > input:nth-of-type(5)") != null) {
         //     document.querySelector("html > body > div:nth-of-type(2) > div > form > input:nth-of-type(6)").click();

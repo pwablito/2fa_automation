@@ -1,21 +1,20 @@
-
 console.log("google.js setup script injected");
 
 function timer(ms) { return new Promise(res => setTimeout(res, ms)); }
 
 // maxWait is in seconds
-async function waitUntilPageLoad(document,maxWait) {
-    for (let i = 0; i < maxWait*10; i++) {
-        if( document.readyState !== 'loading' ) { return true;}
+async function waitUntilPageLoad(document, maxWait) {
+    for (let i = 0; i < maxWait * 10; i++) {
+        if (document.readyState !== 'loading') { return true; }
         console.log(i);
         await timer(100); // then the created Promise can be awaited
     }
     return false;
 }
 
-async function waitUntilElementLoad(document, elemXPath,  maxWait) {
-    for (let i = 0; i < maxWait*10; i++) {
-        if(document.querySelector(elemXPath)) { return true;}
+async function waitUntilElementLoad(document, elemXPath, maxWait) {
+    for (let i = 0; i < maxWait * 10; i++) {
+        if (document.querySelector(elemXPath)) { return true; }
         console.log(i);
         await timer(100); // then the created Promise can be awaited
     }
@@ -42,7 +41,7 @@ async function handleReceivedMessage(request) {
             }
         }, 5000);
     } else if (request.google_phone_number) {
-        document.querySelector("[type=tel]").value = request.number;
+        document.querySelector("[type=tel]").value = request.phone;
         let phoneNumberError = document.querySelector("[aria-atomic=true]");
         getElementByXpath(document, "//*[contains(text(),'Next')]/../..").click();
         let textCodeInputXPath = "[aria-label='Enter the code']";
@@ -51,7 +50,7 @@ async function handleReceivedMessage(request) {
         console.log("1"), phoneNumberError.innerHTML;
         if (phoneNumberError.innerHTML != "") {
             chrome.runtime.sendMessage({
-                google_get_phone_number: true,
+                google_get_phone: true,
                 message: phoneNumberError.innerHTML
             });
             console.log("2");
@@ -66,10 +65,10 @@ async function handleReceivedMessage(request) {
         codeInput.value = request.code;
         getElementByXpath(document, "//*[contains(text(),'Next')]/../..").click();
         // document.querySelector("c-wiz > div > div:nth-child(3) > c-wiz > div > div > div:nth-child(3) > div:nth-child(2) > div > div:nth-child(3) > div").click()
-        let codeErrorXPath ="[aria-atomic=true]";
+        let codeErrorXPath = "[aria-atomic=true]";
         let codeError = document.querySelector(codeErrorXPath);
         console.log("A");
-        if (await waitUntilElementLoad(document, codeErrorXPath , 0.5) && codeError.innerHTML != "") {
+        if (await waitUntilElementLoad(document, codeErrorXPath, 0.5) && codeError.innerHTML != "") {
             chrome.runtime.sendMessage({
                 google_get_code: true,
                 message: codeError.innerHTML
@@ -84,10 +83,10 @@ async function handleReceivedMessage(request) {
         let popUpElemNextButtonXPath = "html > body > div > div > div:nth-of-type(2) > div:nth-of-type(3) > div > div:nth-of-type(3)";
         if (await waitUntilElementLoad(document, popUpElemNextButtonXPath, 2)) {
             for (let i = 0; i < 20; i++) {
-                    if(document.querySelector(popUpElemNextButtonXPath).click()) {
-                        await timer(100); // 100 ms delay. Waiting for the button to be clickable
-                        break;
-                    }
+                if (document.querySelector(popUpElemNextButtonXPath).click()) {
+                    await timer(100); // 100 ms delay. Waiting for the button to be clickable
+                    break;
+                }
             }
         }
         let qrCodeXPath = "html > body > div > div > div:nth-of-type(2) > span > div > div > div > div:nth-of-type(2) > div:nth-of-type(2) > div > img";
@@ -106,7 +105,7 @@ async function handleReceivedMessage(request) {
         await timer(1000);
         let codeErrorXPath = "html > body > div:nth-of-type(12) > div > div:nth-of-type(2) > span > div > div > div > div:nth-of-type(2) > div:nth-of-type(2) > div > div > div:nth-of-type(2) > div:nth-of-type(2)";
         let codeError = document.querySelector(codeErrorXPath);
-        if (await waitUntilElementLoad(document, codeErrorXPath , 0.5) && codeError.innerHTML != "") {
+        if (await waitUntilElementLoad(document, codeErrorXPath, 0.5) && codeError.innerHTML != "") {
             chrome.runtime.sendMessage({
                 google_get_totp_code: true,
                 message: codeError.innerHTML
@@ -122,7 +121,7 @@ async function handleReceivedMessage(request) {
                     google_error: true,
                     message: "Something went wrong",
                 })
-            }                
+            }
         }
     }
 }
@@ -134,12 +133,12 @@ chrome.runtime.onMessage.addListener(
     }
 );
 
-(async () => {
+(async() => {
     try {
         if (window.location.href.includes("https://myaccount.google.com/")) {
             console.log("Signed in");
             await waitUntilPageLoad(document, 3);
-            if (window.location.href.includes("myaccount.google.com/signinoptions/two-step-verification")) { 
+            if (window.location.href.includes("myaccount.google.com/signinoptions/two-step-verification")) {
                 // 2FA is already enabled
                 if (document.querySelector("html > body > c-wiz > div > div:nth-of-type(3) > c-wiz > div > div > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(2) > div > div")) {
                     chrome.runtime.sendMessage({
@@ -154,16 +153,16 @@ chrome.runtime.onMessage.addListener(
                 }
                 if (document.querySelector("[type=tel]")) { // phone number fill page
                     chrome.runtime.sendMessage({
-                        "google_get_phone_number": true
+                        "google_get_phone": true
                     });
-                } 
+                }
             } else {
                 window.location.href = "https://myaccount.google.com/signinoptions/two-step-verification/enroll-welcome";
             }
         } else if (window.location.href.includes("signinchooser")) {
             // In case all the accounts are logged out and google redirects to choose account. We redirect to select a new account always. 
             let UseAnotherAccountButtonXPath = "html > body > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div > div:nth-of-type(2) > div > div > div:nth-of-type(2) > div > div:nth-of-type(1) > div > form > span > section > div > div > div > div:nth-of-type(1) > ul > li:nth-of-type(2) > div > div > div:nth-of-type(2)";
-            if(await waitUntilElementLoad(document, UseAnotherAccountButtonXPath, 2)) {
+            if (await waitUntilElementLoad(document, UseAnotherAccountButtonXPath, 2)) {
                 document.querySelector(UseAnotherAccountButtonXPath).click();
             }
         } else if (window.location.href.includes("/signin/") || window.location.href.includes("/identifier")) {
@@ -175,11 +174,11 @@ chrome.runtime.onMessage.addListener(
                 chrome.runtime.sendMessage({
                     "google_get_password": true
                 });
-            } else { 
+            } else {
                 chrome.runtime.sendMessage({
                     google_error: true,
                     message: "Something went wrong",
-                    message_for_dev : window.location.href
+                    message_for_dev: window.location.href
                 });
             }
         }

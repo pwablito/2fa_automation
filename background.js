@@ -23,11 +23,11 @@ let disable_injection_statuses = {
     "pinterest": false,
 }
 
-isStartingTabIncognito = false
-currentExtensionOpenedTabID = -10
+let isStartingTabIncognito = false
+let currentExtensionOpenedTabID = -10
 
 chrome.tabs.onUpdated.addListener(function(tabId, info, tab) {
-    if (info.status == "complete" && tabId == currentExtensionOpenedTabID) {
+    if (info.status == "complete") {
         // Page loaded, now decide which content script to inject
         if (setup_injection_statuses.github) {
             if (tab.url.includes("github.com")) {
@@ -165,7 +165,7 @@ chrome.runtime.onMessage.addListener(
             }
         } else if (request.open_background_window) {
             console.log("Yolo", isStartingTabIncognito);
-            if(isStartingTabIncognito) {
+            if (isStartingTabIncognito) {
                 chrome.windows.create({
                     url: request.url, //"https://www.reddit.com/2fa/enable",
                     focused: false,
@@ -185,7 +185,7 @@ chrome.runtime.onMessage.addListener(
                     currentExtensionOpenedTabID = window.tabs[0].id;
                 });
             }
-            
+
         }
     }
 );

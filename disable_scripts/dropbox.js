@@ -16,18 +16,18 @@ function getElementByXpath(doc, xpath) {
 function timer(ms) { return new Promise(res => setTimeout(res, ms)); }
 
 // maxWait is in seconds
-async function waitUntilPageLoad(document,maxWait) {
-    for (let i = 0; i < maxWait*10; i++) {
-        if( document.readyState !== 'loading' ) { return true;}
+async function waitUntilPageLoad(document, maxWait) {
+    for (let i = 0; i < maxWait * 10; i++) {
+        if (document.readyState !== 'loading') { return true; }
         console.log(i);
         await timer(100); // then the created Promise can be awaited
     }
     return false;
 }
 
-async function waitUntilElementLoad(document, elemXPath,  maxWait) {
-    for (let i = 0; i < maxWait*10; i++) {
-        if(document.querySelector(elemXPath)) { return true;}
+async function waitUntilElementLoad(document, elemXPath, maxWait) {
+    for (let i = 0; i < maxWait * 10; i++) {
+        if (document.querySelector(elemXPath)) { return true; }
         console.log(i);
         await timer(100); // then the created Promise can be awaited
     }
@@ -44,9 +44,9 @@ function exitScriptWithError() {
 }
 
 async function handleReceivedMessage(request) {
-        
+
     if (request.dropbox_credentials) {
-        change(document.querySelector("input[type='email']"), request.username);
+        change(document.querySelector("input[type='email']"), request.login);
         change(document.querySelector("input[type='password']"), request.password);
         getElementByXpath(document, "//button[./div = 'Sign in']").click();
         if (await waitUntilElementLoad(document, "[class='error-message']", 1)) {
@@ -55,32 +55,11 @@ async function handleReceivedMessage(request) {
                 message: "Invalid credential"
             });
         }
-
-        // change(document.querySelector("html > body > div:nth-of-type(12) > div:nth-of-type(1) > div:nth-of-type(2) > div > div > div > div:nth-of-type(1) > div:nth-of-type(2) > div > div > form > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > input"), request.username);
-        // change(document.querySelector("html > body > div:nth-of-type(12) > div:nth-of-type(1) > div:nth-of-type(2) > div > div > div > div:nth-of-type(1) > div:nth-of-type(2) > div > div > form > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > input"), request.password);
-        // document.querySelector("html > body > div:nth-of-type(12) > div:nth-of-type(1) > div:nth-of-type(2) > div > div > div > div:nth-of-type(1) > div:nth-of-type(2) > div > div > form > div:nth-of-type(2) > button").click();
-        // setTimeout(() => {
-        //     if (document.querySelector("html > body > div:nth-of-type(12) > div:nth-of-type(1) > div:nth-of-type(2) > div > div > div > div:nth-of-type(1) > div:nth-of-type(2) > div > form > div:nth-of-type(2) > div > div:nth-of-type(2) > input") !== null) {
-        //         chrome.runtime.sendMessage({
-        //             dropbox_get_code: true,
-        //         });
-        //     } else if (document.querySelector(".error-message") && document.querySelector(".error-message").textContent !== "") {
-        //         chrome.runtime.sendMessage({
-        //             dropbox_get_credentials: true,
-        //             message: document.querySelector(".error-message").textContent,
-        //         });
-        //     } else {
-        //         chrome.runtime.sendMessage({
-        //             dropbox_error: true,
-        //             message: "2FA already disabled",
-        //         });
-        //     }
-        // }, 8000);
     } else if (request.dropbox_password) {
         change(document.querySelector("input[type='password']"), request.password);
-        if(getElementByXpath(document, "//*[contains(text(),'Next')]/..")){
+        if (getElementByXpath(document, "//*[contains(text(),'Next')]/..")) {
             getElementByXpath(document, "//*[contains(text(),'Next')]/..").click()
-        } else {exitScriptWithError();}
+        } else { exitScriptWithError(); }
         let errorMsgXPath = "div[id*=error-message]";
         if (await waitUntilElementLoad(document, errorMsgXPath, 2) && document.querySelector(errorMsgXPath).innerText != "") {
             console.log("In Error");
@@ -92,12 +71,12 @@ async function handleReceivedMessage(request) {
             console.log("In final ");
             await timer(2000);
             getElementByXpath(document, "//*[contains(text(),'Next')]/..").click();
-                chrome.runtime.sendMessage({
-                    dropbox_finished: true,
-                });
+            chrome.runtime.sendMessage({
+                dropbox_finished: true,
+            });
         }
 
-        
+
         // change(document.querySelector("#password"), request.password);
         // document.querySelector("html > body > div > div > div > div > div > div:nth-of-type(3) > button").click();
         // setTimeout(() => {
@@ -134,11 +113,11 @@ chrome.runtime.onMessage.addListener(
 );
 
 
-(async () => {
+(async() => {
     try {
         if (window.location.href.includes("dropbox.com/account/security")) {
             // setTimeout(() => {
-                
+
             await waitUntilPageLoad(document, 2);
             await waitUntilElementLoad(document, "label[aria-pressed=false]", 2)
             let labelTurnedOff = getElementByXpath(document, "//*[contains(text(),'Two-')]/../../div[2]").querySelector("label[aria-pressed=false]");
@@ -147,7 +126,7 @@ chrome.runtime.onMessage.addListener(
                 let turnOffButton = getElementByXpath(document, "//*[contains(text(),'Two-')]/../../div[2]/label/input");
                 if (turnOffButton) {
                     turnOffButton.click()
-                } else {exitScriptWithError();}
+                } else { exitScriptWithError(); }
                 let passwordInputXPath = "input[type='password']";
                 if (await waitUntilElementLoad(document, passwordInputXPath, 2)) {
                     chrome.runtime.sendMessage({
@@ -174,8 +153,8 @@ chrome.runtime.onMessage.addListener(
                 dropbox_get_credentials: true,
             });
         }
-} catch (e) {
-    console.log(e);
-    // Deal with the fact the chain failed
-}
+    } catch (e) {
+        console.log(e);
+        // Deal with the fact the chain failed
+    }
 })();

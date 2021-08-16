@@ -16,18 +16,18 @@ function getElementByXpath(doc, xpath) {
 
 function timer(ms) { return new Promise(res => setTimeout(res, ms)); }
 
-async function waitUntilPageLoad(document,maxWait) {
-    for (let i = 0; i < maxWait*10; i++) {
-        if( document.readyState !== 'loading' ) { return true;}
+async function waitUntilPageLoad(document, maxWait) {
+    for (let i = 0; i < maxWait * 10; i++) {
+        if (document.readyState !== 'loading') { return true; }
         console.log(i);
         await timer(100); // then the created Promise can be awaited
     }
     return false;
 }
 
-async function waitUntilElementLoad(document, elemXPath,  maxWait) {
-    for (let i = 0; i < maxWait*10; i++) {
-        if(document.querySelector(elemXPath)) { return true;}
+async function waitUntilElementLoad(document, elemXPath, maxWait) {
+    for (let i = 0; i < maxWait * 10; i++) {
+        if (document.querySelector(elemXPath)) { return true; }
         console.log(i);
         await timer(100); // then the created Promise can be awaited
     }
@@ -44,58 +44,59 @@ function exitScriptWithError() {
 }
 
 
-async function handleReceivedMessage(request){
+async function handleReceivedMessage(request) {
     if (request.linkedin_credentials) {
-        document.querySelector("#username").value = request.username;
+        document.querySelector("#username").value = request.login;
         document.querySelector("#password").value = request.password;
         getElementByXpath(document, "//button[contains(@aria-label, 'Sign in')]").click()
-        if(await waitUntilElementLoad(document, "#error-for-password" , 2)){
+        if (await waitUntilElementLoad(document, "#error-for-password", 2)) {
             chrome.runtime.sendMessage({
-                linkedin_incorrect_password:true
+                linkedin_password: true,
+                message: "Incorrect password, try again"
             })
         }
-    } else if(request.linkedin_code){
+    } else if (request.linkedin_code) {
         document.querySelector(".input_verification_pin").value = request.code;
         document.querySelector("button[id='two-step-submit-button']").click();
-        if(await waitUntilElementLoad(document, "#phone-pin-error", 2)){
+        if (await waitUntilElementLoad(document, "#phone-pin-error", 2)) {
             console.log("Incorrect pin")
             chrome.runtime.sendMessage({
                 linkedin_get_code: true,
-                linkedin_incorrect_SMS_code: true
+                message: "Incorrect code, try again"
             });
-        } else if(await waitUntilElementLoad(document, "span[role='alert'", 2)){
-            if(document.querySelector("span[role='alert'").textContent == "The verification code you entered isn't valid. Please check the code and try again."){
+        } else if (await waitUntilElementLoad(document, "span[role='alert'", 2)) {
+            if (document.querySelector("span[role='alert'").textContent == "The verification code you entered isn't valid. Please check the code and try again.") {
                 chrome.runtime.sendMessage({
                     linkedin_get_code: true,
-                    linkedin_incorrect_SMS_code: true
+                    message: "Incorrect code, try again"
                 });
             }
         }
 
     } else if (request.linkedin_password) {
-        if(document.querySelector("#verify-password")){
+        if (document.querySelector("#verify-password")) {
             document.querySelector("#verify-password").value = request.password;
             getElementByXpath(document, "//button[contains(@class, 'submit')]").click();
-    
-            if(await waitUntilElementLoad(document, "p[id='incorrect-password-error']", 2)){
+
+            if (await waitUntilElementLoad(document, "p[id='incorrect-password-error']", 2)) {
                 chrome.runtime.sendMessage({
-                    linkedin_incorrect_password:true
+                    linkedin_incorrect_password: true
                 })
             }
-        } else if(document.querySelector("#password")){
+        } else if (document.querySelector("#password")) {
             document.querySelector("#password").value = request.password;
             getElementByXpath(document, "//button[contains(@aria-label, 'Sign in')]").click()
         }
-        
-        if(await waitUntilElementLoad(document, "p[id='incorrect-password-error']", 2)){
+
+        if (await waitUntilElementLoad(document, "p[id='incorrect-password-error']", 2)) {
             chrome.runtime.sendMessage({
-                linkedin_incorrect_password:true
+                linkedin_incorrect_password: true
             })
-        } else if(await waitUntilElementLoad(document, ".opt-out", 2)){
+        } else if (await waitUntilElementLoad(document, ".opt-out", 2)) {
             chrome.runtime.sendMessage({
                 linkedin_error: true,
                 message: "Something went wrong"
-            });   
+            });
         } else {
             chrome.runtime.sendMessage({
                 linkedin_finished: true,
@@ -105,34 +106,34 @@ async function handleReceivedMessage(request){
 }
 
 chrome.runtime.onMessage.addListener(
-    function(request, _){
+    function(request, _) {
         handleReceivedMessage(request).then()
     }
 );
 
-(async () => {
+(async() => {
     try {
         if (window.location.href.includes("linkedin.com/psettings/two-step-verification")) {
-            if(await waitUntilElementLoad(document, ".opt-out", 2)){
+            if (await waitUntilElementLoad(document, ".opt-out", 2)) {
                 document.querySelector(".opt-out").click();
-                if(await waitUntilElementLoad(document, "#verify-password", 2)){
+                if (await waitUntilElementLoad(document, "#verify-password", 2)) {
                     chrome.runtime.sendMessage({
                         linkedin_get_password: true,
                     });
                 }
-            } else if(await waitUntilElementLoad(document, ".opt-in", 2)){
+            } else if (await waitUntilElementLoad(document, ".opt-in", 2)) {
                 console.log("This is where the error is")
                 chrome.runtime.sendMessage({
                     linkedin_error: true,
                     message: "Already disabled",
                 });
             }
-        } else if (window.location.href.includes("linkedin.com/signup")){
-            if(await waitUntilElementLoad(document, ".main__sign-in-link", 2)){
+        } else if (window.location.href.includes("linkedin.com/signup")) {
+            if (await waitUntilElementLoad(document, ".main__sign-in-link", 2)) {
                 document.querySelector(".main__sign-in-link").click()
             }
         } else if (window.location.href.includes("login")) {
-            if(await waitUntilElementLoad(document, ".member-profile-block", 2)){
+            if (await waitUntilElementLoad(document, ".member-profile-block", 2)) {
                 document.querySelector(".member-profile-block").click();
             } else {
                 chrome.runtime.sendMessage({
@@ -150,17 +151,10 @@ chrome.runtime.onMessage.addListener(
             chrome.runtime.sendMessage({
                 linkedin_get_code: true,
             });
-
-            //see if SMS is the same URL as TOTP 
-        }else if (window.location.href.includes("checkpoint/challenge")) {
-            chrome.runtime.sendMessage({
-                linkedin_get_code: true,
-            });
         }
 
-    } catch(e) {
+    } catch (e) {
         console.log(e)
         exitScriptWithError();
     }
 })();
-

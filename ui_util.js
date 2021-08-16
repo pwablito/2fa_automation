@@ -1,16 +1,26 @@
 class AutomationUI {
-    constructor(sites) {
-        // Make sure sites is a list
-        if (!Array.isArray(sites)) {
-            throw "Sites must be a list of AutomationSiteUI objects"
+    constructor() {
+        this.sites = [];
+    }
+
+    add_site(site) {
+        if (!(site instanceof AutomationSiteUI)) {
+            throw "Site must be an AutomationSiteUI object"
         }
-        this.sites = sites;
+        this.sites.push(site);
     }
 
     run() {
         for (let site of this.sites) {
-            this.enable_injection(site);
+            this.enable_injection(site.identity_prefix);
             site.initialize();
+        }
+    }
+
+    stop() {
+        for (let site of this.sites) {
+            this.disable_injection(site.identity_prefix);
+            site.close_window();
         }
     }
 
@@ -48,47 +58,24 @@ class DisableUI extends AutomationUI {
 }
 
 class AutomationSiteUI {
-    constructor(name, identity_prefix, parent_id, logo_file, controller) {
+    constructor(name, identity_prefix, parent_id, logo_file, controller, start_url, incognito = false) {
         /*
          * @param {string} name - Name of the site (i.e. "Google")
          * @param {string} identity_prefix - Prefix for UI elements (i.e. "google" would result in "google_ui_div"
          * @param {string} parent_id - ID of the parent element in which this will be placed
          * @param {string} logo_file - Path to the logo file to display on the side of the UI
-         * @param {AutomationController} controller - Controller which is an AutomationUI object (i.e. SetupUI or DisableUI)
+         * @param {AutomationUI} controller - Controller which is an AutomationUI object (i.e. SetupUI or DisableUI)
+         * @param {string} start_url - URL for the first page of the 2fa automation process (will be automatically opened)
+         * @param {boolean} incognito - Whether or not to open the target site in incognito mode
          */
         this.name = name;
         this.identity_prefix = identity_prefix;
         this.parent_id = parent_id;
         this.logo_file = logo_file;
         this.controller = controller;
-    }
-
-    launch_listener() {
-        chrome.runtime.onMessage.addListener(
-            function listener(request, sender) {
-                if (request[`${this.identity_prefix}_get_credentials`]) {
-                    this.get_credentials();
-                } else if (request[`${this.identity_prefix}_get_password`]) {
-                    this.get_credentials();
-                } else if (request[`${this.identity_prefix}_get_email`]) {
-                    this.get_email();
-                } else if (request[`${this.identity_prefix}_get_phone`]) {
-                    this.get_phone();
-                } else if (request[`${this.identity_prefix}_get_code`]) {
-                    this.get_code();
-                } else if (request[`${this.identity_prefix}_get_method`]) {
-                    this.get_method();
-                } else if (request[`${this.identity_prefix}_finished`]) {
-                    chrome.runtime.onMessage.removeListener(listener);
-                    this.finished();
-                } else if (request[`${this.identity_prefix}_error`]) {
-                    chrome.runtime.onMessage.removeListener(listener);
-                    this.error();
-                } else {
-                    this.error(`Got invalid request: ${request}`);
-                }
-            }
-        );
+        this.start_url = start_url;
+        this.incognito = incognito
+        this.window_id = null
     }
 
     initialize() {
@@ -104,17 +91,70 @@ class AutomationSiteUI {
             </div>
             `
         );
-        this.launch_listener();
+        this.launch_listener(this);
+        this.loading();
+        chrome.windows.create({
+            url: this.start_url,
+            focused: false,
+            state: "minimized",
+            incognito: this.incognito,
+        }, (window) => {
+            this.window_id = window.id;
+            chrome.windows.update(window.id, { state: 'minimized' });
+        });
+    }
+
+    launch_listener(ui) {
+        chrome.runtime.onMessage.addListener(
+            async function listener(request, sender) {
+                let is_this_site = false;
+                for (const [key, value] of Object.entries(request)) {
+                    if (key.includes(ui.identity_prefix)) {
+                        is_this_site = true;
+                        break;
+                    }
+                }
+                if (is_this_site) {
+                    console.log(request);
+                    if (request[`${ui.identity_prefix}_get_credentials`]) {
+                        ui.get_credentials(sender);
+                    } else if (request[`${ui.identity_prefix}_get_password`]) {
+                        ui.get_password(sender, login = request.login !== null ? request.login : null);
+                    } else if (request[`${ui.identity_prefix}_get_email`]) {
+                        ui.get_email(sender);
+                    } else if (request[`${ui.identity_prefix}_get_phone`]) {
+                        ui.get_phone(sender);
+                    } else if (request[`${ui.identity_prefix}_get_code`]) {
+                        ui.get_code(sender);
+                    } else if (request[`${ui.identity_prefix}_get_method`]) {
+                        ui.get_method(sender);
+                    } else if (request[`${ui.identity_prefix}_finished`]) {
+                        chrome.runtime.onMessage.removeListener(listener);
+                        ui.finished(sender);
+                    } else if (request[`${ui.identity_prefix}_error`]) {
+                        chrome.runtime.onMessage.removeListener(listener);
+                        ui.error(request.message, sender);
+                    } else {
+                        chrome.runtime.onMessage.removeListener(listener);
+                        ui.error(`Got invalid request: ${JSON.stringify(request)}`, sender);
+                    }
+                }
+            }
+        );
+    }
+
+    close_window() {
+        if (this.window_id) chrome.windows.remove(this.window_id);
     }
 
     loading() {
         $(`#${this.identity_prefix}_ui_div`).html(
             `
             <div class="row">
-                <div class="col-8">
+                <div class="col-10">
                 Please wait...
                 </div>
-                <div class="col-4">
+                <div class="col-2">
                     <div class="spinner-border" role="status">
                         <span class="sr-only">Loading...</span>
                     </div>
@@ -124,32 +164,34 @@ class AutomationSiteUI {
         );
     }
 
-    finished() {
-        this.controller.disable_injection(this.identity_prefix);
+    finished(sender = null) {
         $(`#${this.identity_prefix}_ui_div`).html(
             `
             ${message != null ? "<p>" + message + "</p>" : ""}
             <p>Finished automation for ${this.name}</p>
             `
         );
+        this.controller.disable_injection(this.identity_prefix);
+        this.close_window();
     }
 
-    error(message) {
+    error(message, sender = null) {
         $(`#${this.identity_prefix}_ui_div`).html(
             `
             <p>Error: ${message}</p>
             `
         );
         this.controller.disable_injection(this.identity_prefix);
+        this.close_window();
     }
 
-    get_credentials(message = null) {
+    get_credentials(sender, message = null) {
         $(`#${this.identity_prefix}_ui_div`).html(
             `
             ${message != null ? "<p>" + message + "</p>" : ""}
-            <p>Please enter your email and password</p>
+            <p>Please enter your login and password</p>
             <form id="${this.identity_prefix}_credentials_form">
-                <input type="email" id="${this.identity_prefix}_email_input" placeholder="Email" required>
+                <input type="text" id="${this.identity_prefix}_login_input" placeholder="Login" required>
                 <input type="password" id="${this.identity_prefix}_password_input" placeholder="Password" required>
                 <button class="btn btn-success" type="submit">Submit</button>
             </form>
@@ -157,11 +199,11 @@ class AutomationSiteUI {
         );
         $(`#${this.identity_prefix}_credentials_form`).submit((e) => {
             e.preventDefault();
-            let email = $(`#${this.identity_prefix}_email_input`).val();
+            let login = $(`#${this.identity_prefix}_login_input`).val();
             let password = $(`#${this.identity_prefix}_password_input`).val();
-            if (email && password) {
+            if (login && password) {
                 let request_body = {
-                    email: email,
+                    login: login,
                     password: password
                 }
                 request_body[`${this.identity_prefix}_credentials`] = true;
@@ -171,11 +213,11 @@ class AutomationSiteUI {
         });
     }
 
-    get_password(message = null) {
+    get_password(sender, message = null, login = null) {
         $(`#${this.identity_prefix}_ui_div`).html(
             `
-            ${message != null ? "<p>" + message + "</p>" : ""}
-            <p>Please enter your password</p>
+            ${message !== null ? "<p>" + message + "</p>" : ""}
+            <p>Please enter ${login !== null ? "the password for " + login : "your password"}</p>
             <form id="${this.identity_prefix}_password_form">
                 <input type="password" id="${this.identity_prefix}_password_input" placeholder="Password" required>
                 <button class="btn btn-success" type="submit">Submit</button>
@@ -196,7 +238,7 @@ class AutomationSiteUI {
         });
     }
 
-    get_email(message = null) {
+    get_email(sender, message = null) {
         $(`#${this.identity_prefix}_ui_div`).html(
             `
             ${message != null ? "<p>" + message + "</p>" : ""}
@@ -221,7 +263,7 @@ class AutomationSiteUI {
         });
     }
 
-    get_phone(message = null) {
+    get_phone(sender, message = null) {
         $(`#${this.identity_prefix}_ui_div`).html(
             `
             ${message != null ? "<p>" + message + "</p>" : ""}
@@ -246,11 +288,68 @@ class AutomationSiteUI {
         });
     }
 
-    get_code(message = null) {
-        this.error("Not implemented");
+    get_code(sender, type = null, totp_seed = null, message = null) {
+        if (type === null) {
+            $(`#${this.identity_prefix}_ui_div`).html(
+                // This usually happens when authenticating for a disable script- that's why the wording is vague. This is a catch-all for any 2fa code method that is already setup
+                `
+                ${message != null ? "<p>" + message + "</p>" : ""}
+                <p>Please enter your 2FA code</p>
+                <form id="${this.identity_prefix}_code_form">
+                    <input type="text" id="${this.identity_prefix}_code_input" placeholder="Code" required>
+                    <button class="btn btn-success" type="submit"></button>
+                </form>
+                `
+            );
+        } else if (type === "totp") {
+            if (totp_seed === null) {
+                this.error("TOTP seed not provided", sender);
+                return;
+            }
+            $(`#${this.identity_prefix}_ui_div`).html(
+                `
+                ${message != null ? "<p>" + message + "</p>" : ""}
+                <p>Download Google Authenticator, scan this QR code, and enter the generated code</p>
+                <div class="row">
+                    <div class="col-6">
+                        <form id="${this.identity_prefix}_code_form">
+                            <input type="text" id="${this.identity_prefix}_code_input" placeholder="Code" required>
+                            <button class="btn btn-success" type="submit"></button>
+                        </form>
+                    </div>
+                    <div class="col-6">
+                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=otpauth://totp/${this.name}?secret=${totp_seed}" style="width: 100%;">
+                    </div>
+                </div>
+                `
+            );
+        } else if (type === "sms") {
+            $(`#${this.identity_prefix}_ui_div`).html(
+                `
+                ${message != null ? "<p>" + message + "</p>" : ""}
+                <p>Please enter the code sent to your phone via SMS</p>
+                <form id="${this.identity_prefix}_code_form">
+                    <input type="text" id="${this.identity_prefix}_code_input" placeholder="Code" required>
+                    <button class="btn btn-success" type="submit"></button>
+                </form>
+                `
+            );
+        }
+        $(`#${this.identity_prefix}_code_form`).submit((e) => {
+            e.preventDefault();
+            let code = $(`#${this.identity_prefix}_code_input`).val();
+            if (code) {
+                let request_body = {
+                    code: code
+                }
+                request_body[`${this.identity_prefix}_code`] = true;
+                chrome.tabs.sendMessage(sender.tab.id, request_body);
+                this.loading();
+            }
+        });
     }
 
-    get_method(message = null) {
+    get_method(sender, message = null) {
         $(`#${this.identity_prefix}_ui_div`).html(
             `
             ${message != null ? "<p>" + message + "</p>" : ""}
