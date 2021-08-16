@@ -36,11 +36,11 @@ async function waitUntilElementLoad(document, elemXPath,  maxWait) {
 
 function exitScriptWithError() {
     // When debugging comment out code of this function. This will stop closing of background pages.
-    chrome.runtime.sendMessage({
-        facebook_error: true,
-        message: "Sorry! Something went wrong. ",
-        message_for_dev : window.location.href
-    });
+    // chrome.runtime.sendMessage({
+    //     facebook_error: true,
+    //     message: "Sorry! Something went wrong. ",
+    //     message_for_dev : window.location.href
+    // });
 }
 
 
@@ -187,10 +187,10 @@ chrome.runtime.onMessage.addListener(
 (async () => {
     try {
         if (window.location.href.includes("facebook.com/security/2fac/settings")) {
-            chrome.runtime.sendMessage({
-                facebook_finished: true,
-                message: "2FA is already enabled."
-            });
+            // chrome.runtime.sendMessage({
+            //     facebook_finished: true,
+            //     message: "2FA is already enabled."
+            // });
         } else if (window.location.href.includes("facebook.com/security/2fac/setup/intro")) {
             await waitUntilPageLoad(document, 2);
             if (window.location.href.includes("?cquick=")) {
@@ -205,14 +205,19 @@ chrome.runtime.onMessage.addListener(
                 } else {exitScriptWithError();}
             }
         } else if (window.location.href.includes("facebook.com/login/reauth.php")) {
-            if (document.querySelector("[type=password]") != null) {
+            console.log("In reauth");
+            await waitUntilPageLoad(document, 2);
+            if (document.querySelector("iframe[src*=https]")) {
+                    window.location = document.querySelector("iframe[src*=https]").src;
+            } else if (await waitUntilElementLoad(document, "[type=password]", 2)) {
+                console.log("In reauth 2");
                 chrome.runtime.sendMessage({
                     facebook_get_password: true
                 });
             } else {exitScriptWithError();}
-        } else if (window.location.href === "https://www.facebook.com/") {
+        } else if (window.location.href === "https://www.facebook.com/" || window.location.href === "https://www.facebook.com/?sk=welcome") {
             await waitUntilElementLoad(document, 2);
-            if (document.querySelector("#email"))  {
+            if (document.querySelector("#email")) {
                 // Sign in, then redirect to the security page
                 chrome.runtime.sendMessage({
                     facebook_get_credentials: true
@@ -220,9 +225,7 @@ chrome.runtime.onMessage.addListener(
             } else {
                 window.location.href = "https://www.facebook.com/security/2fac/setup/intro";
             }
-        } else if (window.location.href === "https://www.facebook.com/?sk=welcome") {
-            window.location.href = "https://www.facebook.com/security/2fac/setup/intro";
-        }  else {exitScriptWithError();}
+        } else {exitScriptWithError();}
     } catch (e) {
         console.log(e);
         // Deal with the fact the chain failed
