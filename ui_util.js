@@ -119,7 +119,7 @@ class AutomationSiteUI {
                     if (request[`${ui.identity_prefix}_get_credentials`]) {
                         ui.get_credentials(sender);
                     } else if (request[`${ui.identity_prefix}_get_password`]) {
-                        ui.get_password(sender, login = request.login !== null ? request.login : null);
+                        ui.get_password(sender, request.login !== null ? request.login : null);
                     } else if (request[`${ui.identity_prefix}_get_email`]) {
                         ui.get_email(sender);
                     } else if (request[`${ui.identity_prefix}_get_phone`]) {
