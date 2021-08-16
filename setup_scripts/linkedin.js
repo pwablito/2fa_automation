@@ -174,7 +174,7 @@ chrome.runtime.onMessage.addListener(
                 console.log("In first await")
                 document.querySelector(".opt-in").click()
                 chrome.runtime.sendMessage({
-                    linkedin_get_type: true,
+                    linkedin_get_method: true,
                 });
             } else if (await waitUntilElementLoad(document, ".opt-out", 2)) {
                 chrome.runtime.sendMessage({

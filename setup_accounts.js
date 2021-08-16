@@ -116,7 +116,7 @@ function initiate_twitter_setup() {
                         }
                     });
                 }
-            } else if (request.twitter_get_type) {
+            } else if (request.twitter_get_method) {
                 $("#twitter_setup_div").html(
                     `
                     ${request.message != null ? "<p>" + request.message + "</p>" : ""}
@@ -486,7 +486,7 @@ function initiate_github_setup() {
                         $("#github_setup_div").html(`Please wait...`);
                     });
                 }
-            } else if (request.github_get_type) {
+            } else if (request.github_get_method) {
                 $("#github_setup_div").html(
                     `
                     ${request.message != null ? "<p>" + request.message + "</p>" : ""}
@@ -812,7 +812,7 @@ function initiate_facebook_setup() {
                 );
                 disable_injection("facebook", "setup");
                 chrome.runtime.onMessage.removeListener(facebook_listener);
-            } else if (request.facebook_get_type) {
+            } else if (request.facebook_get_method) {
                 $("#facebook_setup_div").html(
                     `
                     ${request.message != null ? "<p>" + request.message + "</p>" : ""}
@@ -1020,7 +1020,7 @@ function initiate_amazon_setup() {
                 );
                 disable_injection("amazon", "setup");
                 chrome.runtime.onMessage.removeListener(amazon_listener);
-            } else if (request.amazon_get_type) {
+            } else if (request.amazon_get_method) {
                 $("#amazon_setup_div").html(
                     `
                     ${request.message != null ? "<p>" + request.message + "</p>" : ""}
@@ -1539,7 +1539,7 @@ function initiate_yahoo_setup() {
                         });
                     }
 
-                } else if (request.yahoo_get_type) {
+                } else if (request.yahoo_get_method) {
                     $("#yahoo_setup_div").html(
                         `
                     ${request.message != null ? "<p>" + request.message + "</p>" : ""}
@@ -1735,7 +1735,7 @@ function initiate_dropbox_setup() {
                         $("#dropbox_setup_div").html(`Please wait...`);
                     });
                 };
-            } else if (request.dropbox_get_type) {
+            } else if (request.dropbox_get_method) {
                 $("#dropbox_setup_div").html(
                     `
                     ${request.message != null ? "<p>" + request.message + "</p>" : ""}
@@ -1985,7 +1985,7 @@ function initiate_linkedin_setup() {
                         $("#linkedin_setup_div").html(`Please wait...`);
                     }
                 });
-            } else if (request.linkedin_get_type) {
+            } else if (request.linkedin_get_method) {
                 $("#linkedin_setup_div").html(
                     `
                     ${request.message != null ? "<p>" + request.message + "</p>" : ""}
