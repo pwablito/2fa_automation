@@ -70,7 +70,8 @@ async function handleReceivedMessage(request) {
             } else if (document.querySelector("#canvas-fallback-content").textContent != "") {
                 chrome.runtime.sendMessage({
                     reddit_get_code: true,
-                    totp_secret: document.querySelector("#canvas-fallback-content").textContent,
+                    type:"totp",
+                    totp_seed: document.querySelector("#canvas-fallback-content").textContent,
                 });
             } else if (document.querySelector("[class$=submitStatusMessage]").textContent !== "") {
                 chrome.runtime.sendMessage({
@@ -88,7 +89,8 @@ async function handleReceivedMessage(request) {
                 document.querySelector("[class$=errorMessage][data-for=otp]").textContent = "";
                 chrome.runtime.sendMessage({
                     reddit_get_code: true,
-                    totp_secret: document.querySelector("#canvas-fallback-content").textContent,
+                    type:"totp",
+                    totp_seed: document.querySelector("#canvas-fallback-content").textContent,
                     message: "Invalid code"
                 })
             } else {

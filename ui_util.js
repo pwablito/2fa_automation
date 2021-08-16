@@ -117,23 +117,23 @@ class AutomationSiteUI {
                 if (is_this_site) {
                     console.log(request);
                     if (request[`${ui.identity_prefix}_get_credentials`]) {
-                        ui.get_credentials(sender);
+                        ui.get_credentials(sender, request);
                     } else if (request[`${ui.identity_prefix}_get_password`]) {
-                        ui.get_password(sender, request.login !== null ? request.login : null);
+                        ui.get_password(sender, request);
                     } else if (request[`${ui.identity_prefix}_get_email`]) {
-                        ui.get_email(sender);
+                        ui.get_email(sender, request);
                     } else if (request[`${ui.identity_prefix}_get_phone`]) {
-                        ui.get_phone(sender);
+                        ui.get_phone(sender, request);
                     } else if (request[`${ui.identity_prefix}_get_code`]) {
-                        ui.get_code(sender);
+                        ui.get_code(sender, request);
                     } else if (request[`${ui.identity_prefix}_get_method`]) {
-                        ui.get_method(sender);
+                        ui.get_method(sender, request);
                     } else if (request[`${ui.identity_prefix}_finished`]) {
                         chrome.runtime.onMessage.removeListener(listener);
-                        ui.finished(sender);
+                        ui.finished(sender, request);
                     } else if (request[`${ui.identity_prefix}_error`]) {
                         chrome.runtime.onMessage.removeListener(listener);
-                        ui.error(request.message, sender);
+                        ui.error(sender, request);
                     } else {
                         chrome.runtime.onMessage.removeListener(listener);
                         ui.error(`Got invalid request: ${JSON.stringify(request)}`, sender);
@@ -164,10 +164,10 @@ class AutomationSiteUI {
         );
     }
 
-    finished(sender = null) {
+    finished(sender, request) {
         $(`#${this.identity_prefix}_ui_div`).html(
             `
-            ${message != null ? "<p>" + message + "</p>" : ""}
+            ${request.message != null ? "<p>" + request.message + "</p>" : ""}
             <p>Finished automation for ${this.name}</p>
             `
         );
@@ -175,20 +175,20 @@ class AutomationSiteUI {
         this.close_window();
     }
 
-    error(message, sender = null) {
+    error(sender, request) {
         $(`#${this.identity_prefix}_ui_div`).html(
             `
-            <p>Error: ${message}</p>
+            <p>Error: ${request.message}</p>
             `
         );
         this.controller.disable_injection(this.identity_prefix);
         this.close_window();
     }
 
-    get_credentials(sender, message = null) {
+    get_credentials(sender, request) {
         $(`#${this.identity_prefix}_ui_div`).html(
             `
-            ${message != null ? "<p>" + message + "</p>" : ""}
+            ${request.message != null ? "<p>" + request.message + "</p>" : ""}
             <p>Please enter your login and password</p>
             <form id="${this.identity_prefix}_credentials_form">
                 <input type="text" id="${this.identity_prefix}_login_input" placeholder="Login" required>
@@ -213,11 +213,11 @@ class AutomationSiteUI {
         });
     }
 
-    get_password(sender, message = null, login = null) {
+    get_password(sender, request) {
         $(`#${this.identity_prefix}_ui_div`).html(
             `
-            ${message !== null ? "<p>" + message + "</p>" : ""}
-            <p>Please enter ${login !== null ? "the password for " + login : "your password"}</p>
+            ${request.message !== null ? "<p>" + request.message + "</p>" : ""}
+            <p>Please enter ${request.username !== null ? "the password for " + request.username : "your password"}</p>
             <form id="${this.identity_prefix}_password_form">
                 <input type="password" id="${this.identity_prefix}_password_input" placeholder="Password" required>
                 <button class="btn btn-success" type="submit">Submit</button>
@@ -238,10 +238,10 @@ class AutomationSiteUI {
         });
     }
 
-    get_email(sender, message = null) {
+    get_email(sender, request) {
         $(`#${this.identity_prefix}_ui_div`).html(
             `
-            ${message != null ? "<p>" + message + "</p>" : ""}
+            ${request.message != null ? "<p>" + request.message + "</p>" : ""}
             <p>Please enter your email</p>
             <form id="${this.identity_prefix}_credentials_form">
                 <input type="email" id="${this.identity_prefix}_email_input" placeholder="Email" required>
@@ -263,10 +263,10 @@ class AutomationSiteUI {
         });
     }
 
-    get_phone(sender, message = null) {
+    get_phone(sender, request) {
         $(`#${this.identity_prefix}_ui_div`).html(
             `
-            ${message != null ? "<p>" + message + "</p>" : ""}
+            ${request.message != null ? "<p>" + request.message + "</p>" : ""}
             <p>Please enter your phone number to setup 2FA</p>
             <form id="${this.identity_prefix}_phone_form">
                 <input type="tel" id="${this.identity_prefix}_phone_input" placeholder="Phone number" required>
@@ -288,12 +288,12 @@ class AutomationSiteUI {
         });
     }
 
-    get_code(sender, type = null, totp_seed = null, message = null) {
-        if (type === null) {
+    get_code(sender, request) {
+        if (request.type === null) {
             $(`#${this.identity_prefix}_ui_div`).html(
                 // This usually happens when authenticating for a disable script- that's why the wording is vague. This is a catch-all for any 2fa code method that is already setup
                 `
-                ${message != null ? "<p>" + message + "</p>" : ""}
+                ${request.message != null ? "<p>" + request.message + "</p>" : ""}
                 <p>Please enter your 2FA code</p>
                 <form id="${this.identity_prefix}_code_form">
                     <input type="text" id="${this.identity_prefix}_code_input" placeholder="Code" required>
@@ -301,14 +301,17 @@ class AutomationSiteUI {
                 </form>
                 `
             );
-        } else if (type === "totp") {
-            if (totp_seed === null) {
+        } else if (request.type === "totp") {
+            if (!(request.totp_seed || request.totp_url)) {
                 this.error("TOTP seed not provided", sender);
                 return;
             }
+            
+            let totp_url_src = request.totp_seed != null ? "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=otpauth://totp/" +this.name + "?secret=" + request.totp_seed : request.totp_url;
+            console.log(totp_url_src);
             $(`#${this.identity_prefix}_ui_div`).html(
                 `
-                ${message != null ? "<p>" + message + "</p>" : ""}
+                ${request.message != null ? "<p>" + request.message + "</p>" : ""}
                 <p>Download Google Authenticator, scan this QR code, and enter the generated code</p>
                 <div class="row">
                     <div class="col-6">
@@ -318,15 +321,15 @@ class AutomationSiteUI {
                         </form>
                     </div>
                     <div class="col-6">
-                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=otpauth://totp/${this.name}?secret=${totp_seed}" style="width: 100%;">
+                        <img src=${totp_url_src} style="width: 100%;">
                     </div>
                 </div>
                 `
             );
-        } else if (type === "sms") {
+        } else if (request.type === "sms") {
             $(`#${this.identity_prefix}_ui_div`).html(
                 `
-                ${message != null ? "<p>" + message + "</p>" : ""}
+                ${request.message != null ? "<p>" + request.message + "</p>" : ""}
                 <p>Please enter the code sent to your phone via SMS</p>
                 <form id="${this.identity_prefix}_code_form">
                     <input type="text" id="${this.identity_prefix}_code_input" placeholder="Code" required>
@@ -349,10 +352,10 @@ class AutomationSiteUI {
         });
     }
 
-    get_method(sender, message = null) {
+    get_method(sender, request) {
         $(`#${this.identity_prefix}_ui_div`).html(
             `
-            ${message != null ? "<p>" + message + "</p>" : ""}
+            ${request.message != null ? "<p>" + request.message + "</p>" : ""}
             <div class="row">
                 <div class="col-6">
                     <p>Please choose a type of 2FA to set up</p>

@@ -90,7 +90,8 @@ async function handleReceivedMessage(request) {
                         chrome.runtime.sendMessage({
                             yahoo_error: true,
                             yahoo_error_code: "incorrectTOTPCode",
-                            yahoo_totp_url: request.yahoo_totp_url
+                            type:"totp",
+                            totp_url: request.totp_url
                         });
                     }
                 }
@@ -115,7 +116,8 @@ async function handleReceivedMessage(request) {
                             chrome.runtime.sendMessage({
                                 yahoo_error: true,
                                 yahoo_error_code: "incorrectTOTPCode",
-                                yahoo_totp_url: request.totp_url
+                                type:"totp",
+                                totp_url: request.totp_url
                             });
                         }
                     }
@@ -164,7 +166,8 @@ async function handleReceivedMessage(request) {
             if (await waitUntilElementLoad(document, ".tsv-authenticator-setup-qr", 2)) {
                 chrome.runtime.sendMessage({
                     yahoo_get_code: true,
-                    yahoo_totp_url: document.querySelector("img[alt='qr code']").src
+                    type:"totp",
+                    totp_url: document.querySelector("img[alt='qr code']").src
                 });
             }
 
