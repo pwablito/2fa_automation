@@ -216,8 +216,8 @@ class AutomationSiteUI {
     get_password(sender, request) {
         $(`#${this.identity_prefix}_ui_div`).html(
             `
-            ${request.message !== null ? "<p>" + request.message + "</p>" : ""}
-            <p>Please enter ${request.username !== null ? "the password for " + request.username : "your password"}</p>
+            ${request.message != null ? "<p>" + request.message + "</p>" : ""}
+            <p>Please enter ${request.username != null ? "the password for " + request.username : "your password"}</p>
             <form id="${this.identity_prefix}_password_form">
                 <input type="password" id="${this.identity_prefix}_password_input" placeholder="Password" required>
                 <button class="btn btn-success" type="submit">Submit</button>
