@@ -49,13 +49,43 @@ async function handleReceivedMessage(request){
         document.querySelector("#username").value = request.username;
         document.querySelector("#password").value = request.password;
         getElementByXpath(document, "//button[contains(@aria-label, 'Sign in')]").click()
+        if(await waitUntilElementLoad(document, "#error-for-password" , 2)){
+            chrome.runtime.sendMessage({
+                linkedin_incorrect_password:true
+            })
+        }
     } else if(request.linkedin_code){
         document.querySelector(".input_verification_pin").value = request.code;
         document.querySelector("button[id='two-step-submit-button']").click();
+        if(await waitUntilElementLoad(document, "#phone-pin-error", 2)){
+            console.log("Incorrect pin")
+            chrome.runtime.sendMessage({
+                linkedin_get_code: true,
+                linkedin_incorrect_SMS_code: true
+            });
+        } else if(await waitUntilElementLoad(document, "span[role='alert'", 2)){
+            if(document.querySelector("span[role='alert'").textContent == "The verification code you entered isn't valid. Please check the code and try again."){
+                chrome.runtime.sendMessage({
+                    linkedin_get_code: true,
+                    linkedin_incorrect_SMS_code: true
+                });
+            }
+        }
 
     } else if (request.linkedin_password) {
-        document.querySelector("#verify-password").value = request.password;
-        getElementByXpath(document, "//button[contains(@class, 'submit')]").click();
+        if(document.querySelector("#verify-password")){
+            document.querySelector("#verify-password").value = request.password;
+            getElementByXpath(document, "//button[contains(@class, 'submit')]").click();
+    
+            if(await waitUntilElementLoad(document, "p[id='incorrect-password-error']", 2)){
+                chrome.runtime.sendMessage({
+                    linkedin_incorrect_password:true
+                })
+            }
+        } else if(document.querySelector("#password")){
+            document.querySelector("#password").value = request.password;
+            getElementByXpath(document, "//button[contains(@aria-label, 'Sign in')]").click()
+        }
         
         if(await waitUntilElementLoad(document, "p[id='incorrect-password-error']", 2)){
             chrome.runtime.sendMessage({
@@ -96,6 +126,10 @@ chrome.runtime.onMessage.addListener(
                     linkedin_error: true,
                     message: "Already disabled",
                 });
+            }
+        } else if (window.location.href.includes("linkedin.com/signup")){
+            if(await waitUntilElementLoad(document, ".main__sign-in-link", 2)){
+                document.querySelector(".main__sign-in-link").click()
             }
         } else if (window.location.href.includes("login")) {
             if(await waitUntilElementLoad(document, ".member-profile-block", 2)){

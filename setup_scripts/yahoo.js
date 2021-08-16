@@ -52,13 +52,20 @@ async function handleReceivedMessage(request){
         change(document.querySelector("#txtPhoneNumber"), request.number);
         if(await waitUntilElementLoad(document, "#btnTsvSendCode", 2)){
             document.querySelector("#btnTsvSendCode").click()
-            if(await waitUntilElementLoad(document, ".error-title", 2)){    
+            if(await waitUntilElementLoad(document, ".error-title", 2)){
+                console.log("Found an error");    
                 if(document.querySelector(".error-title").textContent == "Daily limit exceeded, please try again later"){
                     chrome.runtime.sendMessage({
                         yahoo_error: true,
                         message: "Hit maximum attempts per day with this number"
                     });
-                } 
+                } else {
+                    console.log("see the element saying phone number is invalid, sending message")
+                    chrome.runtime.sendMessage({
+                        yahoo_error: true,
+                        yahoo_incorrect_phone_number: "invalid phone number",
+                    });
+                }
             } else {
                 chrome.runtime.sendMessage({
                     yahoo_get_code: true,
@@ -126,7 +133,7 @@ async function handleReceivedMessage(request){
                 // }
                 for (let i = 0; i < 5; i++){
                     let selectorstring = "input[index='" + i + "']";
-                    elem.querySelector(selectorstring).value=request.code[i];
+                    change(elem.querySelector(selectorstring), request.code[i]);
                 }
                 document.querySelector("#btnTsvVerifyCode").click();
                 if(await waitUntilElementLoad(document, ".error-title", 2)){
@@ -201,7 +208,15 @@ chrome.runtime.onMessage.addListener(
                     yahoo_error: true,
                     message: "2FA already enabled"
                 });
-            } else {
+            } else if(window.location.href.includes("recaptcha")){
+                chrome.runtime.sendMessage({
+                    yahoo_error: true,
+                    message: "recaptcha required"
+                });
+            } else if (window.location.href.includes("account/challenge/challenge-selector")) {
+                document.querySelector("button[type='submit']").click()
+            }
+            else {
                 chrome.runtime.sendMessage({
                     yahoo_get_email: true,
                 });

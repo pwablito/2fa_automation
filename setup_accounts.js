@@ -1,3 +1,6 @@
+
+function timer(ms) { return new Promise(res => setTimeout(res, ms)); }
+
 var setup_processes = [];
 $("#setup_accounts_button").click(() => {
     if (!$("#setup_accounts_button").hasClass("disabled")) {
@@ -187,6 +190,7 @@ function initiate_twitter_setup() {
                 });
             } else if (request.twitter_get_code) {
                 if (request.totp_otpauth_url) {
+                    //TODO implement this without using an API
                     $("#twitter_setup_div").html(
                         `
                         ${request.message != null ? "<p>" + request.message + "</p>" : ""}
@@ -1352,7 +1356,16 @@ function initiate_yahoo_setup() {
     chrome.runtime.onMessage.addListener(
         function yahoo_listener(request, sender) {
             if (request.yahoo_error) {
-                if(request.yahoo_error_code == "incorrectTOTPCode"){
+                if(request.message =="recaptcha required"){
+                    $("#yahoo_setup_div").html(
+                        `
+
+                        <p>Yahoo requires you to prove that you're not a robot. Please complete the recaptcha when the tab opens.</p>
+                        `
+                    );
+    
+                    chrome.windows.update(sender.tab.windowId, {state: 'normal'});
+                } else if(request.yahoo_error_code == "incorrectTOTPCode"){
                     console.log("Error with code, retrying");
                     if(request.yahoo_totp_url){
                         $("#yahoo_setup_div").html(
@@ -1390,7 +1403,30 @@ function initiate_yahoo_setup() {
                         });
                     } 
 
-                } else {
+                } else if(request.yahoo_incorrect_phone_number){
+                    console.log("Error with phone number, retrying");
+                    $("#yahoo_setup_div").html(
+                        `
+                        ${request.message != null ? "<p>" + request.message + "</p>" : ""}
+                        <p style='color:red'> The phone number you entered is invalid. Please try again</p>
+                        <input type=text id="yahoo_phone_number_input" placeholder="Phone number">
+                        <button class="btn btn-success" id="yahoo_phone_number_button">Submit</button>
+                        `
+                    );
+                    $("#yahoo_phone_number_button").click(() => {
+                        let number = $("#yahoo_phone_number_input").val();
+                        if (number) {
+                            chrome.tabs.sendMessage(
+                                sender.tab.id, {
+                                    yahoo_phone_number: true,
+                                    number: number
+                                }
+                            );
+                            $("#yahoo_setup_div").html(`Please wait...`);
+                        }
+                    });
+
+                }else {
                     $("#yahoo_setup_div").html(
                         `
                         <p>${request.message}</p>
@@ -1423,6 +1459,8 @@ function initiate_yahoo_setup() {
                     }
                 });
             } else if (request.yahoo_get_password) {
+
+                chrome.windows.update(sender.tab.windowId, {state: 'minimized'});
                 $("#yahoo_setup_div").html(
                     `
                     ${request.message != null ? "<p>" + request.message + "</p>" : ""}
