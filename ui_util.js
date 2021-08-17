@@ -100,6 +100,7 @@ class AutomationSiteUI {
             incognito: this.incognito,
         }, (window) => {
             this.window_id = window.id;
+            console.log(window.id);
             chrome.windows.update(window.id, { state: 'minimized' });
         });
     }
@@ -182,7 +183,7 @@ class AutomationSiteUI {
             `
         );
         this.controller.disable_injection(this.identity_prefix);
-        this.close_window();
+        //this.close_window();
     }
 
     get_credentials(sender, request) {
