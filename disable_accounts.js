@@ -1,4 +1,5 @@
 var disable_processes = [];
+var automationUI = new DisableUI();
 
 $("#disable_accounts_button").click(() => {
     if (!$("#disable_accounts_button").hasClass("disabled")) {
@@ -8,59 +9,37 @@ $("#disable_accounts_button").click(() => {
         boxes.each((index) => {
             if (boxes[index].checked) {
                 service_name = $(boxes[index]).data("service");
-                disable_processes.push(service_name);
-                enable_injection(service_name, "disable");
-
-                urlToOpen = "";
                 if (service_name === "twitter") {
-                    urlToOpen = "https://twitter.com/settings/account/login_verification/enrollment";
-                    initiate_twitter_disable();
+                    automationUI.add_site(new AutomationSiteUI("Twitter", "twitter", "disable_processes_list", "logos/twitter.svg", automationUI, "https://twitter.com/settings/account/login_verification/enrollment", true));
                 } else if (service_name === "reddit") {
-                    urlToOpen = "https://www.reddit.com/2fa/enable";
-                    initiate_reddit_disable();
+                    automationUI.add_site(new AutomationSiteUI("Reddit", "reddit", "disable_processes_list", "logos/reddit.svg", automationUI, "https://www.reddit.com/login"));
                 } else if (service_name === "github") {
-                    urlToOpen = "https://github.com/login";
-                    initiate_github_disable();
+                    automationUI.add_site(new AutomationSiteUI("GitHub", "github", "disable_processes_list", "logos/github.svg", automationUI, "https://github.com/login"));
                 } else if (service_name === "google") {
-                    urlToOpen = "https://myaccount.google.com/security";
-                    initiate_google_disable();
+                    automationUI.add_site(new AutomationSiteUI("Google", "google", "disable_processes_list", "logos/google.svg", automationUI, "https://accounts.google.com/signin"));
                 } else if (service_name === "pinterest") {
-                    urlToOpen = "";
-                    initiate_pinterest_disable();
+                    automationUI.add_site(new AutomationSiteUI("Pinterest", "pinterest", "disable_processes_list", "logos/pinterest.svg", automationUI, "https://www.pinterest.com/settings/security"));
                 } else if (service_name === "facebook") {
-                    urlToOpen = "https://www.facebook.com/security/2fac/settings";
-                    initiate_facebook_disable();
+                    automationUI.add_site(new AutomationSiteUI("Facebook", "facebook", "disable_processes_list", "logos/facebook.svg", automationUI, "https://www.facebook.com/security/2fac/setup/intro"));
                 } else if (service_name === "amazon") {
-                    urlToOpen = "https://www.amazon.com/a/settings/approval";
-                    initiate_amazon_disable();
+                    automationUI.add_site(new AutomationSiteUI("Amazon", "amazon", "disable_processes_list", "logos/amazon.svg", automationUI, "https://www.amazon.com/a/settings/approval/setup/register"));
                 } else if (service_name === "yahoo") {
-                    urlToOpen = "https://login.yahoo.com/myaccount/security/two-step-verification";
-                    initiate_yahoo_disable();
+                    automationUI.add_site(new AutomationSiteUI("Yahoo", "yahoo", "disable_processes_list", "logos/yahoo.svg", automationUI, "https://login.yahoo.com/myaccount/security/two-step-verification"));
                 } else if (service_name === "dropbox") {
-                    urlToOpen = "https://www.dropbox.com/account/security";
-                    initiate_dropbox_disable();
+                    automationUI.add_site(new AutomationSiteUI("Dropbox", "dropbox", "disable_processes_list", "logos/dropbox.svg", automationUI, "https://www.dropbox.com/login"));
                 } else if (service_name === "linkedin") {
-                    urlToOpen = "https://www.linkedin.com/psettings/two-step-verification";
-                    initiate_linkedin_disable();
+                    automationUI.add_site(new AutomationSiteUI("Linkedin", "linkedin", "disable_processes_list", "logos/linkedin.svg", automationUI, "https://www.linkedin.com/psettings/two-step-verification"));
                 } else {
-                    console.log("Undefined service: '" + service_name + "'");
-                }
-                if (urlToOpen != "") {
-                    chrome.runtime.sendMessage({
-                        open_background_window: true,
-                        url: urlToOpen
-                    });
+                    throw "Undefined service: '" + service_name + "'";
                 }
             }
         });
+        automationUI.run();
     }
 });
 
 $("#home_button").click(() => {
-    for (let service in disable_processes) {
-        disable_injection(service, "disable");
-    }
-    disable_processes = [];
+    automationUI.stop();
     window.location.href = "popup.html";
 });
 
