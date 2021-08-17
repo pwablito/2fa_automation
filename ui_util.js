@@ -282,7 +282,7 @@ class AutomationSiteUI {
                 let request_body = {
                     phone: phone
                 }
-                request_body[`${this.identity_prefix}_credentials`] = true;
+                request_body[`${this.identity_prefix}_phone`] = true;
                 chrome.tabs.sendMessage(sender.tab.id, request_body);
                 this.loading();
             }
