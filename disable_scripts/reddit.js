@@ -72,7 +72,10 @@ async function handleReceivedMessage(request) {
                     message: "2FA is already enabled.",
                     message_for_dev: window.location.href
                 });
-            } else { exitScriptWithError(); }
+            } else { chrome.runtime.sendMessage({
+                    reddit_finished: true
+                });
+            }
         }, 2000);
     } 
 }

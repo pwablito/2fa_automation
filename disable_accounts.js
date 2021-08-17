@@ -16,7 +16,7 @@ $("#disable_accounts_button").click(() => {
                     urlToOpen = "https://twitter.com/settings/account/login_verification/enrollment";
                     initiate_twitter_disable();
                 } else if (service_name === "reddit") {
-                    urlToOpen = "https://www.reddit.com/2fa/enable";
+                    urlToOpen = "https://www.reddit.com/2fa/disable";
                     initiate_reddit_disable();
                 } else if (service_name === "github") {
                     urlToOpen = "https://github.com/login";
