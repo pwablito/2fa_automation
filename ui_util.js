@@ -134,10 +134,10 @@ class AutomationSiteUI {
                         ui.finished(sender, request);
                     } else if (request[`${ui.identity_prefix}_error`]) {
                         chrome.runtime.onMessage.removeListener(listener);
-                        ui.error(sender, request);
+                        ui.request_error(request);
                     } else {
                         chrome.runtime.onMessage.removeListener(listener);
-                        ui.error(`Got invalid request: ${JSON.stringify(request)}`, sender);
+                        ui.request_error(`Got invalid request: ${JSON.stringify(request)}`);
                     }
                 }
             }
@@ -176,10 +176,14 @@ class AutomationSiteUI {
         this.close_window();
     }
 
-    error(sender, request) {
+    request_error(request) {
+        this.error(JSON.stringify(request));
+    }
+
+    error(message) {
         $(`#${this.identity_prefix}_ui_div`).html(
             `
-            <p>Error: ${request.message}</p>
+            <p>${this.name} Error: ${message}</p>
             `
         );
         this.controller.disable_injection(this.identity_prefix);
@@ -190,7 +194,7 @@ class AutomationSiteUI {
         $(`#${this.identity_prefix}_ui_div`).html(
             `
             ${request.message != null ? "<p>" + request.message + "</p>" : ""}
-            <p>Please enter your ${request.type === null ? "login" : request.type === "username" ? "username" : "email"} and password</p>
+            <p>Please enter your ${request.type === null ? "login" : request.type === "username" ? "username" : "email"} and password for ${this.name}</p>
             <form id="${this.identity_prefix}_credentials_form">
                 <input type="${request.type !== null && request.type === "email" ? "email" : "text"}" id="${this.identity_prefix}_login_input" placeholder="${request.type === null ? "Login" : request.type === "username" ? "Username" : "Email"}" required>
                 <input type="password" id="${this.identity_prefix}_password_input" placeholder="Password" required>
@@ -220,8 +224,8 @@ class AutomationSiteUI {
             ${request.message != null ? "<p>" + request.message + "</p>" : ""}
             <p>Please enter ${request.username != null ? "the password for " + request.username : "your password"}</p>
             <form id="${this.identity_prefix}_password_form">
-                <input type="password" id="${this.identity_prefix}_password_input" placeholder="Password" required>
-                <button class="btn btn-success" type="submit">Submit</button>
+            <input type="password" id="${this.identity_prefix}_password_input" placeholder="Password" required>
+            <button class="btn btn-success" type="submit">Submit</button>
             </form>
             `
         );
@@ -243,7 +247,7 @@ class AutomationSiteUI {
         $(`#${this.identity_prefix}_ui_div`).html(
             `
             ${request.message != null ? "<p>" + request.message + "</p>" : ""}
-            <p>Please enter your email</p>
+            <p>Please enter your email for ${this.name}</p>
             <form id="${this.identity_prefix}_credentials_form">
                 <input type="email" id="${this.identity_prefix}_email_input" placeholder="Email" required>
                 <button class="btn btn-success" type="submit">Submit</button>
@@ -268,7 +272,7 @@ class AutomationSiteUI {
         $(`#${this.identity_prefix}_ui_div`).html(
             `
             ${request.message != null ? "<p>" + request.message + "</p>" : ""}
-            <p>Please enter your phone number to setup 2FA</p>
+            <p>Please enter your phone number to setup 2FA for ${this.name}</p>
             <form id="${this.identity_prefix}_phone_form">
                 <input type="tel" id="${this.identity_prefix}_phone_input" placeholder="Phone number" required>
                 <button class="btn btn-success" type="submit">Submit</button>
@@ -295,7 +299,7 @@ class AutomationSiteUI {
                 // This usually happens when authenticating for a disable script- that's why the wording is vague. This is a catch-all for any 2fa code method that is already setup
                 `
                 ${request.message != null ? "<p>" + request.message + "</p>" : ""}
-                <p>Please enter your 2FA code</p>
+                <p>Please enter your 2FA code for ${this.name}</p>
                 <form id="${this.identity_prefix}_code_form">
                     <input type="text" id="${this.identity_prefix}_code_input" placeholder="Code" required>
                     <button class="btn btn-success" type="submit">Submit</button>
@@ -304,7 +308,7 @@ class AutomationSiteUI {
             );
         } else if (request.type === "totp") {
             if (!(request.totp_seed || request.totp_url)) {
-                this.error("TOTP seed not provided", sender);
+                this.error("TOTP seed not provided");
                 return;
             }
 
@@ -321,15 +325,7 @@ class AutomationSiteUI {
                 <p>Download Google Authenticator, scan this QR code, and enter the generated code</p>
                 <div class="row">
                     <div class="col-6">
-                        <form id="${this.identity_prefix}_code_form">
-                            <input type="text" id="${this.identity_prefix}_code_input" placeholder="Code" required>
-                            <button class="btn btn-success" type="submit">Submit</button>
-                        </form>
-                    </div>
-                    <div class="col-6">
-                        <div id="${this.identity_prefix}_qr_div" style="width: 100%;">
-                    </div>
-                </div>
+                        <form id="${this.identity_prefix}_code_form">This usually happens when authenticating for a disable script- that's why the wording is vague.
                 `
             );
             place_qr_code(totp_url, `${this.identity_prefix}_qr_div`);
@@ -366,7 +362,7 @@ class AutomationSiteUI {
             ${request.message != null ? "<p>" + request.message + "</p>" : ""}
             <div class="row">
                 <div class="col-6">
-                    <p>Please choose a type of 2FA to set up</p>
+                    <p>Please choose a type of 2FA to set up for ${this.name}</p>
                 </div>
                 <div class="col-6">
                     <button class="btn btn-success" id="${this.identity_prefix}_totp_button">TOTP</button>
