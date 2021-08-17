@@ -86,7 +86,7 @@ class AutomationSiteUI {
         this.register_handler("get_email", this.get_email);
         this.register_handler("get_phone", this.get_phone);
         this.register_handler("get_code", this.get_code);
-        this.register_handler("get_method, this.get_method");
+        this.register_handler("get_method", this.get_method);
         this.register_handler("error", this.error_handler);
         this.register_handler("finished", this.finished);
     }
@@ -408,7 +408,11 @@ class AmazonUI extends AutomationSiteUI {
     }
 
     approve_login(sender, request, context) {
-        alert("Amazon approval function");
-        // TODO implement a UI for sending the user to their email to approve the authentication request
+        $(`#${context.identity_prefix}_ui_div`).html(
+            `
+            ${request.message != null ? "<p>" + request.message + "</p>" : ""}
+            <p>Please approve the request sent to your email and/or phone</p>
+            `
+        );
     }
 }
