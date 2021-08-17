@@ -411,7 +411,11 @@ class AmazonUI extends AutomationSiteUI {
         $(`#${context.identity_prefix}_ui_div`).html(
             `
             ${request.message != null ? "<p>" + request.message + "</p>" : ""}
-            <p>Please approve the request sent to your email and/or phone</p>
+            <p>
+                Amazon requires that you approve your login attempts manually each time you sign in.
+                To do this, please follow the link sent to your phone and email.
+                There, click "Approve" and then close the window. Then check back here for more instructions.
+            </p>
             `
         );
     }
