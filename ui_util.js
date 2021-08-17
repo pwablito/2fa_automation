@@ -342,7 +342,7 @@ class AutomationSiteUI {
                         <form id="${this.identity_prefix}_code_form">This usually happens when authenticating for a disable script- that's why the wording is vague.
                 `
             );
-            place_qr_code(totp_url, `${this.identity_prefix}_qr_div`);
+            new QRCode(document.getElementById(`${this.identity_prefix}_qr_div`), totp_url);
         } else if (request.type === "sms") {
             $(`#${this.identity_prefix}_ui_div`).html(
                 `
@@ -399,10 +399,4 @@ class AutomationSiteUI {
             this.loading();
         });
     }
-}
-
-function place_qr_code(url, div_id) {
-    console.log(url);
-    console.log(div_id);
-    new QRCode(document.getElementById(div_id), url);
 }
