@@ -400,3 +400,14 @@ class AutomationSiteUI {
         });
     }
 }
+
+class AmazonUI extends AutomationSiteUI {
+    constructor(name, identity_prefix, parent_id, logo_file, controller, start_url, incognito = false) {
+        super(name, identity_prefix, parent_id, logo_file, controller, start_url, incognito);
+        this.register_handler("approval", this.approval);
+    }
+
+    approval(sender, request) {
+        // TODO implement a UI for sending the user to their email to approve the authentication request
+    }
+}
