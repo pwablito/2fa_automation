@@ -137,7 +137,7 @@ function initiate_twitter_disable() {
                         }
                     });
                 }
-            } else if (request.twitter_get_type) {
+            } else if (request.twitter_get_method) {
                 $("#twitter_setup_div").html(
                     `
                     ${request.message != null ? "<p>" + request.message + "</p>" : ""}

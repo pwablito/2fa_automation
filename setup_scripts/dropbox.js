@@ -64,7 +64,7 @@ async function handleReceivedMessage(request) {
         let SMSChoice = "[id=sms-choice]"
         if (await waitUntilElementLoad(document, SMSChoice, 1)) {
             chrome.runtime.sendMessage({
-                dropbox_get_type: true,
+                dropbox_get_method: true,
             });
         } else if (await waitUntilElementLoad(document, errorMsgXPath, 2) && document.querySelector(errorMsgXPath).innerText != "") {
             chrome.runtime.sendMessage({

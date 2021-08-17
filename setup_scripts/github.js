@@ -163,7 +163,7 @@ chrome.runtime.onMessage.addListener(
                 });
             } else {
                 chrome.runtime.sendMessage({
-                    github_get_type: true,
+                    github_get_method: true,
                 });
             }
         } else { // either github.com/login or redirection to github.com

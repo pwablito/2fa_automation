@@ -298,7 +298,7 @@ class AutomationSiteUI {
                 <p>Please enter your 2FA code</p>
                 <form id="${this.identity_prefix}_code_form">
                     <input type="text" id="${this.identity_prefix}_code_input" placeholder="Code" required>
-                    <button class="btn btn-success" type="submit"></button>
+                    <button class="btn btn-success" type="submit">Submit</button>
                 </form>
                 `
             );
@@ -307,9 +307,13 @@ class AutomationSiteUI {
                 this.error("TOTP seed not provided", sender);
                 return;
             }
-            
-            let totp_url_src = request.totp_seed != null ? "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=otpauth://totp/" +this.name + "?secret=" + request.totp_seed : request.totp_url;
-            console.log(totp_url_src);
+
+            let totp_url;
+            if (request.totp_url) {
+                totp_url = request.totp_url;
+            } else {
+                totp_url = `otpauth://totp/${this.name}?secret=${request.totp_seed}`;
+            }
             $(`#${this.identity_prefix}_ui_div`).html(
                 `
                 ${request.message != null ? "<p>" + request.message + "</p>" : ""}
@@ -318,15 +322,16 @@ class AutomationSiteUI {
                     <div class="col-6">
                         <form id="${this.identity_prefix}_code_form">
                             <input type="text" id="${this.identity_prefix}_code_input" placeholder="Code" required>
-                            <button class="btn btn-success" type="submit"></button>
+                            <button class="btn btn-success" type="submit">Submit</button>
                         </form>
                     </div>
                     <div class="col-6">
-                        <img src=${totp_url_src} style="width: 100%;">
+                        <div id="${this.identity_prefix}_qr_div" style="width: 100%;">
                     </div>
                 </div>
                 `
             );
+            place_qr_code(totp_url, `${this.identity_prefix}_qr_div`);
         } else if (request.type === "sms") {
             $(`#${this.identity_prefix}_ui_div`).html(
                 `
@@ -334,7 +339,7 @@ class AutomationSiteUI {
                 <p>Please enter the code sent to your phone via SMS</p>
                 <form id="${this.identity_prefix}_code_form">
                     <input type="text" id="${this.identity_prefix}_code_input" placeholder="Code" required>
-                    <button class="btn btn-success" type="submit"></button>
+                    <button class="btn btn-success" type="submit">Submit</button>
                 </form>
                 `
             );
@@ -382,4 +387,8 @@ class AutomationSiteUI {
             this.loading();
         });
     }
+}
+
+function place_qr_code(url, div_id) {
+    new QRCode(document.getElementById(div_id), url);
 }
