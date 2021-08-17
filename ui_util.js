@@ -100,6 +100,7 @@ class AutomationSiteUI {
             incognito: this.incognito,
         }, (window) => {
             this.window_id = window.id;
+            console.log(window.id);
             chrome.windows.update(window.id, { state: 'minimized' });
         });
     }
@@ -189,9 +190,9 @@ class AutomationSiteUI {
         $(`#${this.identity_prefix}_ui_div`).html(
             `
             ${request.message != null ? "<p>" + request.message + "</p>" : ""}
-            <p>Please enter your login and password</p>
+            <p>Please enter your ${this.identity_prefix}_login_input" placeholder="${request.type === null ? "login" : request.type === "username" ? "username" : "email"} and password</p>
             <form id="${this.identity_prefix}_credentials_form">
-                <input type="text" id="${this.identity_prefix}_login_input" placeholder="Login" required>
+                <input type="${request.type !== null && request.type === "email" ? "email" : "text"}" id="${this.identity_prefix}_login_input" placeholder="${request.type === null ? "Login" : request.type === "username" ? "Username" : "Email"}" required>
                 <input type="password" id="${this.identity_prefix}_password_input" placeholder="Password" required>
                 <button class="btn btn-success" type="submit">Submit</button>
             </form>
@@ -281,7 +282,7 @@ class AutomationSiteUI {
                 let request_body = {
                     phone: phone
                 }
-                request_body[`${this.identity_prefix}_credentials`] = true;
+                request_body[`${this.identity_prefix}_phone`] = true;
                 chrome.tabs.sendMessage(sender.tab.id, request_body);
                 this.loading();
             }
@@ -312,6 +313,7 @@ class AutomationSiteUI {
                 totp_url = request.totp_url;
             } else {
                 totp_url = `otpauth://totp/${this.name}?secret=${request.totp_seed}`;
+                console.log(totp_url);
             }
             $(`#${this.identity_prefix}_ui_div`).html(
                 `
@@ -348,7 +350,8 @@ class AutomationSiteUI {
             let code = $(`#${this.identity_prefix}_code_input`).val();
             if (code) {
                 let request_body = {
-                    code: code
+                    code: code,
+                    totp_seed: request.totp_seed
                 }
                 request_body[`${this.identity_prefix}_code`] = true;
                 chrome.tabs.sendMessage(sender.tab.id, request_body);
@@ -389,5 +392,7 @@ class AutomationSiteUI {
 }
 
 function place_qr_code(url, div_id) {
+    console.log(url);
+    console.log(div_id);
     new QRCode(document.getElementById(div_id), url);
 }

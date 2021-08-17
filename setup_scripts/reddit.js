@@ -46,14 +46,15 @@ function exitScriptWithError() {
 
 async function handleReceivedMessage(request) {
     if (request.reddit_credentials) {
-        document.querySelector("#[name=username]").value = request.login;
+        document.querySelector("[name=username]").value = request.login;
         document.querySelector("[type=password]").value = request.password;
         getElementByXpath(document, "//button[contains(text(),'Log In')]").click();
         setTimeout(() => {
             if (document.querySelector("[class$=errorMessage]").textContent !== "") {
                 chrome.runtime.sendMessage({
                     reddit_get_credentials: true,
-                    message: "Invalid credentials"
+                    message: "Invalid credentials",
+                    type: "username"
                 });
             }
         }, 2000);
@@ -70,7 +71,7 @@ async function handleReceivedMessage(request) {
             } else if (document.querySelector("#canvas-fallback-content").textContent != "") {
                 chrome.runtime.sendMessage({
                     reddit_get_code: true,
-                    type:"totp",
+                    type: "totp",
                     totp_seed: document.querySelector("#canvas-fallback-content").textContent,
                 });
             } else if (document.querySelector("[class$=submitStatusMessage]").textContent !== "") {
@@ -89,7 +90,7 @@ async function handleReceivedMessage(request) {
                 document.querySelector("[class$=errorMessage][data-for=otp]").textContent = "";
                 chrome.runtime.sendMessage({
                     reddit_get_code: true,
-                    type:"totp",
+                    type: "totp",
                     totp_seed: document.querySelector("#canvas-fallback-content").textContent,
                     message: "Invalid code"
                 })
@@ -124,6 +125,7 @@ chrome.runtime.onMessage.addListener(
             if (document.querySelector("[type=password]")) {
                 chrome.runtime.sendMessage({
                     reddit_get_credentials: true,
+                    type: "username"
                 });
             } else {
                 window.location.href = "https://www.reddit.com/2fa/enable";

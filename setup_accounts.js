@@ -22,7 +22,7 @@ $("#setup_accounts_button").click(() => {
                 } else if (service_name === "pinterest") {
                     automationUI.add_site(new AutomationSiteUI("Pinterest", "pinterest", "setup_processes_list", "logos/pinterest.svg", automationUI, "https://www.pinterest.com/settings/security"));
                 } else if (service_name === "facebook") {
-                    automationUI.add_site(new AutomationSiteUI("Facebook", "facebook", "setup_processes_list", "logos/facebook.svg", automationUI, "https://www.facebook.com/security/2fac/setup/intro"));
+                    automationUI.add_site(new AutomationSiteUI("Facebook", "facebook", "setup_processes_list", "logos/facebook.svg", automationUI, "https://www.facebook.com"));
                 } else if (service_name === "amazon") {
                     automationUI.add_site(new AutomationSiteUI("Amazon", "amazon", "setup_processes_list", "logos/amazon.svg", automationUI, "https://www.amazon.com/a/settings/approval/setup/register"));
                 } else if (service_name === "yahoo") {
@@ -527,7 +527,7 @@ function initiate_github_setup() {
         }
     );
 }
-// END GITHUB
+//END GITHUB
 
 // START GOOGLE
 function initiate_google_setup() {
@@ -795,7 +795,7 @@ function initiate_facebook_setup() {
     );
     $("#facebook_setup_div").html(`Please wait...`);
     // chrome.windows.create({
-    //     url: "https://www.facebook.com/security/2fac/setup/intro", // "https://www.facebook.com", //
+    //     url: "https://www.facebook.com", //"https://www.facebook.com/security/2fac/setup/intro", // 
     //     focused: false,
     //     state: "minimized"
     // }, (window) => {

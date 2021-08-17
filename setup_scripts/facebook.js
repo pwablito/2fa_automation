@@ -45,6 +45,7 @@ function exitScriptWithError() {
 
 
 async function handleReceievedMessage(request) {
+    console.log(request);
     if (request.facebook_phone) {
         change(document.querySelector("[placeholder='Mobile phone number']"), request.phone);
         await timer(100);
@@ -71,12 +72,13 @@ async function handleReceievedMessage(request) {
             chrome.runtime.sendMessage({
                 facebook_get_phone: true,
             });
-        } else if (await waitUntilElementLoad(document, "[src*= 'https://www.facebook.com/qr/show/code']", 2)) {
+        } else if (await waitUntilElementLoad(document, "[src*= 'https://www.facebook.com/qr/show/code']", 4)) {
             chrome.runtime.sendMessage({
                 facebook_get_code: true,
                 type: "totp",
                 // TODO change this to `totp_seed`: see issue #7
-                totp_url: document.querySelector("[src*= 'https://www.facebook.com/qr/show/code']").src
+                totp_seed: getElementByXpath(document, "//*[contains(text(),'Or enter this code')]/../..").innerText.split("\n")[1]
+                    // totp_url: document.querySelector("[src*= 'https://www.facebook.com/qr/show/code']").src
             });
             getElementByXpath(document, "//*[contains(text(),'Continue')]/../..").click();
         } else if (document.querySelector("[type=password]")) {
@@ -85,84 +87,9 @@ async function handleReceievedMessage(request) {
                 message: "Incorrect password",
             });
         } else { exitScriptWithError(); }
-    } else if (request.facebook_sms_code) {
-        if (request.code.length != 6) {
-            chrome.runtime.sendMessage({
-                facebook_get_code: true,
-                type: "sms",
-                message: "Invalid code"
-            });
-        } else {
-            for (let index = 0; index < 6; index++) {
-                // change(document.querySelector(`html > body > div:nth-of-type(6) > div:nth-of-type(2) > div > div > div > div > div > div > div:nth-of-type(2) > div > div > div > div:nth-of-type(2) > div > div > form > input:nth-of-type(${index + 1})`), request.code[index]);
-                change(document.querySelector("[data-key='" + index + "']"), request.code[index]);
-            }
-            getElementByXpath(document, "//*[contains(text(),'Continue')]/../..").click();
-            await timer(500);
-            if (document.querySelector("[data-key='0']")) {
-                chrome.runtime.sendMessage({
-                    facebook_get_code: true,
-                    // TODO What kind of code is this? Add `type` parameter here
-                    message: "Invalid code"
-                });
-            } else {
-                // getElementByXpath(document, "//*[contains(text(),'Done')]/../..").click();
-                chrome.runtime.sendMessage({
-                    facebook_finished: true
-                });
-            }
-        }
-    } else if (request.facebook_totp_code) {
-        if (request.code.length != 6) {
-            chrome.runtime.sendMessage({
-                facebook_get_code: true,
-                type: "totp",
-                // TODO change this to `totp_seed`: see issue #7
-                totp_url: request.totp_url,
-                message: "Invalid code"
-            });
-        } else {
-            for (let index = 0; index < 6; index++) {
-                change(document.querySelector("[data-key='" + index + "']"), request.code[index]);
-            }
-            getElementByXpath(document, "//*[contains(text(),'Continue')]/../..").click();
-            await timer(500);
-            if (document.querySelector("[data-key='0']")) {
-                chrome.runtime.sendMessage({
-                    facebook_get_code: true,
-                    type: "totp",
-                    // TODO change this to `totp_seed`: see issue #7
-                    totp_url: request.totp_url,
-                    message: "Invalid code"
-                });
-            } else {
-                chrome.runtime.sendMessage({
-                    facebook_finished: true
-                });
-            }
-        }
-    } else if (request.facebook_credentials) {
-        document.querySelector("#email").value = request.login;
-        document.querySelector("#pass").value = request.password;
-        document.querySelector("[name=login]").click();
-    } else if (request.facebook_totp) {
-        getElementByXpath(document, "//*[contains(text(),'Use Authentication App')]").click();
-        if (await waitUntilElementLoad(document, "[src*= 'https://www.facebook.com/qr/show/code']", 2)) {
-            chrome.runtime.sendMessage({
-                facebook_get_code: true,
-                type: "totp",
-                // TODO change this to `totp_seed`: see issue #7
-                totp_url: document.querySelector("[src*= 'https://www.facebook.com/qr/show/code']").src
-            });
-            getElementByXpath(document, "//*[contains(text(),'Continue')]/../..").click();
-        } else if (document.querySelector("[type=password]")) {
-            chrome.runtime.sendMessage({
-                facebook_get_password: true
-            });
-        }
     } else if (request.facebook_sms) {
         getElementByXpath(document, "//*[contains(text(),'Use Text Message')]").click();
-        if (await waitUntilElementLoad(document, "[placeholder='Mobile phone number']", 1)) {
+        if (await waitUntilElementLoad(document, "[placeholder='Mobile phone number']", 2)) {
             chrome.runtime.sendMessage({
                 facebook_get_phone: true
             });
@@ -184,6 +111,87 @@ async function handleReceievedMessage(request) {
             } else { exitScriptWithError(); }
 
         } else { exitScriptWithError(); }
+    } else if (request.facebook_code) {
+        if (request.totp_seed) { // for totp
+            console.log("Entering totp");
+            if (request.code.length != 6) {
+                console.log("less than 6");
+                chrome.runtime.sendMessage({
+                    facebook_get_code: true,
+                    type: "totp",
+                    // TODO change this to `totp_seed`: see issue #7
+                    totp_seed: request.totp_seed,
+                    message: "Invalid code"
+                });
+            } else {
+                for (let index = 0; index < 6; index++) {
+                    change(document.querySelector("[data-key='" + index + "']"), request.code[index]);
+                }
+                getElementByXpath(document, "//*[contains(text(),'Continue')]/../..").click();
+                await timer(500);
+                if (document.querySelector("[data-key='0']")) {
+                    chrome.runtime.sendMessage({
+                        facebook_get_code: true,
+                        type: "totp",
+                        totp_seed: request.totp_seed,
+                        message: "Invalid code"
+                    });
+                } else {
+                    chrome.runtime.sendMessage({
+                        facebook_finished: true
+                    });
+                }
+            }
+        } else { // for sms
+            if (request.code.length != 6) {
+                chrome.runtime.sendMessage({
+                    facebook_get_code: true,
+                    type: "sms",
+                    message: "Invalid code"
+                });
+            } else {
+                for (let index = 0; index < 6; index++) {
+                    // change(document.querySelector(`html > body > div:nth-of-type(6) > div:nth-of-type(2) > div > div > div > div > div > div > div:nth-of-type(2) > div > div > div > div:nth-of-type(2) > div > div > form > input:nth-of-type(${index + 1})`), request.code[index]);
+                    change(document.querySelector("[data-key='" + index + "']"), request.code[index]);
+                }
+                getElementByXpath(document, "//*[contains(text(),'Continue')]/../..").click();
+                await timer(500);
+                if (document.querySelector("[data-key='0']")) {
+                    chrome.runtime.sendMessage({
+                        facebook_get_code: true,
+                        // TODO What kind of code is this? Add `type` parameter here
+                        message: "Invalid code"
+                    });
+                } else {
+                    // getElementByXpath(document, "//*[contains(text(),'Done')]/../..").click();
+                    chrome.runtime.sendMessage({
+                        facebook_finished: true
+                    });
+                }
+            }
+        }
+    } else if (request.facebook_credentials) {
+        document.querySelector("#email").value = request.login;
+        document.querySelector("#pass").value = request.password;
+        document.querySelector("[name=login]").click();
+    } else if (request.facebook_totp) {
+        getElementByXpath(document, "//*[contains(text(),'Use Authentication App')]").click();
+        if (await waitUntilElementLoad(document, "[src*= 'https://www.facebook.com/qr/show/code']", 4)) {
+            chrome.runtime.sendMessage({
+                facebook_get_code: true,
+                type: "totp",
+                // TODO change this to `totp_seed`: see issue #7
+                totp_seed: getElementByXpath(document, "//*[contains(text(),'Or enter this code')]/../..").innerText.split("\n")[1]
+                    // totp_url: document.querySelector("[src*= 'https://www.facebook.com/qr/show/code']").src
+            });
+            getElementByXpath(document, "//*[contains(text(),'Continue')]/../..").click();
+        } else if (document.querySelector("[type=password]")) {
+            chrome.runtime.sendMessage({
+                facebook_get_password: true
+            });
+        } else {
+            console.log("error");
+        }
     }
 }
 
@@ -197,46 +205,47 @@ chrome.runtime.onMessage.addListener(
 
 (async() => {
     try {
-        if (window.location.href.includes("facebook.com/security/2fac/settings")) {
-            // chrome.runtime.sendMessage({
-            //     facebook_finished: true,
-            //     message: "2FA is already enabled."
-            // });
+        if (window.location.href.includes("compat")) {
+            window.location.href = "https://www.facebook.com/security/2fac/setup/intro";
+        } else if (window.location.href.includes("facebook.com/security/2fac/settings")) {
+            chrome.runtime.sendMessage({
+                facebook_finished: true,
+                message: "2FA is already enabled."
+            });
         } else if (window.location.href.includes("facebook.com/security/2fac/setup/intro")) {
             await waitUntilPageLoad(document, 2);
+            let iFrameXPath = "iframe[src*='https://www.facebook.com/security/2fac/setup/intro']";
             if (window.location.href.includes("?cquick=")) {
                 // Inside iframe
                 chrome.runtime.sendMessage({
                     facebook_get_method: true,
                 });
-            } else {
-                let iFrameXPath = "iframe[src*=https]";
-                if (await waitUntilElementLoad(document, iFrameXPath, 2)) {
-                    window.location = document.querySelector(iFrameXPath).src;
-                } else { exitScriptWithError(); }
+            } else if (await waitUntilElementLoad(document, iFrameXPath, 2)) {
+                window.location = document.querySelector(iFrameXPath).src;
             }
         } else if (window.location.href.includes("facebook.com/login/reauth.php")) {
             console.log("In reauth");
             await waitUntilPageLoad(document, 2);
             if (document.querySelector("iframe[src*=https]")) {
-                    window.location = document.querySelector("iframe[src*=https]").src;
+                window.location = document.querySelector("iframe[src*='https://www.facebook.com/login/reauth.php']").src;
             } else if (await waitUntilElementLoad(document, "[type=password]", 2)) {
                 console.log("In reauth 2");
                 chrome.runtime.sendMessage({
                     facebook_get_password: true
                 });
-            } else {exitScriptWithError();}
+            } else { exitScriptWithError(); }
         } else if (window.location.href === "https://www.facebook.com/" || window.location.href === "https://www.facebook.com/?sk=welcome") {
             await waitUntilElementLoad(document, 2);
             if (document.querySelector("#email")) {
                 // Sign in, then redirect to the security page
                 chrome.runtime.sendMessage({
-                    facebook_get_credentials: true
+                    facebook_get_credentials: true,
+                    type: "email"
                 });
             } else {
                 window.location.href = "https://www.facebook.com/security/2fac/setup/intro";
             }
-        } else {exitScriptWithError();}
+        } else { exitScriptWithError(); }
     } catch (e) {
         console.log(e);
         // Deal with the fact the chain failed

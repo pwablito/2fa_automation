@@ -52,7 +52,8 @@ async function handleReceivedMessage(request) {
         if (await waitUntilElementLoad(document, "[class='error-message']", 1)) {
             chrome.runtime.sendMessage({
                 dropbox_get_credentials: true,
-                message: "Invalid credential"
+                message: "Invalid credential",
+                type: "email"
             });
         }
     } else if (request.dropbox_password) {
@@ -151,6 +152,7 @@ chrome.runtime.onMessage.addListener(
         } else if (window.location.href.includes("login")) {
             chrome.runtime.sendMessage({
                 dropbox_get_credentials: true,
+                type: "email"
             });
         }
     } catch (e) {

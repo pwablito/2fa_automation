@@ -77,17 +77,19 @@ async function handleReceivedMessage(request) {
         if (await waitUntilElementLoad(document, ".authenticator-QRImage", 2)) {
             chrome.runtime.sendMessage({
                 linkedin_get_code: true,
-                totp_url: document.querySelector(".authenticator-QRImage").src,
+                type: 'totp',
+                totp_seed: document.querySelector(".authenticator-key").textContent,
             });
         }
         //sms
         if (await waitUntilElementLoad(document, "input[id='enter-code']", 2) && document.querySelector(".authenticator-QRImage") == null) {
             chrome.runtime.sendMessage({
-                linkedin_get_code: true
+                linkedin_get_code: true,
+                type: 'sms'
             });
         }
 
-    } else if (request.linkedin_start_totp) {
+    } else if (request.linkedin_totp) {
         getElementByXpath(document, "//select[contains(@id, 'two-step-method')]").selectedIndex = 0;
         document.querySelector(".continue").click();
 
@@ -99,11 +101,12 @@ async function handleReceivedMessage(request) {
         if (await waitUntilElementLoad(document, ".authenticator-QRImage", 2)) {
             chrome.runtime.sendMessage({
                 linkedin_get_code: true,
-                totp_url: document.querySelector(".authenticator-QRImage").src,
+                type: 'totp',
+                totp_seed: document.querySelector(".authenticator-key").textContent,
             });
         }
 
-    } else if (request.linkedin_start_sms) {
+    } else if (request.linkedin_sms) {
         getElementByXpath(document, "//select[contains(@id, 'two-step-method')]").selectedIndex = 1;
         document.querySelector(".continue").click();
 
@@ -134,7 +137,7 @@ async function handleReceivedMessage(request) {
                 chrome.runtime.sendMessage({
                     linkedin_get_code: true,
                     linkedin_incorrect_TOTP_code: true,
-                    totp_url: document.querySelector(".authenticator-QRImage").src,
+                    totp_seed: document.querySelector(".authenticator-key").textContent,
                 })
             }
         }
@@ -200,6 +203,7 @@ chrome.runtime.onMessage.addListener(
             } else {
                 chrome.runtime.sendMessage({
                     linkedin_get_credentials: true,
+                    type: "email"
                 });
             }
 

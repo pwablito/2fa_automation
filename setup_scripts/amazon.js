@@ -43,6 +43,7 @@ function exitScriptWithError() {
 }
 
 async function handleReceivedMessage(request) {
+    console.log(request);
     if (request.amazon_password) {
         if (window.location.href.includes("amazon.com/ap/cnep")) {
             document.querySelector("#ap_password").value = request.password;
@@ -57,7 +58,7 @@ async function handleReceivedMessage(request) {
     } else if (request.amazon_email) {
         document.querySelector("#ap_email").value = request.email;
         document.querySelector("input#continue").click()
-    } else if (request.amazon_phone_number) {
+    } else if (request.amazon_phone) {
         if (document.querySelector("#mfa-cvf-embedded-content") != null) {
             document.querySelector("input[name='cvf_phone_num']").value = request.phone;
             document.querySelector("input[name='cvf_action']").click();
@@ -80,8 +81,24 @@ async function handleReceivedMessage(request) {
                 document.querySelector("#auth-verification-ok-announce").click();
             }
         }
-    } else if (request.amazon_sms_code) {
-        if (window.location.href.includes("amazon.com/ap/pv")) {
+    } else if (request.amazon_code) {
+        if(document.querySelector("#ch-auth-app-code-input").offsetParent!=null){
+            document.querySelector("#ch-auth-app-code-input").value = request.code;
+            document.querySelector("#ch-auth-app-submit").click();
+            if (await waitUntilElementLoad(document, "#ch-auth-app-form-error", 2)) {
+                if(document.querySelector("#ch-auth-app-form-error").textContent != "An unexpected error has occured. "){
+                    console.log("incorrect code");
+                    let unformattedText = document.querySelector("#sia-auth-app-formatted-secret").textContent;
+                    let formattedText = unformattedText.replace(/ /g,'');
+                    chrome.runtime.sendMessage({
+                        amazon_get_code: true,
+                        type: "totp",
+                        totp_seed: formattedText, 
+                        message: document.querySelector("#ch-auth-app-form-error").textContent
+                    });
+                }
+            }
+        } else if (window.location.href.includes("amazon.com/ap/pv")) {
             document.querySelector("#auth-pv-enter-code").value = request.code;
             document.querySelector("#auth-verify-button").click();
         } else if (window.location.href.includes("amazon.com/ap/mfa")) {
@@ -100,19 +117,6 @@ async function handleReceivedMessage(request) {
                 });
             }
         }
-    } else if (request.amazon_totp_code) {
-        document.querySelector("#ch-auth-app-code-input").value = request.code;
-        document.querySelector("#ch-auth-app-submit").click();
-        if (await waitUntilElementLoad(document, "#ch-auth-app-form-error", 2)) {
-            console.log("incorrect code");
-            chrome.runtime.sendMessage({
-                amazon_get_code: true,
-                type: "totp",
-                // TODO Need to either implement raw urls in the backend or else convert this to a seed and send it in `totp_seed`
-                // See issue #7 for more details
-                totp_url: document.querySelector("div.a-accordion-active img").src
-            });
-        }
     } else if (request.amazon_sms) {
         chrome.runtime.sendMessage({
             amazon_get_phone: true,
@@ -121,13 +125,20 @@ async function handleReceivedMessage(request) {
         let elem = document.querySelector("#sia-otp-accordion-totp-header");
         elem.querySelector(".a-accordion-radio").click();
         if (await waitUntilElementLoad(document, "div.a-accordion-active img", 2)) {
+            document.querySelector("#sia-auth-app-cant-scan-link").click()
+        if(await waitUntilElementLoad(document, "#sia-auth-app-formatted-secret", 2)){
+            let unformattedText = document.querySelector("#sia-auth-app-formatted-secret").textContent;
+            let formattedText = unformattedText.replace(/ /g,'');
+
             chrome.runtime.sendMessage({
                 amazon_get_code: true,
                 type: "totp",
                 // TODO Need to either implement raw urls in the backend or else convert this to a seed and send it in `totp_seed`
                 // See issue #7 for more details
-                totp_url: document.querySelector("div.a-accordion-active img").src
+                totp_seed: formattedText
             });
+        }
+            
         }
 
     }

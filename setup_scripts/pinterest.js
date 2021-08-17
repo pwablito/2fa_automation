@@ -53,6 +53,7 @@ if (window.location.href.includes("pinterest.com/settings/security")) {
         if (document.querySelector("#email")) {
             chrome.runtime.sendMessage({
                 pinterest_get_credentials: true,
+                type: "email"
             });
         } else {
             chrome.runtime.sendMessage({

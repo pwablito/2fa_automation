@@ -52,7 +52,8 @@ async function handleReceivedMessage(request) {
             if (document.querySelector("[class$=errorMessage]").textContent !== "") {
                 chrome.runtime.sendMessage({
                     reddit_get_credentials: true,
-                    message: "Invalid credentials"
+                    message: "Invalid credentials",
+                    type: "username"
                 });
             }
         }, 2000);
@@ -72,9 +73,13 @@ async function handleReceivedMessage(request) {
                     message: "2FA is already enabled.",
                     message_for_dev: window.location.href
                 });
-            } else { exitScriptWithError(); }
+            } else {
+                chrome.runtime.sendMessage({
+                    reddit_finished: true
+                });
+            }
         }, 2000);
-    } 
+    }
 }
 
 
@@ -99,6 +104,7 @@ chrome.runtime.onMessage.addListener(
             if (document.querySelector("[type=password]")) {
                 chrome.runtime.sendMessage({
                     reddit_get_credentials: true,
+                    type: "username"
                 });
             } else {
                 window.location.href = "https://www.reddit.com/2fa/disable";
