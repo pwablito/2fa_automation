@@ -183,7 +183,7 @@ class AutomationSiteUI {
             `
         );
         this.controller.disable_injection(this.identity_prefix);
-        //this.close_window();
+        this.close_window();
     }
 
     get_credentials(sender, request) {
@@ -313,6 +313,7 @@ class AutomationSiteUI {
                 totp_url = request.totp_url;
             } else {
                 totp_url = `otpauth://totp/${this.name}?secret=${request.totp_seed}`;
+                console.log(totp_url);
             }
             $(`#${this.identity_prefix}_ui_div`).html(
                 `
@@ -390,5 +391,7 @@ class AutomationSiteUI {
 }
 
 function place_qr_code(url, div_id) {
+    console.log(url);
+    console.log(div_id);
     new QRCode(document.getElementById(div_id), url);
 }

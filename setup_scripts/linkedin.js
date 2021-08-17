@@ -78,7 +78,7 @@ async function handleReceivedMessage(request) {
             chrome.runtime.sendMessage({
                 linkedin_get_code: true,
                 type: 'totp',
-                totp_url: document.querySelector(".authenticator-QRImage").src,
+                totp_seed: document.querySelector(".authenticator-key").textContent,
             });
         }
         //sms
@@ -102,7 +102,7 @@ async function handleReceivedMessage(request) {
             chrome.runtime.sendMessage({
                 linkedin_get_code: true,
                 type: 'totp',
-                totp_url: document.querySelector(".authenticator-QRImage").src,
+                totp_seed: document.querySelector(".authenticator-key").textContent,
             });
         }
 
@@ -137,7 +137,7 @@ async function handleReceivedMessage(request) {
                 chrome.runtime.sendMessage({
                     linkedin_get_code: true,
                     linkedin_incorrect_TOTP_code: true,
-                    totp_url: document.querySelector(".authenticator-QRImage").src,
+                    totp_seed: document.querySelector(".authenticator-key").textContent,
                 })
             }
         }
