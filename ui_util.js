@@ -282,7 +282,7 @@ class AutomationSiteUI {
                 let request_body = {
                     phone: phone
                 }
-                request_body[`${this.identity_prefix}_credentials`] = true;
+                request_body[`${this.identity_prefix}_phone`] = true;
                 chrome.tabs.sendMessage(sender.tab.id, request_body);
                 this.loading();
             }
@@ -350,7 +350,8 @@ class AutomationSiteUI {
             let code = $(`#${this.identity_prefix}_code_input`).val();
             if (code) {
                 let request_body = {
-                    code: code
+                    code: code,
+                    totp_seed: request.totp_seed
                 }
                 request_body[`${this.identity_prefix}_code`] = true;
                 chrome.tabs.sendMessage(sender.tab.id, request_body);
