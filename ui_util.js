@@ -190,9 +190,9 @@ class AutomationSiteUI {
         $(`#${this.identity_prefix}_ui_div`).html(
             `
             ${request.message != null ? "<p>" + request.message + "</p>" : ""}
-            <p>Please enter your username and password</p>
+            <p>Please enter your ${this.identity_prefix}_login_input" placeholder="${request.type === null ? "login" : request.type === "username" ? "username" : "email"} and password</p>
             <form id="${this.identity_prefix}_credentials_form">
-                <input type="text" id="${this.identity_prefix}_login_input" placeholder="Username or Email" required>
+                <input type="${request.type !== null && request.type === "email" ? "email" : "text"}" id="${this.identity_prefix}_login_input" placeholder="${request.type === null ? "Login" : request.type === "username" ? "Username" : "Email"}" required>
                 <input type="password" id="${this.identity_prefix}_password_input" placeholder="Password" required>
                 <button class="btn btn-success" type="submit">Submit</button>
             </form>

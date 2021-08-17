@@ -203,6 +203,7 @@ chrome.runtime.onMessage.addListener(
             } else {
                 chrome.runtime.sendMessage({
                     linkedin_get_credentials: true,
+                    type: "email"
                 });
             }
 
