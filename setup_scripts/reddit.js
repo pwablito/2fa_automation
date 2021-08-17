@@ -46,7 +46,7 @@ function exitScriptWithError() {
 
 async function handleReceivedMessage(request) {
     if (request.reddit_credentials) {
-        document.querySelector("#[name=username]").value = request.login;
+        document.querySelector("[name=username]").value = request.login;
         document.querySelector("[type=password]").value = request.password;
         getElementByXpath(document, "//button[contains(text(),'Log In')]").click();
         setTimeout(() => {
