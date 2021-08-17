@@ -22,7 +22,7 @@ $("#disable_accounts_button").click(() => {
                 } else if (service_name === "facebook") {
                     automationUI.add_site(new AutomationSiteUI("Facebook", "facebook", "disable_processes_list", "logos/facebook.svg", automationUI, "https://www.facebook.com/security/2fac/setup/intro"));
                 } else if (service_name === "amazon") {
-                    automationUI.add_site(new AutomationSiteUI("Amazon", "amazon", "disable_processes_list", "logos/amazon.svg", automationUI, "https://www.amazon.com/a/settings/approval/setup/register"));
+                    automationUI.add_site(new AmazonUI("Amazon", "amazon", "disable_processes_list", "logos/amazon.svg", automationUI, "https://www.amazon.com/a/settings/approval/setup/register"));
                 } else if (service_name === "yahoo") {
                     automationUI.add_site(new AutomationSiteUI("Yahoo", "yahoo", "disable_processes_list", "logos/yahoo.svg", automationUI, "https://login.yahoo.com/myaccount/security/two-step-verification"));
                 } else if (service_name === "dropbox") {
