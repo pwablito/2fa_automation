@@ -92,7 +92,7 @@ class AutomationSiteUI {
     }
 
     register_handler(suffix, handler) {
-        this.handlers.push({ suffix: suffix, handler: handler });
+        this.handlers.push({ suffix: suffix, handler: handler, context: this });
 
     }
 
@@ -139,7 +139,7 @@ class AutomationSiteUI {
                     for (const handler of ui.handlers) {
                         if (request[`${ui.identity_prefix}_${handler.suffix}`]) {
                             consumed_request = true;
-                            handler.handler(sender, request);
+                            handler.handler(sender, request, handler.context);
                             if (handler.suffix === "error" || handler.suffix === "finished") {
                                 chrome.runtime.onMessage.removeListener(listener);
                             }
@@ -175,23 +175,23 @@ class AutomationSiteUI {
         );
     }
 
-    finished(sender, request) {
-        $(`#${this.identity_prefix}_ui_div`).html(
+    finished(sender, request, context) {
+        $(`#${context.identity_prefix}_ui_div`).html(
             `
             ${request.message != null ? "<p>" + request.message + "</p>" : ""}
-            <p>Finished automation for ${this.name}</p>
+            <p>Finished automation for ${context.name}</p>
             `
         );
-        this.controller.disable_injection(this.identity_prefix);
-        this.close_window();
+        context.controller.disable_injection(context.identity_prefix);
+        context.close_window();
     }
 
     request_error(request) {
         this.error(`Got invalid request: ${JSON.stringify(request)}`);
     }
 
-    error_handler(sender, request) {
-        this.error(request.message);
+    error_handler(_, request, context) {
+        context.error(request.message);
     }
 
     error(message) {
@@ -204,125 +204,125 @@ class AutomationSiteUI {
         this.close_window();
     }
 
-    get_credentials(sender, request) {
-        $(`#${this.identity_prefix}_ui_div`).html(
+    get_credentials(sender, request, context) {
+        $(`#${context.identity_prefix}_ui_div`).html(
             `
             ${request.message != null ? "<p>" + request.message + "</p>" : ""}
-            <p>Please enter your ${request.type === null ? "login" : request.type === "username" ? "username" : "email"} and password for ${this.name}</p>
-            <form id="${this.identity_prefix}_credentials_form">
-                <input type="${request.type !== null && request.type === "email" ? "email" : "text"}" id="${this.identity_prefix}_login_input" placeholder="${request.type === null ? "Login" : request.type === "username" ? "Username" : "Email"}" required>
-                <input type="password" id="${this.identity_prefix}_password_input" placeholder="Password" required>
+            <p>Please enter your ${request.type === null ? "login" : request.type === "username" ? "username" : "email"} and password for ${context.name}</p>
+            <form id="${context.identity_prefix}_credentials_form">
+                <input type="${request.type !== null && request.type === "email" ? "email" : "text"}" id="${context.identity_prefix}_login_input" placeholder="${request.type === null ? "Login" : request.type === "username" ? "Username" : "Email"}" required>
+                <input type="password" id="${context.identity_prefix}_password_input" placeholder="Password" required>
                 <button class="btn btn-success" type="submit">Submit</button>
             </form>
             `
         );
-        $(`#${this.identity_prefix}_credentials_form`).submit((e) => {
+        $(`#${context.identity_prefix}_credentials_form`).submit((e) => {
             e.preventDefault();
-            let login = $(`#${this.identity_prefix}_login_input`).val();
-            let password = $(`#${this.identity_prefix}_password_input`).val();
+            let login = $(`#${context.identity_prefix}_login_input`).val();
+            let password = $(`#${context.identity_prefix}_password_input`).val();
             if (login && password) {
                 let request_body = {
                     login: login,
                     password: password
                 }
-                request_body[`${this.identity_prefix}_credentials`] = true;
+                request_body[`${context.identity_prefix}_credentials`] = true;
                 chrome.tabs.sendMessage(sender.tab.id, request_body);
-                this.loading();
+                context.loading();
             }
         });
     }
 
-    get_password(sender, request) {
-        $(`#${this.identity_prefix}_ui_div`).html(
+    get_password(sender, request, context) {
+        $(`#${context.identity_prefix}_ui_div`).html(
             `
             ${request.message != null ? "<p>" + request.message + "</p>" : ""}
             <p>Please enter ${request.username != null ? "the password for " + request.username : "your password"}</p>
-            <form id="${this.identity_prefix}_password_form">
-            <input type="password" id="${this.identity_prefix}_password_input" placeholder="Password" required>
+            <form id="${context.identity_prefix}_password_form">
+            <input type="password" id="${context.identity_prefix}_password_input" placeholder="Password" required>
             <button class="btn btn-success" type="submit">Submit</button>
             </form>
             `
         );
-        $(`#${this.identity_prefix}_password_form`).submit((e) => {
+        $(`#${context.identity_prefix}_password_form`).submit((e) => {
             e.preventDefault();
-            let password = $(`#${this.identity_prefix}_password_input`).val();
+            let password = $(`#${context.identity_prefix}_password_input`).val();
             if (password) {
                 let request_body = {
                     password: password
                 }
-                request_body[`${this.identity_prefix}_password`] = true;
+                request_body[`${context.identity_prefix}_password`] = true;
                 chrome.tabs.sendMessage(sender.tab.id, request_body);
-                this.loading();
+                context.loading();
             }
         });
     }
 
-    get_email(sender, request) {
-        $(`#${this.identity_prefix}_ui_div`).html(
+    get_email(sender, request, context) {
+        $(`#${context.identity_prefix}_ui_div`).html(
             `
             ${request.message != null ? "<p>" + request.message + "</p>" : ""}
-            <p>Please enter your email for ${this.name}</p>
-            <form id="${this.identity_prefix}_credentials_form">
-                <input type="email" id="${this.identity_prefix}_email_input" placeholder="Email" required>
+            <p>Please enter your email for ${context.name}</p>
+            <form id="${context.identity_prefix}_credentials_form">
+                <input type="email" id="${context.identity_prefix}_email_input" placeholder="Email" required>
                 <button class="btn btn-success" type="submit">Submit</button>
             </form>
             `
         );
-        $(`#${this.identity_prefix}_credentials_form`).submit((e) => {
+        $(`#${context.identity_prefix}_credentials_form`).submit((e) => {
             e.preventDefault();
-            let email = $(`#${this.identity_prefix}_email_input`).val();
+            let email = $(`#${context.identity_prefix}_email_input`).val();
             if (email) {
                 let request_body = {
                     email: email
                 }
-                request_body[`${this.identity_prefix}_email`] = true;
+                request_body[`${context.identity_prefix}_email`] = true;
                 chrome.tabs.sendMessage(sender.tab.id, request_body);
-                this.loading();
+                context.loading();
             }
         });
     }
 
-    get_phone(sender, request) {
-        $(`#${this.identity_prefix}_ui_div`).html(
+    get_phone(sender, request, context) {
+        $(`#${context.identity_prefix}_ui_div`).html(
             `
             ${request.message != null ? "<p>" + request.message + "</p>" : ""}
-            <p>Please enter your phone number to setup 2FA for ${this.name}</p>
-            <form id="${this.identity_prefix}_phone_form">
-                <input type="tel" id="${this.identity_prefix}_phone_input" placeholder="Phone number" required>
+            <p>Please enter your phone number to setup 2FA for ${context.name}</p>
+            <form id="${context.identity_prefix}_phone_form">
+                <input type="tel" id="${context.identity_prefix}_phone_input" placeholder="Phone number" required>
                 <button class="btn btn-success" type="submit">Submit</button>
             </form>
             `
         );
-        $(`#${this.identity_prefix}_phone_form`).submit((e) => {
+        $(`#${context.identity_prefix}_phone_form`).submit((e) => {
             e.preventDefault();
-            let phone = $(`#${this.identity_prefix}_phone_input`).val();
+            let phone = $(`#${context.identity_prefix}_phone_input`).val();
             if (phone) {
                 let request_body = {
                     phone: phone
                 }
-                request_body[`${this.identity_prefix}_phone`] = true;
+                request_body[`${context.identity_prefix}_phone`] = true;
                 chrome.tabs.sendMessage(sender.tab.id, request_body);
-                this.loading();
+                context.loading();
             }
         });
     }
 
-    get_code(sender, request) {
+    get_code(sender, request, context) {
         if (request.type === null) {
-            $(`#${this.identity_prefix}_ui_div`).html(
+            $(`#${context.identity_prefix}_ui_div`).html(
                 // This usually happens when authenticating for a disable script- that's why the wording is vague. This is a catch-all for any 2fa code method that is already setup
                 `
                 ${request.message != null ? "<p>" + request.message + "</p>" : ""}
-                <p>Please enter your 2FA code for ${this.name}</p>
-                <form id="${this.identity_prefix}_code_form">
-                    <input type="text" id="${this.identity_prefix}_code_input" placeholder="Code" required>
+                <p>Please enter your 2FA code for ${context.name}</p>
+                <form id="${context.identity_prefix}_code_form">
+                    <input type="text" id="${context.identity_prefix}_code_input" placeholder="Code" required>
                     <button class="btn btn-success" type="submit">Submit</button>
                 </form>
                 `
             );
         } else if (request.type === "totp") {
             if (!(request.totp_seed || request.totp_url)) {
-                this.error("TOTP seed not provided");
+                context.error("TOTP seed not provided");
                 return;
             }
 
@@ -330,73 +330,73 @@ class AutomationSiteUI {
             if (request.totp_url) {
                 totp_url = request.totp_url;
             } else {
-                totp_url = `otpauth://totp/${this.name}?secret=${request.totp_seed}`;
+                totp_url = `otpauth://totp/${context.name}?secret=${request.totp_seed}`;
                 console.log(totp_url);
             }
-            $(`#${this.identity_prefix}_ui_div`).html(
+            $(`#${context.identity_prefix}_ui_div`).html(
                 `
                 ${request.message != null ? "<p>" + request.message + "</p>" : ""}
                 <p>Download Google Authenticator, scan this QR code, and enter the generated code</p>
                 <div class="row">
                     <div class="col-6">
-                        <form id="${this.identity_prefix}_code_form">This usually happens when authenticating for a disable script- that's why the wording is vague.
+                        <form id="${context.identity_prefix}_code_form">This usually happens when authenticating for a disable script- that's why the wording is vague.
                 `
             );
-            new QRCode(document.getElementById(`${this.identity_prefix}_qr_div`), totp_url);
+            new QRCode(document.getElementById(`${context.identity_prefix}_qr_div`), totp_url);
         } else if (request.type === "sms") {
-            $(`#${this.identity_prefix}_ui_div`).html(
+            $(`#${context.identity_prefix}_ui_div`).html(
                 `
                 ${request.message != null ? "<p>" + request.message + "</p>" : ""}
                 <p>Please enter the code sent to your phone via SMS</p>
-                <form id="${this.identity_prefix}_code_form">
-                    <input type="text" id="${this.identity_prefix}_code_input" placeholder="Code" required>
+                <form id="${context.identity_prefix}_code_form">
+                    <input type="text" id="${context.identity_prefix}_code_input" placeholder="Code" required>
                     <button class="btn btn-success" type="submit">Submit</button>
                 </form>
                 `
             );
         }
-        $(`#${this.identity_prefix}_code_form`).submit((e) => {
+        $(`#${context.identity_prefix}_code_form`).submit((e) => {
             e.preventDefault();
-            let code = $(`#${this.identity_prefix}_code_input`).val();
+            let code = $(`#${context.identity_prefix}_code_input`).val();
             if (code) {
                 let request_body = {
                     code: code,
                     totp_seed: request.totp_seed
                 }
-                request_body[`${this.identity_prefix}_code`] = true;
+                request_body[`${context.identity_prefix}_code`] = true;
                 chrome.tabs.sendMessage(sender.tab.id, request_body);
-                this.loading();
+                context.loading();
             }
         });
     }
 
-    get_method(sender, request) {
-        $(`#${this.identity_prefix}_ui_div`).html(
+    get_method(sender, request, context) {
+        $(`#${context.identity_prefix}_ui_div`).html(
             `
             ${request.message != null ? "<p>" + request.message + "</p>" : ""}
             <div class="row">
                 <div class="col-6">
-                    <p>Please choose a type of 2FA to set up for ${this.name}</p>
+                    <p>Please choose a type of 2FA to set up for ${context.name}</p>
                 </div>
                 <div class="col-6">
-                    <button class="btn btn-success" id="${this.identity_prefix}_totp_button">TOTP</button>
+                    <button class="btn btn-success" id="${context.identity_prefix}_totp_button">TOTP</button>
                     <br><br>
-                    <button class="btn btn-success" id="${this.identity_prefix}_sms_button">SMS</button>
+                    <button class="btn btn-success" id="${context.identity_prefix}_sms_button">SMS</button>
                 </div>
             </div>
             `
         );
-        $(`#${this.identity_prefix}_totp_button`).click(() => {
+        $(`#${context.identity_prefix}_totp_button`).click(() => {
             let request_body = {}
-            request_body[`${this.identity_prefix}_totp`] = true;
+            request_body[`${context.identity_prefix}_totp`] = true;
             chrome.tabs.sendMessage(sender.tab.id, request_body);
-            this.loading();
+            context.loading();
         });
-        $(`#${this.identity_prefix}_sms_button`).click(() => {
+        $(`#${context.identity_prefix}_sms_button`).click(() => {
             let request_body = {}
-            request_body[`${this.identity_prefix}_sms`] = true;
+            request_body[`${context.identity_prefix}_sms`] = true;
             chrome.tabs.sendMessage(sender.tab.id, request_body);
-            this.loading();
+            context.loading();
         });
     }
 }
@@ -404,10 +404,11 @@ class AutomationSiteUI {
 class AmazonUI extends AutomationSiteUI {
     constructor(name, identity_prefix, parent_id, logo_file, controller, start_url, incognito = false) {
         super(name, identity_prefix, parent_id, logo_file, controller, start_url, incognito);
-        this.register_handler("approval", this.approval);
+        this.register_handler("approve_login", this.approve_login);
     }
 
-    approval(sender, request) {
+    approve_login(sender, request, context) {
+        alert("Amazon approval function");
         // TODO implement a UI for sending the user to their email to approve the authentication request
     }
 }
