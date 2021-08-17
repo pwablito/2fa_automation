@@ -76,6 +76,24 @@ class AutomationSiteUI {
         this.start_url = start_url;
         this.incognito = incognito
         this.window_id = null
+        this.handlers = []
+        this.init_default_handlers()
+    }
+
+    init_default_handlers() {
+        this.register_handler("get_credentials", this.get_credentials);
+        this.register_handler("get_password", this.get_password);
+        this.register_handler("get_email", this.get_email);
+        this.register_handler("get_phone", this.get_phone);
+        this.register_handler("get_code", this.get_code);
+        this.register_handler("get_method, this.get_method");
+        this.register_handler("error", this.error_handler);
+        this.register_handler("finished", this.finished);
+    }
+
+    register_handler(suffix, handler) {
+        this.handlers.push({ suffix: suffix, handler: handler });
+
     }
 
     initialize() {
@@ -117,27 +135,19 @@ class AutomationSiteUI {
                 }
                 if (is_this_site) {
                     console.log(request);
-                    if (request[`${ui.identity_prefix}_get_credentials`]) {
-                        ui.get_credentials(sender, request);
-                    } else if (request[`${ui.identity_prefix}_get_password`]) {
-                        ui.get_password(sender, request);
-                    } else if (request[`${ui.identity_prefix}_get_email`]) {
-                        ui.get_email(sender, request);
-                    } else if (request[`${ui.identity_prefix}_get_phone`]) {
-                        ui.get_phone(sender, request);
-                    } else if (request[`${ui.identity_prefix}_get_code`]) {
-                        ui.get_code(sender, request);
-                    } else if (request[`${ui.identity_prefix}_get_method`]) {
-                        ui.get_method(sender, request);
-                    } else if (request[`${ui.identity_prefix}_finished`]) {
-                        chrome.runtime.onMessage.removeListener(listener);
-                        ui.finished(sender, request);
-                    } else if (request[`${ui.identity_prefix}_error`]) {
+                    let consumed_request = false;
+                    for (const handler of ui.handlers) {
+                        if (request[`${ui.identity_prefix}_${handler.suffix}`]) {
+                            consumed_request = true;
+                            handler.handler(sender, request);
+                            if (handler.suffix === "error" || handler.suffix === "finished") {
+                                chrome.runtime.onMessage.removeListener(listener);
+                            }
+                        }
+                    }
+                    if (!consumed_request) {
                         chrome.runtime.onMessage.removeListener(listener);
                         ui.request_error(request);
-                    } else {
-                        chrome.runtime.onMessage.removeListener(listener);
-                        ui.request_error(`Got invalid request: ${JSON.stringify(request)}`);
                     }
                 }
             }
@@ -177,7 +187,11 @@ class AutomationSiteUI {
     }
 
     request_error(request) {
-        this.error(JSON.stringify(request));
+        this.error(`Got invalid request: ${JSON.stringify(request)}`);
+    }
+
+    error_handler(sender, request) {
+        this.error(request.message);
     }
 
     error(message) {
