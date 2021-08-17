@@ -306,8 +306,8 @@ class AutomationSiteUI {
                 this.error("TOTP seed not provided", sender);
                 return;
             }
-            
-            let totp_url_src = request.totp_seed != null ? "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=otpauth://totp/" +this.name + "?secret=" + request.totp_seed : request.totp_url;
+
+            let totp_url_src = request.totp_seed != null ? "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=otpauth://totp/" + this.name + "?secret=" + request.totp_seed : request.totp_url;
             console.log(totp_url_src);
             $(`#${this.identity_prefix}_ui_div`).html(
                 `
@@ -381,4 +381,8 @@ class AutomationSiteUI {
             this.loading();
         });
     }
+}
+
+function place_qr_code(url, div_id) {
+    new QRCode(document.getElementById(div_id), url);
 }
