@@ -26,11 +26,11 @@ $("#setup_accounts_button").click(() => {
                 } else if (service_name === "amazon") {
                     automationUI.add_site(new AmazonUI("Amazon", "amazon", "setup_processes_list", "logos/amazon.svg", automationUI, "https://www.amazon.com/a/settings/approval/setup/register"));
                 } else if (service_name === "yahoo") {
-                    automationUI.add_site(new AutomationSiteUI("Yahoo", "yahoo", "setup_processes_list", "logos/yahoo.svg", automationUI, "https://login.yahoo.com/myaccount/security/two-step-verification"));
+                    automationUI.add_site(new YahooUI("Yahoo", "yahoo", "setup_processes_list", "logos/yahoo.svg", automationUI, "https://login.yahoo.com/myaccount/security/two-step-verification", true));
                 } else if (service_name === "dropbox") {
                     automationUI.add_site(new AutomationSiteUI("Dropbox", "dropbox", "setup_processes_list", "logos/dropbox.svg", automationUI, "https://www.dropbox.com/login"));
                 } else if (service_name === "linkedin") {
-                    automationUI.add_site(new AutomationSiteUI("Linkedin", "linkedin", "setup_processes_list", "logos/linkedin.svg", automationUI, "https://www.linkedin.com/psettings/two-step-verification"));
+                    automationUI.add_site(new AutomationSiteUI("Linkedin", "linkedin", "setup_processes_list", "logos/linkedin.svg", automationUI, "https://www.linkedin.com/psettings/two-step-verification", true));
                 } else {
                     throw "Undefined service: '" + service_name + "'";
                 }

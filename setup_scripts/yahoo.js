@@ -75,6 +75,11 @@ async function handleReceivedMessage(request) {
             }
         }
     } else if (request.yahoo_code) {
+        if(request.login_challenge){
+            document.querySelector("#verification-code-field").value = request.code; 
+            document.querySelector("#verify-code-button").click();
+            return;
+        }
         if (request.yahoo_incorrect_totp) {
             if (await waitUntilElementLoad(document, "#btnTsvAuthenticatorVerifyCode", 2)) {
                 let elem = document.querySelector(".code-input-container");
@@ -120,7 +125,11 @@ async function handleReceivedMessage(request) {
                             type: "totp",
                             totp_url: request.totp_url
                         });
-                    }
+                    } 
+                } else {
+                    chrome.runtime.sendMessage({
+                        yahoo_finished: true,
+                    });
                 }
             }
             //SMS page
@@ -141,11 +150,29 @@ async function handleReceivedMessage(request) {
                             yahoo_error_code: "incorrectCode",
                         });
                     }
+                } else {
+                    chrome.runtime.sendMessage({
+                        yahoo_finished: true,
+                    });
                 }
             }
         }
     } else if (request.yahoo_sms) {
-        document.querySelector("#tsvPhone").click();
+        if(request.change_method){
+            document.querySelector("#btnTsvTurnOff").click();
+            if(await waitUntilElementLoad(document, "a[href^='/myaccount/security/two-step-verification']", 2)){
+                document.querySelector("a[href^='/myaccount/security/two-step-verification']").click();
+                //TODO Element is clicked and page loads but the element doesn't get clicked
+                if(await waitUntilElementLoad(document, "#btnTsvIntro", 2)){
+                    document.querySelector("#btnTsvIntro").click()
+                }
+            }
+        
+        } 
+        if(await waitUntilElementLoad(document, "#tsvPhone", 2)){
+            document.querySelector("#tsvPhone").click();
+        }
+        
         if (await waitUntilElementLoad(document, "#lnkBtnShowSendCodeForm", 2)) {
             document.querySelector("#lnkBtnShowSendCodeForm").click();
             chrome.runtime.sendMessage({
@@ -154,6 +181,9 @@ async function handleReceivedMessage(request) {
         }
     } else if (request.yahoo_totp) {
         console.log("Told to start totp");
+        if(request.change_method){
+            return;
+        } 
         document.querySelector("#tsvTOTP").click();
         if (await waitUntilElementLoad(document, "#btnAuthenticatorIntro", 2)) {
             document.querySelector("#btnAuthenticatorIntro").click();
@@ -200,21 +230,32 @@ chrome.runtime.onMessage.addListener(
                                 yahoo_get_method: true,
                             });
                         }
-                    }
+                    } else if(document.querySelector("#btnTsvTurnOff")){
+                        if(document.querySelector(".tsv-authenticator").textContent == "Authenticator App  ON  "){
+                            chrome.runtime.sendMessage({
+                                yahoo_change_method: true,
+                                method_enabled: 'totp'
+                            });
+                        }
+                    }                          
                 } else {
-                    chrome.runtime.sendMessage({
-                        yahoo_finished: true,
-                    });
+                    window.location = "https://login.yahoo.com/myaccount/security/two-step-verification";
                 }
             } else if (window.location.href.includes("phone-verify")) {
                 chrome.runtime.sendMessage({
-                    yahoo_error: true,
-                    message: "2FA already enabled"
+                    yahoo_get_code: true,
+                    method: 'sms',
+                    login_challenge: true
+                });
+            } else if(window.location.href.includes("account/challenge/tsv-authenticator")) {
+                chrome.runtime.sendMessage({
+                    yahoo_get_code: true,
+                    type: 'totp',
+                    login_challenge: true
                 });
             } else if (window.location.href.includes("recaptcha")) {
                 chrome.runtime.sendMessage({
-                    yahoo_error: true,
-                    message: "recaptcha required"
+                    yahoo_complete_captcha: true,
                 });
             } else if (window.location.href.includes("account/challenge/challenge-selector")) {
                 document.querySelector("button[type='submit']").click()

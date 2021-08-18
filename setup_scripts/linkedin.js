@@ -47,11 +47,15 @@ async function handleReceivedMessage(request) {
         document.querySelector("#username").value = request.login;
         document.querySelector("#password").value = request.password;
         getElementByXpath(document, "//button[contains(@aria-label, 'Sign in')]").click()
-        if (await waitUntilElementLoad(document, "#error-for-password", 2)) {
-            chrome.runtime.sendMessage({
-                linkedin_incorrect_password: true
-            })
+        if(await timer(2000)){
+            if (await waitUntilElementLoad(document, "#error-for-password", 2)) {
+                chrome.runtime.sendMessage({
+                    linkedin_incorrect_password: true,
+                    message: 1
+                })
+            }
         }
+        
     } else if (request.linkedin_password) {
         if (document.querySelector("#verify-password")) {
             document.querySelector("#verify-password").value = request.password;
@@ -59,7 +63,8 @@ async function handleReceivedMessage(request) {
 
             if (await waitUntilElementLoad(document, "p[id='incorrect-password-error']", 2)) {
                 chrome.runtime.sendMessage({
-                    linkedin_incorrect_password: true
+                    linkedin_incorrect_password: true,
+                    message: 2
                 })
             }
         } else {
@@ -67,7 +72,8 @@ async function handleReceivedMessage(request) {
             getElementByXpath(document, "//button[contains(@aria-label, 'Sign in')]").click()
             if (await waitUntilElementLoad(document, "#error-for-password", 2)) {
                 chrome.runtime.sendMessage({
-                    linkedin_incorrect_password: true
+                    linkedin_incorrect_password: true,
+                    message: 3
                 })
             }
         }
@@ -127,6 +133,10 @@ async function handleReceivedMessage(request) {
         }
 
     } else if (request.linkedin_code) {
+        if(request.login_challenge){
+            document.querySelector("#input__phone_verification_pin").value= request.code;
+            return;
+        }
         console.log("Got code");
         document.querySelector("#enter-code").value = request.code;
 
@@ -228,7 +238,20 @@ chrome.runtime.onMessage.addListener(
                     type: "email"
                 });
             }
-
+        } else if(window.location.href.includes("linkedin.com/checkpoint/challenge")) {
+            if(await waitUntilElementLoad(document, "#input__phone_verification_pin", 2)){
+                chrome.runtime.sendMessage({
+                    linkedin_get_code: true,
+                    type: "sms",
+                    login_challenge: true,
+                });
+            } else {
+                chrome.runtime.sendMessage({
+                    linkedin_get_code: true,
+                    type: "totp", 
+                    login_challenge: true,
+                });
+            }
         }
     } catch (e) {
         console.log(e);
