@@ -1,18 +1,47 @@
 console.log("google.js disable script injected");
 
 
-function rafAsync() {
-    return new Promise(resolve => {
-        requestAnimationFrame(resolve); //faster than set time out
-    });
+function change(field, value) {
+    field.value = value;
+    field.dispatchEvent(new Event('input', { bubbles: true }));
+    field.dispatchEvent(new Event('change', { bubbles: true }));
+    field.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, cancelable: false, key: '', char: '' }));
+    field.dispatchEvent(new KeyboardEvent('keypress', { bubbles: true, cancelable: false, key: '', char: '' }));
+    field.dispatchEvent(new KeyboardEvent('keyup', { bubbles: true, cancelable: false, key: '', char: '' }));
 }
 
-function checkElement(selector) {
-    if (document.querySelector(selector) === null) {
-        return rafAsync().then(() => checkElement(selector));
-    } else {
-        return Promise.resolve(true);
+function getElementByXpath(doc, xpath) {
+    return doc.evaluate(xpath, doc, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+}
+
+function timer(ms) { return new Promise(res => setTimeout(res, ms)); }
+
+// maxWait is in seconds
+async function waitUntilPageLoad(document, maxWait) {
+    for (let i = 0; i < maxWait * 10; i++) {
+        if (document.readyState !== 'loading') { return true; }
+        console.log(i);
+        await timer(100); // then the created Promise can be awaited
     }
+    return false;
+}
+
+async function waitUntilElementLoad(document, elemXPath, maxWait) {
+    for (let i = 0; i < maxWait * 10; i++) {
+        if (document.querySelector(elemXPath)) { return true; }
+        console.log(i);
+        await timer(100); // then the created Promise can be awaited
+    }
+    return false;
+}
+
+function exitScriptWithError() {
+    // When debugging comment out code of this function. This will stop closing of background pages.
+    // chrome.runtime.sendMessage({
+    //     facebook_error: true,
+    //     message: "Sorry! Something went wrong. ",
+    //     message_for_dev: window.location.href
+    // });
 }
 
 chrome.runtime.onMessage.addListener(

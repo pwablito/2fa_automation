@@ -407,13 +407,21 @@ class AutomationSiteUI {
                     <p>Please choose a type of 2FA to set up for ${context.name}</p>
                 </div>
                 <div class="col-6">
-                    <button class="btn btn-success" id="${context.identity_prefix}_totp_button">TOTP</button>
+                    <button class="btn btn-success" id="${context.identity_prefix}_totp_button">TOTP</button> <span id = "${context.identity_prefix}_totp_tick" style="display:none"> &#10004</span>
                     <br><br>
-                    <button class="btn btn-success" id="${context.identity_prefix}_sms_button">SMS</button>
+                    <button class="btn btn-success" id="${context.identity_prefix}_sms_button">SMS</button> <span id = "${context.identity_prefix}_sms_tick" style="display:none"> &#10004</span>
                 </div>
             </div>
             `
         );
+        if (request.sms_already_setup) {
+            document.getElementById(context.identity_prefix + "_sms_button").disabled = "disabled";
+            document.getElementById(context.identity_prefix + "_sms_tick").style.display = "";
+        }
+        if (request.totp_already_setup) {
+            document.getElementById(context.identity_prefix + "_totp_button").disabled = "disabled";
+            document.getElementById(context.identity_prefix + "_totp_tick").style.display = "";
+        }
         $(`#${context.identity_prefix}_totp_button`).click(() => {
             let request_body = {}
             request_body[`${context.identity_prefix}_totp`] = true;
