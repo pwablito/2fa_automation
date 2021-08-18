@@ -340,7 +340,15 @@ class AutomationSiteUI {
                 <p>Download Google Authenticator, scan this QR code, and enter the generated code</p>
                 <div class="row">
                     <div class="col-6">
-                        <form id="${context.identity_prefix}_code_form">This usually happens when authenticating for a disable script- that's why the wording is vague.
+                        <form id="${context.identity_prefix}_code_form">
+                        <input type="text" id="${context.identity_prefix}_code_input" placeholder="Code" required>
+                            <button class="btn btn-success" type="submit">Submit</button>
+                        </form>
+                    </div>
+                    <div class="col-6">
+                        <div id="${context.identity_prefix}_qr_div" style="width: 100%;">
+                    </div>
+                </div>
                 `
             );
             new QRCode(document.getElementById(`${context.identity_prefix}_qr_div`), totp_url);
@@ -401,8 +409,8 @@ class AutomationSiteUI {
         });
     }
 
-    change_method(sender, request) {
-        $(`#${this.identity_prefix}_ui_div`).html(
+    change_method(sender, request, context) {
+        $(`#${context.identity_prefix}_ui_div`).html(
             `
             <div class="row">
                 <div class="col-6">
@@ -410,35 +418,35 @@ class AutomationSiteUI {
                     <p>Would you like to change this method? </p>
                 </div>
                 <div class="col-6">
-                    <button class="btn btn-success" id="${this.identity_prefix}_continue_button">Yes</button>
+                    <button class="btn btn-success" id="${context.identity_prefix}_continue_button">Yes</button>
                     <br><br>
-                    <button class="btn btn-success" id="${this.identity_prefix}_cancel_button">No</button>
+                    <button class="btn btn-success" id="${context.identity_prefix}_cancel_button">No</button>
                 </div>
             </div>
             `
         );
        
-        $(`#${this.identity_prefix}_continue_button`).click(() => {
+        $(`#${context.identity_prefix}_continue_button`).click(() => {
             if(request.method_enabled == 'sms'){
                 let request_body = {
                     change_method: true,
                 }
-                request_body[`${this.identity_prefix}_totp`] = true;
+                request_body[`${context.identity_prefix}_totp`] = true;
                 chrome.tabs.sendMessage(sender.tab.id, request_body);
-                this.loading();
+                context.loading();
             } else {
                 let request_body = {
                     change_method: true,
                 }
-                request_body[`${this.identity_prefix}_sms`] = true;
+                request_body[`${context.identity_prefix}_sms`] = true;
                 chrome.tabs.sendMessage(sender.tab.id, request_body);
-                this.loading();
+                context.loading();
                 
             }
         });
 
-        $(`#${this.identity_prefix}_cancel_button`).click(() => {
-            this.finished(sender, request);
+        $(`#${context.identity_prefix}_cancel_button`).click(() => {
+            context.finished(sender, request, context);
         });
     }
 }

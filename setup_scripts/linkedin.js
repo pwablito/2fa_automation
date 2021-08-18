@@ -94,8 +94,10 @@ async function handleReceivedMessage(request) {
         if(request.change_method){
             document.querySelector("#change-two-step-method-button").click()
         }
-        getElementByXpath(document, "//select[contains(@id, 'two-step-method')]").selectedIndex = 0;
-        document.querySelector(".continue").click();
+        if(await waitUntilElementLoad(document, ".continue", 2)){
+            getElementByXpath(document, "//select[contains(@id, 'two-step-method')]").selectedIndex = 0;
+            document.querySelector(".continue").click();
+        }
 
         if (await waitUntilElementLoad(document, "#verify-password", 2)) {
             chrome.runtime.sendMessage({
@@ -183,10 +185,14 @@ chrome.runtime.onMessage.addListener(
             //await waitUntilElementLoad(document, )document.querySelector("button:nth-of-type(contains(@class, 'opt-in'))")
             if (await waitUntilElementLoad(document, ".opt-in", 2)) {
                 console.log("In first await")
+                if(document.querySelector(".opt-in") == null){
+                    document.reload();
+                }
                 document.querySelector(".opt-in").click()
                 chrome.runtime.sendMessage({
                     linkedin_get_method: true,
                 });
+                
             } else if (await waitUntilElementLoad(document, ".opt-out", 2)) {
                 if(document.querySelector(".two-step-via").textContent == "Via Authenticator app  "){
                     chrome.runtime.sendMessage({
