@@ -90,6 +90,10 @@ async function handleReceivedMessage(request) {
         }
 
     } else if (request.linkedin_totp) {
+        console.log(request)
+        if(request.change_method){
+            document.querySelector("#change-two-step-method-button").click()
+        }
         getElementByXpath(document, "//select[contains(@id, 'two-step-method')]").selectedIndex = 0;
         document.querySelector(".continue").click();
 
@@ -107,6 +111,10 @@ async function handleReceivedMessage(request) {
         }
 
     } else if (request.linkedin_sms) {
+        console.log(request)
+        if(request.change_method){
+            document.querySelector("#change-two-step-method-button").click()
+        }
         getElementByXpath(document, "//select[contains(@id, 'two-step-method')]").selectedIndex = 1;
         document.querySelector(".continue").click();
 
@@ -180,10 +188,18 @@ chrome.runtime.onMessage.addListener(
                     linkedin_get_method: true,
                 });
             } else if (await waitUntilElementLoad(document, ".opt-out", 2)) {
-                chrome.runtime.sendMessage({
-                    linkedin_error: true,
-                    message: "Already setup",
-                });
+                if(document.querySelector(".two-step-via").textContent == "Via Authenticator app  "){
+                    chrome.runtime.sendMessage({
+                        linkedin_change_method: true,
+                        method_enabled: "totp",
+                    });
+                } else {
+                    chrome.runtime.sendMessage({
+                        linkedin_change_method: true,
+                        method_enabled: "sms",
+                    });
+                }
+                
             }
         } else if (window.location.href.includes("login-submit")) {
             if (await waitUntilElementLoad(document, ".member-profile-block", 2)) {

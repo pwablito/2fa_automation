@@ -129,6 +129,8 @@ class AutomationSiteUI {
                         ui.get_code(sender, request);
                     } else if (request[`${ui.identity_prefix}_get_method`]) {
                         ui.get_method(sender, request);
+                    } else if (request[`${ui.identity_prefix}_change_method`]) {
+                        ui.change_method(sender, request);
                     } else if (request[`${ui.identity_prefix}_finished`]) {
                         chrome.runtime.onMessage.removeListener(listener);
                         ui.finished(sender, request);
@@ -187,7 +189,7 @@ class AutomationSiteUI {
             `
         );
         this.controller.disable_injection(this.identity_prefix);
-        this.close_window();
+        //this.close_window();
     }
 
     get_credentials(sender, request) {
@@ -383,6 +385,47 @@ class AutomationSiteUI {
             request_body[`${this.identity_prefix}_sms`] = true;
             chrome.tabs.sendMessage(sender.tab.id, request_body);
             this.loading();
+        });
+    }
+
+    change_method(sender, request) {
+        $(`#${this.identity_prefix}_ui_div`).html(
+            `
+            <div class="row">
+                <div class="col-6">
+                    <p>You are currently using ${request.method_enabled == "sms" ? "SMS" : " an authenticator app" } to login to your account at ${this.name}. </p>
+                    <p>Would you like to change this method? </p>
+                </div>
+                <div class="col-6">
+                    <button class="btn btn-success" id="${this.identity_prefix}_continue_button">Yes</button>
+                    <br><br>
+                    <button class="btn btn-success" id="${this.identity_prefix}_cancel_button">No</button>
+                </div>
+            </div>
+            `
+        );
+       
+        $(`#${this.identity_prefix}_continue_button`).click(() => {
+            if(request.method_enabled == 'sms'){
+                let request_body = {
+                    change_method: true,
+                }
+                request_body[`${this.identity_prefix}_totp`] = true;
+                chrome.tabs.sendMessage(sender.tab.id, request_body);
+                this.loading();
+            } else {
+                let request_body = {
+                    change_method: true,
+                }
+                request_body[`${this.identity_prefix}_sms`] = true;
+                chrome.tabs.sendMessage(sender.tab.id, request_body);
+                this.loading();
+                
+            }
+        });
+
+        $(`#${this.identity_prefix}_cancel_button`).click(() => {
+            this.finished(sender, request);
         });
     }
 }
