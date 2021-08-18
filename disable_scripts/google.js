@@ -81,43 +81,103 @@ chrome.runtime.onMessage.addListener(
     }
 );
 
-if (window.location.href.includes("accounts.google.com/signin/v2/challenge/pwd")) {
-    chrome.runtime.sendMessage({
-        "google_get_password": true
-    });
-} else if (window.location.href.includes("/identifier")) {
-    chrome.runtime.sendMessage({
-        "google_username": true
-    });
-} else if (window.location.href.includes("myaccount.google.com/security")) {
-    console.log("In myaccount.google.com/security");
-    if (document.readyState !== 'loading') {
-        console.log('document is already ready, just execute code here');
-        document.querySelector("html > body > c-wiz > div > div:nth-of-type(2) > c-wiz > c-wiz > div > div:nth-of-type(3) > div > div > c-wiz > section > div:nth-of-type(3) > div > div > div:nth-of-type(3) > div:nth-of-type(2) > a").click();
-    } else {
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('document was not ready, place code here');
-            document.querySelector("html > body > c-wiz > div > div:nth-of-type(2) > c-wiz > c-wiz > div > div:nth-of-type(3) > div > div > c-wiz > section > div:nth-of-type(3) > div > div > div:nth-of-type(3) > div:nth-of-type(2) > a").click();
 
-        });
-    }
-} else if (window.location.href.includes("myaccount.google.com/signinoptions/two-step-verification?")) {
-    function onReady() {
-        if (document.querySelector("html > body > c-wiz > div > div:nth-of-type(3) > c-wiz > div > div > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(2) > div > div")) {
-            document.querySelector("html > body > c-wiz > div > div:nth-of-type(3) > c-wiz > div > div > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(2) > div > div").click();
+(async() => {
+    try {
+        if (window.location.href.includes("https://myaccount.google.com/")) {
+            console.log("Signed in");
+            await waitUntilPageLoad(document, 3);
+            if (window.location.href.includes("https://myaccount.google.com/signinoptions/two-step-verification")) {
+                // 2FA is already disabled
+                if (getElementByXpath(document, "//*[contains(text(),'Turn on')]/../..")) {
+                    let msg = {
+                        google_error: true,
+                        message: "2FA is already disabled on this account"
+                    };
+                    chrome.runtime.sendMessage(msg);
+                } else if (getElementByXpath(document, "//*[contains(text(),'Turn off')]/../..")) {
+                    getElementByXpath(document, "//*[contains(text(),'Turn off')]/../..").click(); 
+                    turnOffButtXPath = "html > body > div:nth-of-type(11) > div > div:nth-of-type(2) > div:nth-of-type(3) > div > div:nth-of-type(2)";  
+                    if (await waitUntilElementLoad(document, turnOffButtXPath, 2)) {
+                        document.querySelector(turnOffButtXPath).click();                           
+                    }
+                    
+                }
+            } else if (window.location.href.includes("https://myaccount.google.com/security")) {
+                chrome.runtime.sendMessage({
+                    google_finished: true
+                });
+            } else {
+                window.location.href = "https://myaccount.google.com/signinoptions/two-step-verification";
+            } 
+        } else if (window.location.href.includes("signinchooser")) {
+            // In case all the accounts are logged out and google redirects to choose account. We redirect to select a new account always. 
+            let UseAnotherAccountButtonXPath = "html > body > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div > div:nth-of-type(2) > div > div > div:nth-of-type(2) > div > div:nth-of-type(1) > div > form > span > section > div > div > div > div:nth-of-type(1) > ul > li:nth-of-type(2) > div > div > div:nth-of-type(2)";
+            if (await waitUntilElementLoad(document, UseAnotherAccountButtonXPath, 2)) {
+                document.querySelector(UseAnotherAccountButtonXPath).click();
+            }
+        } else if (window.location.href.includes("/signin/") || window.location.href.includes("/identifier")) {
+            if (document.querySelector("[type=email]") && document.querySelector("[type=email]").value == "") {
+                chrome.runtime.sendMessage({
+                    "google_get_username": true
+                });
+            } else if (document.querySelector("[type=password]")) {
+                chrome.runtime.sendMessage({
+                    "google_get_password": true
+                });
+            } else {
+                chrome.runtime.sendMessage({
+                    google_error: true,
+                    message: "Something went wrong",
+                    message_for_dev: window.location.href
+                });
+            }
         }
-        checkElement("html > body > div:nth-of-type(11) > div > div:nth-of-type(2) > div:nth-of-type(3) > div > div:nth-of-type(2)") //use whichever selector you want
-            .then((element) => {
-                console.info(element);
-                document.querySelector("html > body > div:nth-of-type(11) > div > div:nth-of-type(2) > div:nth-of-type(3) > div > div:nth-of-type(2)").click()
-                    // chrome.runtime.sendMessage({
-                    //     "google_finished": true
-                    // });
-            });
+    } catch (e) {
+        // Deal with the fact the chain failed
     }
-    if (document.readyState !== 'loading') {
-        onReady();
-    } else {
-        document.addEventListener('DOMContentLoaded', onReady);
-    }
-}
+})();
+
+
+
+
+// if (window.location.href.includes("accounts.google.com/signin/v2/challenge/pwd")) {
+//     chrome.runtime.sendMessage({
+//         "google_get_password": true
+//     });
+// } else if (window.location.href.includes("/identifier")) {
+//     chrome.runtime.sendMessage({
+//         "google_username": true
+//     });
+// } else if (window.location.href.includes("myaccount.google.com/security")) {
+//     console.log("In myaccount.google.com/security");
+//     if (document.readyState !== 'loading') {
+//         console.log('document is already ready, just execute code here');
+//         document.querySelector("html > body > c-wiz > div > div:nth-of-type(2) > c-wiz > c-wiz > div > div:nth-of-type(3) > div > div > c-wiz > section > div:nth-of-type(3) > div > div > div:nth-of-type(3) > div:nth-of-type(2) > a").click();
+//     } else {
+//         document.addEventListener('DOMContentLoaded', function() {
+//             console.log('document was not ready, place code here');
+//             document.querySelector("html > body > c-wiz > div > div:nth-of-type(2) > c-wiz > c-wiz > div > div:nth-of-type(3) > div > div > c-wiz > section > div:nth-of-type(3) > div > div > div:nth-of-type(3) > div:nth-of-type(2) > a").click();
+
+//         });
+//     }
+// } else if (window.location.href.includes("myaccount.google.com/signinoptions/two-step-verification?")) {
+//     function onReady() {
+//         if (document.querySelector("html > body > c-wiz > div > div:nth-of-type(3) > c-wiz > div > div > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(2) > div > div")) {
+//             document.querySelector("html > body > c-wiz > div > div:nth-of-type(3) > c-wiz > div > div > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(2) > div > div").click();
+//         }
+//         checkElement("html > body > div:nth-of-type(11) > div > div:nth-of-type(2) > div:nth-of-type(3) > div > div:nth-of-type(2)") //use whichever selector you want
+//             .then((element) => {
+//                 console.info(element);
+//                 document.querySelector("html > body > div:nth-of-type(11) > div > div:nth-of-type(2) > div:nth-of-type(3) > div > div:nth-of-type(2)").click()
+//                     // chrome.runtime.sendMessage({
+//                     //     "google_finished": true
+//                     // });
+//             });
+//     }
+//     if (document.readyState !== 'loading') {
+//         onReady();
+//     } else {
+//         document.addEventListener('DOMContentLoaded', onReady);
+//     }
+// }
