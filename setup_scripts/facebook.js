@@ -67,7 +67,12 @@ async function handleReceievedMessage(request) {
         change(document.querySelector("[type=password]"), request.password);
         // let item = document.querySelector("html > body > div:nth-of-type(5) > div:nth-of-type(2) > div > div > div > div:nth-of-type(3) > table > tbody > tr > td:nth-of-type(2) > button");
         // item = document.querySelector("html > body > div:nth-of-type(7) > div:nth-of-type(2) > div > div > div > div:nth-of-type(3) > table > tbody > tr > td:nth-of-type(2) > button");
-        getElementByXpath(document, "//button[contains(text(),'Submit')]").click();
+        if (getElementByXpath(document, "//button[contains(text(),'Submit')]")) {
+            getElementByXpath(document, "//button[contains(text(),'Submit')]").click();
+        } else if (document.querySelector("[type=submit][value=Continue]")) {
+            document.querySelector("[type=submit][value=Continue]").click();
+        }
+        // getElementByXpath(document, "//button[contains(text(),'Submit')]").click();
         if (await waitUntilElementLoad(document, "[placeholder='Mobile phone number']", 2)) {
             chrome.runtime.sendMessage({
                 facebook_get_phone: true,
@@ -88,7 +93,12 @@ async function handleReceievedMessage(request) {
             });
         } else { exitScriptWithError(); }
     } else if (request.facebook_sms) {
-        getElementByXpath(document, "//*[contains(text(),'Use Text Message')]").click();
+        if (getElementByXpath(document, "//*[contains(text(),'Use Text Message')]")) {
+            getElementByXpath(document, "//*[contains(text(),'Use Text Message')]").click();
+        }
+        else if (document.querySelector("[href*='security/2fac/setup/select_phone']")) {
+            document.querySelector("[href*='security/2fac/setup/select_phone']").click()
+        }
         if (await waitUntilElementLoad(document, "[placeholder='Mobile phone number']", 2)) {
             chrome.runtime.sendMessage({
                 facebook_get_phone: true
@@ -175,7 +185,12 @@ async function handleReceievedMessage(request) {
         document.querySelector("#pass").value = request.password;
         document.querySelector("[name=login]").click();
     } else if (request.facebook_totp) {
-        getElementByXpath(document, "//*[contains(text(),'Use Authentication App')]").click();
+        if ( getElementByXpath(document, "//*[contains(text(),'Use Authentication App')]")) {
+            getElementByXpath(document, "//*[contains(text(),'Use Authentication App')]").click();
+        } else if (document.querySelector("[href*='security/2fac/setup/qrcode']")) {
+            document.querySelector("[href*='security/2fac/setup/qrcode']").click()
+        }
+       
         if (await waitUntilElementLoad(document, "[src*= 'https://www.facebook.com/qr/show/code']", 4)) {
             chrome.runtime.sendMessage({
                 facebook_get_code: true,
@@ -206,33 +221,61 @@ chrome.runtime.onMessage.addListener(
 (async() => {
     try {
         if (window.location.href.includes("compat")) {
-            window.location.href = "https://www.facebook.com/security/2fac/setup/intro";
+            window.location.href = "https://www.facebook.com/security/2fac/settings";
         } else if (window.location.href.includes("facebook.com/security/2fac/settings")) {
-            chrome.runtime.sendMessage({
-                facebook_finished: true,
-                message: "2FA is already enabled."
-            });
+            await waitUntilPageLoad(document, 3);
+            console.log("2FA enabled");
+
+            let iFrameXPath = "iframe[src*='https://www.facebook.com/security/2fac/']";
+            if (window.location.href.includes("?cquick=")) {
+                // Inside iframe
+                if (getElementByXpath(document, "//*[contains(text(),'Turn Off')]")) {
+                    console.log("2FA in");
+
+                    let msg = {
+                        facebook_get_method: true,
+                        message: "2FA is turned on.",
+                    };
+                    // let msg = {
+                    //     facebook_change_method: true,
+                    // }
+                    if (getElementByXpath(document, "//*[contains(text(),'Your Security Method')]/..//*[contains(text(), 'SMS')]")) {
+                        msg["sms_already_setup"]= true;
+                    }
+                    if (getElementByXpath(document, "//*[contains(text(),'Your Security Method')]/..//*[contains(text(), 'Authentication App')]")) {
+                        msg["totp_already_setup"]= true;
+                    }
+                    chrome.runtime.sendMessage(msg);
+                }
+            } else if (await waitUntilElementLoad(document, iFrameXPath, 2)) {
+                console.log("to go xframe");
+                window.location.href = document.querySelector(iFrameXPath).src;
+            }
+
         } else if (window.location.href.includes("facebook.com/security/2fac/setup/intro")) {
-            await waitUntilPageLoad(document, 2);
-            let iFrameXPath = "iframe[src*='https://www.facebook.com/security/2fac/setup/intro']";
+            await waitUntilPageLoad(document, 3);
+            console.log("In setup/intro");
+            let iFrameXPath = "iframe[src*='https://www.facebook.com/security/2fac/']";
             if (window.location.href.includes("?cquick=")) {
                 // Inside iframe
                 chrome.runtime.sendMessage({
                     facebook_get_method: true,
                 });
             } else if (await waitUntilElementLoad(document, iFrameXPath, 2)) {
-                window.location = document.querySelector(iFrameXPath).src;
+                console.log("to go xframe");
+                window.location.href = document.querySelector(iFrameXPath).src;
             }
         } else if (window.location.href.includes("facebook.com/login/reauth.php")) {
             console.log("In reauth");
             await waitUntilPageLoad(document, 2);
-            if (document.querySelector("iframe[src*=https]")) {
-                window.location = document.querySelector("iframe[src*='https://www.facebook.com/login/reauth.php']").src;
-            } else if (await waitUntilElementLoad(document, "[type=password]", 2)) {
+           if (await waitUntilElementLoad(document, "[type=password]", 2)) {
                 console.log("In reauth 2");
                 chrome.runtime.sendMessage({
                     facebook_get_password: true
                 });
+            } else if (document.querySelector("iframe[src*='https://www.facebook.com/login/reauth.php']")) {
+                console.log("In reauth 1");
+                window.location.href = document.querySelector("iframe[src*='https://www.facebook.com/login/reauth.php']").src;
             } else { exitScriptWithError(); }
         } else if (window.location.href === "https://www.facebook.com/" || window.location.href === "https://www.facebook.com/?sk=welcome") {
             await waitUntilElementLoad(document, 2);

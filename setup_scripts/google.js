@@ -196,7 +196,10 @@ chrome.runtime.onMessage.addListener(
             await waitUntilPageLoad(document, 3);
             if (window.location.href.includes("myaccount.google.com/signinoptions/two-step-verification")) {
                 // 2FA is already enabled
-                if (document.querySelector("html > body > c-wiz > div > div:nth-of-type(3) > c-wiz > div > div > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(2) > div > div")) {
+                console.log("1");
+                await timer(2000);
+                buttonXPath = "html > body > c-wiz > div > div:nth-of-type(3) > c-wiz > div > div > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(2) > div > div";
+                if (document.querySelector(buttonXPath) && document.querySelector(buttonXPath).innerText == "TURN OFF") {
                     console.log("2FA already exists");
                     let msg = {
                         "google_get_method": true,
@@ -207,11 +210,22 @@ chrome.runtime.onMessage.addListener(
                         msg["totp_already_setup"]= true;
                     }
                     chrome.runtime.sendMessage(msg);
+                } else if (document.querySelector(buttonXPath) && document.querySelector(buttonXPath).innerText == "TURN ON") {
+                    console.log("2");
+                    document.querySelector(buttonXPath).click();
+                    let msg = {
+                        "google_get_method": true,
+                        "sms_already_setup": true,
+                        "message": "2FA turned on. Phone number for SMS 2FA already exists."
+                    };
+                    chrome.runtime.sendMessage(msg);
                 }
                 // Get started page
                 else if (getElementByXpath(document, "//*[contains(text(),'Get started')]/../..")) {
+                    console.log("3");   
                     getElementByXpath(document, "//*[contains(text(),'Get started')]/../..").click();
                 }
+                console.log("4");
                 if ( await waitUntilElementLoad(document, "[type=tel]", 2)) { // phone number fill page
                     chrome.runtime.sendMessage({
                         "google_get_phone": true

@@ -72,9 +72,11 @@ async function handleReceivedMessage(request) {
             console.log("In final ");
             await timer(2000);
             getElementByXpath(document, "//*[contains(text(),'Next')]/..").click();
-            chrome.runtime.sendMessage({
-                dropbox_finished: true,
-            });
+            setTimeout(() => {
+                chrome.runtime.sendMessage({
+                    dropbox_finished: true,
+                });
+            }, 2000);
         }
 
 
@@ -154,6 +156,8 @@ chrome.runtime.onMessage.addListener(
                 dropbox_get_credentials: true,
                 type: "email"
             });
+        } else {
+            window.location.href =  "https://www.dropbox.com/account/security";
         }
     } catch (e) {
         console.log(e);
