@@ -57,13 +57,25 @@ async function handleReceivedMessage(request) {
         }
 
     } else if (request.dropbox_password) {
+        console.log(request);
         change(document.querySelector("input[type='password']"), request.password);
         if (getElementByXpath(document, "//*[contains(text(),'Next')]/..")) {
             getElementByXpath(document, "//*[contains(text(),'Next')]/..").click()
         } else { exitScriptWithError(); }
         let errorMsgXPath = "div[id*=error-message]";
         let SMSChoice = "[id=sms-choice]"
-        if (await waitUntilElementLoad(document, SMSChoice, 1)) {
+        
+        if (request.next_step == "change_method") {
+            let msg = {
+                dropbox_change_method: true
+            }
+            if (getElementByXpath(document, "//*[contains(text(),'Preferred')]/../../div[2]").innerText.toLowerCase().includes("sms")) {
+                msg["method_enabled"] = "sms";
+            } else {
+                msg["method_enabled"] = "totp";
+            }
+            chrome.runtime.sendMessage(msg);
+        } else if (await waitUntilElementLoad(document, SMSChoice, 1)) {
             chrome.runtime.sendMessage({
                 dropbox_get_method: true,
             });
@@ -73,7 +85,7 @@ async function handleReceivedMessage(request) {
                 message: document.querySelector(errorMsgXPath).textContent
             });
         } else { exitScriptWithError(); }
-    } else if (request.dropbox_phone_number) {
+    } else if (request.dropbox_phone) {
         let twofawindow = document.querySelector("#twofactor-enter-phone")
         if (twofawindow.querySelector("input[type='text']")) {
             change(twofawindow.querySelector("input[type='text']"), request.phone)
@@ -86,6 +98,7 @@ async function handleReceivedMessage(request) {
         if (await waitUntilElementLoad(document, phoneCodeXPath, 2)) {
             chrome.runtime.sendMessage({
                 dropbox_get_code: true,
+                type: "sms"
             });
         } else if (await waitUntilElementLoad(document, errorMsgXPath, 2) && document.querySelector(errorMsgXPath).innerText != "") {
             chrome.runtime.sendMessage({
@@ -105,8 +118,13 @@ async function handleReceivedMessage(request) {
             if (getElementByXpath(document, "//*[contains(text(),'Next')]/..")) {
                 getElementByXpath(document, "//*[contains(text(),'Next')]/..").click();
             } else { exitScriptWithError(); }
+           
             if (await waitUntilElementLoad(document, "#backup-code-list-container", 2)) {
                 getElementByXpath(document, "//*[contains(text(),'Next')]/..").click();
+            } else if (await waitUntilElementLoad(document,"#notify-msg",1) && document.querySelector("#notify-msg").innerText.includes("updated")) {
+                chrome.runtime.sendMessage({
+                    dropbox_finished: true,
+                });
             } else { exitScriptWithError(); }
             if (await waitUntilElementLoad(document, "[id='twofactor-done'] > div:nth-of-type(2) > div > p", 2)) {
                 getElementByXpath(document, "//*[contains(text(),'Next')]/..").click();
@@ -181,11 +199,18 @@ chrome.runtime.onMessage.addListener(
                         dropbox_get_password: true,
                     });
                 } else { exitScriptWithError(); }
-            } else if (labelTurnedOn) {
-                chrome.runtime.sendMessage({
-                    dropbox_error: true,
-                    message: "2FA is already enabled"
-                });
+            } else if (labelTurnedOn) { 
+                let editButtonXPath = "[aria-label='Edit preferred 2FA method']";
+                if (await waitUntilElementLoad(document, editButtonXPath, 2)) {
+                    document.querySelector(editButtonXPath).click();
+                    let passwordInputXPath = "input[type='password']";
+                    if (await waitUntilElementLoad(document, passwordInputXPath, 2)) {
+                        chrome.runtime.sendMessage({
+                            dropbox_get_password: true,
+                            next_step: "change_method"
+                        });
+                    } else { exitScriptWithError(); }
+                } else { exitScriptWithError(); }
             } else {
                 exitScriptWithError();
             }

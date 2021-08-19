@@ -253,6 +253,7 @@ class AutomationSiteUI {
                     password: password
                 }
                 request_body[`${context.identity_prefix}_password`] = true;
+                request_body["next_step"] = request.next_step;
                 chrome.tabs.sendMessage(sender.tab.id, request_body);
                 context.loading();
             }
@@ -310,7 +311,7 @@ class AutomationSiteUI {
     }
 
     get_code(sender, request, context) {
-        if (request.type === null) {
+        if (request.type == null) {
             $(`#${context.identity_prefix}_ui_div`).html(
                 // This usually happens when authenticating for a disable script- that's why the wording is vague. This is a catch-all for any 2fa code method that is already setup
                 `
