@@ -122,6 +122,10 @@ async function handleReceievedMessage(request) {
 
         } else { exitScriptWithError(); }
     } else if (request.facebook_code) {
+        if(request.login_challenge){
+            change(document.querySelector("#approvals_code"), request.code);
+            document.querySelector("#checkpointSubmitButton").click()
+        }
         if (request.totp_seed) { // for totp
             console.log("Entering totp");
             if (request.code.length != 6) {
@@ -265,7 +269,29 @@ chrome.runtime.onMessage.addListener(
                 console.log("to go xframe");
                 window.location.href = document.querySelector(iFrameXPath).src;
             }
-        } else if (window.location.href.includes("facebook.com/login/reauth.php")) {
+        } else if(window.location.href.includes("facebook.com/checkpoint")) {
+            if(document.querySelector("input[aria-label='Login code']")){
+                if(document.querySelectorAll("strong").length > 1){
+                    chrome.runtime.sendMessage({
+                        facebook_get_code: true,
+                        login_challenge: true,
+                        type: 'totp'
+                    })
+                } else {
+                    chrome.runtime.sendMessage({
+                        facebook_get_code: true,
+                        login_challenge: true,
+                        type: 'sms'
+                    })
+                }            
+                
+            } else if(document.querySelector("input[value='dont_save']")){
+                document.querySelector("input[value='dont_save']").click()
+                document.querySelector("#checkpointSubmitButton").click()
+            } else if(document.querySelector("#checkpointSubmitButton")){
+                document.querySelector("#checkpointSubmitButton").click()
+            }
+        }else if (window.location.href.includes("facebook.com/login/reauth.php")) {
             console.log("In reauth");
             await waitUntilPageLoad(document, 2);
            if (await waitUntilElementLoad(document, "[type=password]", 2)) {

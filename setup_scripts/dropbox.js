@@ -7,6 +7,7 @@ function change(field, value) {
     field.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, cancelable: false, key: '', char: '' }));
     field.dispatchEvent(new KeyboardEvent('keypress', { bubbles: true, cancelable: false, key: '', char: '' }));
     field.dispatchEvent(new KeyboardEvent('keyup', { bubbles: true, cancelable: false, key: '', char: '' }));
+    
 }
 
 function getElementByXpath(doc, xpath) {
@@ -44,16 +45,34 @@ function exitScriptWithError() {
 }
 
 async function handleReceivedMessage(request) {
+    console.log(request);
     if (request.dropbox_credentials) {
         change(document.querySelector("input[type='email']"), request.login);
         change(document.querySelector("input[type='password']"), request.password);
         getElementByXpath(document, "//button[./div = 'Sign in']").click();
+        console.log("Waiting for error element")
         if (await waitUntilElementLoad(document, "[class='error-message']", 1)) {
             chrome.runtime.sendMessage({
                 dropbox_get_credentials: true,
                 message: "Invalid credentials",
                 type: "email"
             });
+        }
+        console.log("Waiting for 2fa phone form element")
+        if(await waitUntilElementLoad(document, ".\\32 fa-phone-form", 3)){
+            if(document.querySelector(".two-factor-uses-authenticator")){
+                chrome.runtime.sendMessage({
+                    dropbox_get_code: true,
+                    type: 'totp',
+                    login_challenge: true,
+                })
+            } else {
+                chrome.runtime.sendMessage({
+                    dropbox_get_code: true,
+                    type: 'sms',
+                    login_challenge: true,
+                })
+            }
         }
 
     } else if (request.dropbox_password) {
@@ -107,39 +126,48 @@ async function handleReceivedMessage(request) {
             });
         } else { exitScriptWithError(); }
     } else if (request.dropbox_code) {
-        change(document.querySelector("#phone-code"), request.code);
-        if (getElementByXpath(document, "//*[contains(text(),'Next')]/..")) {
-            getElementByXpath(document, "//*[contains(text(),'Next')]/..").click();
-        } else { exitScriptWithError(); }
 
-        // let errorMsgXPath = "div[id*=error-message]";
-        let backupDescriptionXPath = "[id=backup-phone-number-description]"
-        if (await waitUntilElementLoad(document, backupDescriptionXPath, 2)) {
+        if(request.login_challenge){
+            console.log(request.code);
+            change(document.querySelector("input[name='code']"), request.code);
+            document.querySelector(".login-button").click();
+           
+        } else {
+            change(document.querySelector("#phone-code"), request.code);
             if (getElementByXpath(document, "//*[contains(text(),'Next')]/..")) {
                 getElementByXpath(document, "//*[contains(text(),'Next')]/..").click();
             } else { exitScriptWithError(); }
-           
-            if (await waitUntilElementLoad(document, "#backup-code-list-container", 2)) {
-                getElementByXpath(document, "//*[contains(text(),'Next')]/..").click();
-            } else if (await waitUntilElementLoad(document,"#notify-msg",1) && document.querySelector("#notify-msg").innerText.includes("updated")) {
+    
+            // let errorMsgXPath = "div[id*=error-message]";
+            let backupDescriptionXPath = "[id=backup-phone-number-description]"
+            if (await waitUntilElementLoad(document, backupDescriptionXPath, 2)) {
+                if (getElementByXpath(document, "//*[contains(text(),'Next')]/..")) {
+                    getElementByXpath(document, "//*[contains(text(),'Next')]/..").click();
+                } else { exitScriptWithError(); }
+               
+                if (await waitUntilElementLoad(document, "#backup-code-list-container", 2)) {
+                    getElementByXpath(document, "//*[contains(text(),'Next')]/..").click();
+                } else if (await waitUntilElementLoad(document,"#notify-msg",1) && document.querySelector("#notify-msg").innerText.includes("updated")) {
+                    chrome.runtime.sendMessage({
+                        dropbox_finished: true,
+                    });
+                } else { exitScriptWithError(); }
+                if (await waitUntilElementLoad(document, "[id='twofactor-done'] > div:nth-of-type(2) > div > p", 2)) {
+                    getElementByXpath(document, "//*[contains(text(),'Next')]/..").click();
+                }
                 chrome.runtime.sendMessage({
                     dropbox_finished: true,
                 });
+            } else if (getElementByXpath(document, "//*[contains(text(),'Invalid')]")) {
+                chrome.runtime.sendMessage({
+                    dropbox_get_code: true,
+                    type: "totp",
+                    message: getElementByXpath(document, "//*[contains(text(),'Invalid')]").innerHTML,
+                    totp_seed: request.totp_seed // in case of totp, we need to recieve the QR code value from the extnesion to send it back for next retry/
+                });
             } else { exitScriptWithError(); }
-            if (await waitUntilElementLoad(document, "[id='twofactor-done'] > div:nth-of-type(2) > div > p", 2)) {
-                getElementByXpath(document, "//*[contains(text(),'Next')]/..").click();
-            }
-            chrome.runtime.sendMessage({
-                dropbox_finished: true,
-            });
-        } else if (getElementByXpath(document, "//*[contains(text(),'Invalid')]")) {
-            chrome.runtime.sendMessage({
-                dropbox_get_code: true,
-                type: "totp",
-                message: getElementByXpath(document, "//*[contains(text(),'Invalid')]").innerHTML,
-                totp_seed: request.totp_seed // in case of totp, we need to recieve the QR code value from the extnesion to send it back for next retry/
-            });
-        } else { exitScriptWithError(); }
+        }
+        
     } else if (request.dropbox_sms) {
         document.querySelector("#use-sms").click();
         if (getElementByXpath(document, "//*[contains(text(),'Next')]/..")) {
@@ -216,11 +244,28 @@ chrome.runtime.onMessage.addListener(
             }
         } else if (window.location.href.includes("login")) {
             await waitUntilPageLoad(document, 2);
+            console.log("A");
             if (document.querySelector("[name=login_email]") && document.querySelector("[name=login_password]")) {
+                console.log("B, sending message for credentials");
                 chrome.runtime.sendMessage({
                     dropbox_get_credentials: true,
                     type: "email"
                 });
+            } else if(document.querySelector(".\\32 fa-phone-form")){
+                if(document.querySelector(".two-factor-uses-authenticator")){
+                    chrome.runtime.sendMessage({
+                        dropbox_get_code: true,
+                        type: 'totp',
+                        login_challenge: true,
+                    })
+                } else {
+                    chrome.runtime.sendMessage({
+                        dropbox_get_code: true,
+                        type: 'sms',
+                        login_challenge: true,
+                    })
+                }
+                
             } else {
                 exitScriptWithError();
             }
