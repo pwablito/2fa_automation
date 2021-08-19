@@ -75,6 +75,7 @@ async function handleReceivedMessage(request) {
             }
         }
     } else if (request.yahoo_code) {
+        console.log(request);
         if(request.login_challenge){
             document.querySelector("#verification-code-field").value = request.code; 
             document.querySelector("#verify-code-button").click();
@@ -162,7 +163,6 @@ async function handleReceivedMessage(request) {
             document.querySelector("#btnTsvTurnOff").click();
             if(await waitUntilElementLoad(document, "a[href^='/myaccount/security/two-step-verification']", 2)){
                 document.querySelector("a[href^='/myaccount/security/two-step-verification']").click();
-                //TODO Element is clicked and page loads but the element doesn't get clicked
                 if(await waitUntilElementLoad(document, "#btnTsvIntro", 2)){
                     document.querySelector("#btnTsvIntro").click()
                 }
@@ -182,7 +182,13 @@ async function handleReceivedMessage(request) {
     } else if (request.yahoo_totp) {
         console.log("Told to start totp");
         if(request.change_method){
-            return;
+            document.querySelector("#btnTsvTurnOff").click();
+            if(await waitUntilElementLoad(document, "a[href^='/myaccount/security/two-step-verification']", 2)){
+                document.querySelector("a[href^='/myaccount/security/two-step-verification']").click();
+                if(await waitUntilElementLoad(document, "#btnTsvIntro", 2)){
+                    document.querySelector("#btnTsvIntro").click()
+                }
+            }
         } 
         document.querySelector("#tsvTOTP").click();
         if (await waitUntilElementLoad(document, "#btnAuthenticatorIntro", 2)) {
@@ -231,10 +237,17 @@ chrome.runtime.onMessage.addListener(
                             });
                         }
                     } else if(document.querySelector("#btnTsvTurnOff")){
-                        if(document.querySelector(".tsv-authenticator").textContent == "Authenticator App  ON  "){
+                        if(document.querySelector(".tsv-authenticator")){
+                            if(document.querySelector(".tsv-authenticator").textContent == "Authenticator App  ON  "){
+                                chrome.runtime.sendMessage({
+                                    yahoo_change_method: true,
+                                    method_enabled: 'totp'
+                                });
+                            }
+                        } else {
                             chrome.runtime.sendMessage({
                                 yahoo_change_method: true,
-                                method_enabled: 'totp'
+                                method_enabled: 'sms'
                             });
                         }
                     }                          
@@ -244,7 +257,7 @@ chrome.runtime.onMessage.addListener(
             } else if (window.location.href.includes("phone-verify")) {
                 chrome.runtime.sendMessage({
                     yahoo_get_code: true,
-                    method: 'sms',
+                    type: 'sms',
                     login_challenge: true
                 });
             } else if(window.location.href.includes("account/challenge/tsv-authenticator")) {

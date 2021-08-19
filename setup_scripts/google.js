@@ -45,8 +45,9 @@ function exitScriptWithError() {
 
 
 async function handleReceivedMessage(request) {
-    if (request.google_username) {
-        document.querySelector("[type=email]").value = request.username;
+    console.log(request);
+    if (request.google_email) {
+        document.querySelector("[type=email]").value = request.email;
         document.querySelector("#identifierNext > div > button").click();
         chrome.runtime.sendMessage({
             "google_get_password": true
@@ -79,7 +80,7 @@ async function handleReceivedMessage(request) {
         } else if (await waitUntilElementLoad(document, textCodeInputXPath, 1)) {
             chrome.runtime.sendMessage({
                 google_get_code: true,
-                type: "sms"
+                type: "sms",
             });
             console.log("3");
         }
@@ -114,6 +115,17 @@ async function handleReceivedMessage(request) {
                     })
                 }
             }
+        } else if(request.login_challenge){
+            console.log("login challenge request");
+            if(document.querySelector("#idvPin")){
+                document.querySelector("#idvPin").value = request.code;
+                getElementByXpath(document, "//span[contains(text(),'Next')]/..").click();
+            } else if(document.querySelector("#totpPin")) {
+                document.querySelector("#totpPin").value = request.code,
+                getElementByXpath(document, "//span[contains(text(),'Next')]/..").click();
+            }
+            
+
         } else {
             let codeInput = document.querySelector("[aria-label='Enter the code']");
             codeInput.value = request.code;
@@ -199,17 +211,23 @@ chrome.runtime.onMessage.addListener(
                 console.log("1");
                 await timer(2000);
                 buttonXPath = "html > body > c-wiz > div > div:nth-of-type(3) > c-wiz > div > div > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(2) > div > div";
-                if (document.querySelector(buttonXPath) && document.querySelector(buttonXPath).innerText == "TURN OFF") {
-                    console.log("2FA already exists");
-                    let msg = {
-                        "google_get_method": true,
-                        "sms_already_setup": true,
-                        "message": "2FA is already enabled on this account"
-                    };
-                    if (getElementByXpath(document, "//*[contains(text(),'Authenticator app')]/..//div[@role='button'][@aria-label='Delete']")) {
-                        msg["totp_already_setup"]= true;
+                if (document.querySelector(buttonXPath) && document.querySelector(buttonXPath).innerText == "TURN OFF") {      
+                                                                                                                       "Security Center: StrongAuth: Authenticator:verifyCode"
+                    if(document.querySelector("div[role='radio']")!=null || document.querySelector("div[wizard-step-uid='Security Center: StrongAuth: Authenticator:installApp']")!=null || document.querySelector("div[wizard-step-uid='Security Center: StrongAuth: Authenticator:verifyCode']")!=null){
+                        return;
+                    } else {
+                        console.log("2FA already exists");
+                        let msg = {
+                            "google_get_method": true,
+                            "sms_already_setup": true,
+                            "message": "2FA is already enabled on this account"
+                        };
+                        if (getElementByXpath(document, "//*[contains(text(),'Authenticator app')]/..//div[@role='button'][@aria-label='Delete']")) {
+                            msg["totp_already_setup"]= true;
+                            msg['sms_already_setup']= false;
+                        }
+                        chrome.runtime.sendMessage(msg);
                     }
-                    chrome.runtime.sendMessage(msg);
                 } else if (document.querySelector(buttonXPath) && document.querySelector(buttonXPath).innerText == "TURN ON") {
                     console.log("2");
                     document.querySelector(buttonXPath).click();
@@ -234,6 +252,26 @@ chrome.runtime.onMessage.addListener(
             } else {
                 window.location.href = "https://myaccount.google.com/signinoptions/two-step-verification/enroll-welcome";
             }
+        } else if(window.location.href.includes("google.com/signin/v2/challenge")){
+            if(await waitUntilElementLoad(document, "#idvPin", 2)){
+                
+                chrome.runtime.sendMessage({
+                    google_get_code: true,
+                    type: 'sms',
+                    login_challenge: true,
+                });
+                
+            } else if(await waitUntilElementLoad(document, "#totpPin", 2)){
+                chrome.runtime.sendMessage({
+                    google_get_code: true,
+                    type: 'totp',
+                    login_challenge: true,
+                });
+            } else if(await waitUntilElementLoad(document, "input[type='password']", 2)){
+                chrome.runtime.sendMessage({
+                    google_get_password: true,
+                });
+            }
         } else if (window.location.href.includes("signinchooser")) {
             // In case all the accounts are logged out and google redirects to choose account. We redirect to select a new account always. 
             let UseAnotherAccountButtonXPath = "html > body > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div > div:nth-of-type(2) > div > div > div:nth-of-type(2) > div > div:nth-of-type(1) > div > form > span > section > div > div > div > div:nth-of-type(1) > ul > li:nth-of-type(2) > div > div > div:nth-of-type(2)";
@@ -243,7 +281,7 @@ chrome.runtime.onMessage.addListener(
         } else if (window.location.href.includes("/signin/") || window.location.href.includes("/identifier")) {
             if (document.querySelector("[type=email]") && document.querySelector("[type=email]").value == "") {
                 chrome.runtime.sendMessage({
-                    "google_get_username": true
+                    "google_get_email": true
                 });
             } else if (document.querySelector("[type=password]")) {
                 chrome.runtime.sendMessage({

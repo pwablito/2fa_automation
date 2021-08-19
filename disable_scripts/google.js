@@ -46,8 +46,8 @@ function exitScriptWithError() {
 
 chrome.runtime.onMessage.addListener(
     function(request, _) {
-        if (request.google_username) {
-            document.querySelector("#identifierId").value = request.username;
+        if (request.email) {
+            document.querySelector("#identifierId").value = request.email;
             document.querySelector("#identifierNext > div > button").click();
             chrome.runtime.sendMessage({
                 "google_get_password": true
@@ -119,7 +119,7 @@ chrome.runtime.onMessage.addListener(
         } else if (window.location.href.includes("/signin/") || window.location.href.includes("/identifier")) {
             if (document.querySelector("[type=email]") && document.querySelector("[type=email]").value == "") {
                 chrome.runtime.sendMessage({
-                    "google_get_username": true
+                    "google_get_email": true
                 });
             } else if (document.querySelector("[type=password]")) {
                 chrome.runtime.sendMessage({
