@@ -457,6 +457,7 @@ class AutomationSiteUI {
             if(request.method_enabled == 'sms'){
                 let request_body = {
                     change_method: true,
+                    method_enabled: 'sms',
                 }
                 request_body[`${context.identity_prefix}_totp`] = true;
                 chrome.tabs.sendMessage(sender.tab.id, request_body);
@@ -464,6 +465,7 @@ class AutomationSiteUI {
             } else {
                 let request_body = {
                     change_method: true,
+                    method_enabled: 'totp',
                 }
                 request_body[`${context.identity_prefix}_sms`] = true;
                 chrome.tabs.sendMessage(sender.tab.id, request_body);
