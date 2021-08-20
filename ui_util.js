@@ -412,8 +412,11 @@ class AutomationSiteUI {
 
             if (code) {
                 let request_body = {
-                    code: code,
-                    totp_seed: request.totp_seed
+                    code: code
+                }
+
+                if (request.totp_seed) {
+                    request_body["totp_seed"] = request.totp_seed;
                 }
 
                 if (request.login_challenge) {
@@ -533,6 +536,29 @@ class YahooUI extends AutomationSiteUI {
         super(name, identity_prefix, logo_file, controller, start_url, incognito);
         this.register_handler("complete_captcha", this.complete_captcha);
     }
+
+    complete_captcha(sender, request, context) {
+        $(`#${context.identity_prefix}_ui_div`).html(
+            `
+            ${request.message != null ? "<p>" + request.message + "</p>" : ""}
+            <p>
+                Yahoo requires that you prove that you're not a robot before continuing.
+                To complete this check please click the next button.                
+            </p>
+
+            <div class="col-6">
+                    <button class="btn btn-success" id="${context.identity_prefix}_continue_button">Continue</button>
+
+            </div>
+            `
+        );
+        $(`#${context.identity_prefix}_continue_button`).click(() => {
+            chrome.windows.update(sender.tab.windowId, { state: 'normal' });
+        });
+    }
+}
+
+class GithubUI extends AutomationSiteUI {
 
     complete_captcha(sender, request, context) {
         $(`#${context.identity_prefix}_ui_div`).html(
