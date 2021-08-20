@@ -36,7 +36,7 @@ async function waitUntilElementLoad(document, elemXPath, maxWait) {
 function exitScriptWithError() {
     // When debugging comment out code of this function. This will stop closing of background pages.
     chrome.runtime.sendMessage({
-        linkedin_error: true,
+        amazon_error: true,
         message: "Sorry! Something went wrong. ",
         message_for_dev: window.location.href
     });
@@ -82,18 +82,18 @@ async function handleReceivedMessage(request) {
             }
         }
     } else if (request.amazon_code) {
-        if(document.querySelector("#ch-auth-app-code-input").offsetParent!=null){
+        if (document.querySelector("#ch-auth-app-code-input").offsetParent != null) {
             document.querySelector("#ch-auth-app-code-input").value = request.code;
             document.querySelector("#ch-auth-app-submit").click();
             if (await waitUntilElementLoad(document, "#ch-auth-app-form-error", 2)) {
-                if(document.querySelector("#ch-auth-app-form-error").textContent != "An unexpected error has occured. "){
+                if (document.querySelector("#ch-auth-app-form-error").textContent != "An unexpected error has occured. ") {
                     console.log("incorrect code");
                     let unformattedText = document.querySelector("#sia-auth-app-formatted-secret").textContent;
-                    let formattedText = unformattedText.replace(/ /g,'');
+                    let formattedText = unformattedText.replace(/ /g, '');
                     chrome.runtime.sendMessage({
                         amazon_get_code: true,
                         type: "totp",
-                        totp_seed: formattedText, 
+                        totp_seed: formattedText,
                         message: document.querySelector("#ch-auth-app-form-error").textContent
                     });
                 }
@@ -126,19 +126,19 @@ async function handleReceivedMessage(request) {
         elem.querySelector(".a-accordion-radio").click();
         if (await waitUntilElementLoad(document, "div.a-accordion-active img", 2)) {
             document.querySelector("#sia-auth-app-cant-scan-link").click()
-        if(await waitUntilElementLoad(document, "#sia-auth-app-formatted-secret", 2)){
-            let unformattedText = document.querySelector("#sia-auth-app-formatted-secret").textContent;
-            let formattedText = unformattedText.replace(/ /g,'');
+            if (await waitUntilElementLoad(document, "#sia-auth-app-formatted-secret", 2)) {
+                let unformattedText = document.querySelector("#sia-auth-app-formatted-secret").textContent;
+                let formattedText = unformattedText.replace(/ /g, '');
 
-            chrome.runtime.sendMessage({
-                amazon_get_code: true,
-                type: "totp",
-                // TODO Need to either implement raw urls in the backend or else convert this to a seed and send it in `totp_seed`
-                // See issue #7 for more details
-                totp_seed: formattedText
-            });
-        }
-            
+                chrome.runtime.sendMessage({
+                    amazon_get_code: true,
+                    type: "totp",
+                    // TODO Need to either implement raw urls in the backend or else convert this to a seed and send it in `totp_seed`
+                    // See issue #7 for more details
+                    totp_seed: formattedText
+                });
+            }
+
         }
 
     }

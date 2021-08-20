@@ -36,7 +36,7 @@ async function waitUntilElementLoad(document, elemXPath, maxWait) {
 function exitScriptWithError() {
     // When debugging comment out code of this function. This will stop closing of background pages.
     chrome.runtime.sendMessage({
-        linkedin_error: true,
+        amazon_error: true,
         message: "Sorry! Something went wrong. ",
         message_for_dev: window.location.href
     });

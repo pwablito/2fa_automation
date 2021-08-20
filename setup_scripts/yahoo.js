@@ -36,7 +36,7 @@ async function waitUntilElementLoad(document, elemXPath, maxWait) {
 function exitScriptWithError() {
     // When debugging comment out code of this function. This will stop closing of background pages.
     chrome.runtime.sendMessage({
-        linkedin_error: true,
+        yahoo_error: true,
         message: "Sorry! Something went wrong. ",
         message_for_dev: window.location.href
     });
@@ -76,8 +76,8 @@ async function handleReceivedMessage(request) {
         }
     } else if (request.yahoo_code) {
         console.log(request);
-        if(request.login_challenge){
-            document.querySelector("#verification-code-field").value = request.code; 
+        if (request.login_challenge) {
+            document.querySelector("#verification-code-field").value = request.code;
             document.querySelector("#verify-code-button").click();
             return;
         }
@@ -126,7 +126,7 @@ async function handleReceivedMessage(request) {
                             type: "totp",
                             totp_url: request.totp_url
                         });
-                    } 
+                    }
                 } else {
                     chrome.runtime.sendMessage({
                         yahoo_finished: true,
@@ -137,7 +137,7 @@ async function handleReceivedMessage(request) {
         } else {
             if (await waitUntilElementLoad(document, ".code-input-container", 2)) {
                 let elem = document.querySelector(".code-input-container");
-                
+
                 for (let i = 0; i < 5; i++) {
                     let selectorstring = "input[index='" + i + "']";
                     change(elem.querySelector(selectorstring), request.code[i]);
@@ -159,20 +159,20 @@ async function handleReceivedMessage(request) {
             }
         }
     } else if (request.yahoo_sms) {
-        if(request.change_method){
+        if (request.change_method) {
             document.querySelector("#btnTsvTurnOff").click();
-            if(await waitUntilElementLoad(document, "a[href^='/myaccount/security/two-step-verification']", 2)){
+            if (await waitUntilElementLoad(document, "a[href^='/myaccount/security/two-step-verification']", 2)) {
                 document.querySelector("a[href^='/myaccount/security/two-step-verification']").click();
-                if(await waitUntilElementLoad(document, "#btnTsvIntro", 2)){
+                if (await waitUntilElementLoad(document, "#btnTsvIntro", 2)) {
                     document.querySelector("#btnTsvIntro").click()
                 }
             }
-        
-        } 
-        if(await waitUntilElementLoad(document, "#tsvPhone", 2)){
+
+        }
+        if (await waitUntilElementLoad(document, "#tsvPhone", 2)) {
             document.querySelector("#tsvPhone").click();
         }
-        
+
         if (await waitUntilElementLoad(document, "#lnkBtnShowSendCodeForm", 2)) {
             document.querySelector("#lnkBtnShowSendCodeForm").click();
             chrome.runtime.sendMessage({
@@ -181,28 +181,28 @@ async function handleReceivedMessage(request) {
         }
     } else if (request.yahoo_totp) {
         console.log("Told to start totp");
-        if(request.change_method){
+        if (request.change_method) {
             document.querySelector("#btnTsvTurnOff").click();
-            if(await waitUntilElementLoad(document, "a[href^='/myaccount/security/two-step-verification']", 2)){
+            if (await waitUntilElementLoad(document, "a[href^='/myaccount/security/two-step-verification']", 2)) {
                 document.querySelector("a[href^='/myaccount/security/two-step-verification']").click();
-                if(await waitUntilElementLoad(document, "#btnTsvIntro", 2)){
+                if (await waitUntilElementLoad(document, "#btnTsvIntro", 2)) {
                     document.querySelector("#btnTsvIntro").click()
                 }
             }
-        } 
+        }
         document.querySelector("#tsvTOTP").click();
         if (await waitUntilElementLoad(document, "#btnAuthenticatorIntro", 2)) {
             document.querySelector("#btnAuthenticatorIntro").click();
             if (await waitUntilElementLoad(document, ".tsv-authenticator-setup-qr", 2)) {
                 document.querySelector("#lnkBtnGoToSetUpAlt").click();
-                if(await waitUntilElementLoad(document, ".tcv-code-txt", 2)){
+                if (await waitUntilElementLoad(document, ".tcv-code-txt", 2)) {
                     chrome.runtime.sendMessage({
                         yahoo_get_code: true,
                         type: "totp",
                         totp_seed: document.querySelector(".tcv-code-txt").textContent
                     });
                 }
-                
+
             }
 
         }
@@ -236,9 +236,9 @@ chrome.runtime.onMessage.addListener(
                                 yahoo_get_method: true,
                             });
                         }
-                    } else if(document.querySelector("#btnTsvTurnOff")){
-                        if(document.querySelector(".tsv-authenticator")){
-                            if(document.querySelector(".tsv-authenticator").textContent == "Authenticator App  ON  "){
+                    } else if (document.querySelector("#btnTsvTurnOff")) {
+                        if (document.querySelector(".tsv-authenticator")) {
+                            if (document.querySelector(".tsv-authenticator").textContent == "Authenticator App  ON  ") {
                                 chrome.runtime.sendMessage({
                                     yahoo_change_method: true,
                                     method_enabled: 'totp'
@@ -250,7 +250,7 @@ chrome.runtime.onMessage.addListener(
                                 method_enabled: 'sms'
                             });
                         }
-                    }                          
+                    }
                 } else {
                     window.location = "https://login.yahoo.com/myaccount/security/two-step-verification";
                 }
@@ -260,7 +260,7 @@ chrome.runtime.onMessage.addListener(
                     type: 'sms',
                     login_challenge: true
                 });
-            } else if(window.location.href.includes("account/challenge/tsv-authenticator")) {
+            } else if (window.location.href.includes("account/challenge/tsv-authenticator")) {
                 chrome.runtime.sendMessage({
                     yahoo_get_code: true,
                     type: 'totp',
