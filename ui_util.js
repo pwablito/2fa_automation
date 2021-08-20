@@ -1,6 +1,26 @@
 class AutomationUI {
-    constructor() {
+    constructor(parent_id) {
         this.sites = [];
+        this.parent_id = parent_id;
+        $(`#${this.parent_id}`).html(
+            `
+            <div id="site_automation_div"></div>
+            <button id="next_site_automation" class="btn btn-success" style="display: none;">Next</button>
+            `
+        );
+        $("#next_site_automation").click(() => {
+            this.disable_injection(this.current_site.identity_prefix);
+            this.current_site.destroy();
+            $(`#next_site_automation`).hide();
+            this.next();
+        });
+        chrome.runtime.onMessage.addListener(
+            (request, _) => {
+                if (request.next_automation) {
+                    $(`#next_site_automation`).show();
+                }
+            }
+        );
     }
 
     add_site(site) {
@@ -11,17 +31,21 @@ class AutomationUI {
     }
 
     run() {
-        for (let site of this.sites) {
-            this.enable_injection(site.identity_prefix);
-            site.initialize();
+        this.next();
+    }
+
+    next() {
+        if (this.sites.length === 0) {
+            this.finished(); // TODO implement this function
         }
+        this.current_site = this.sites.pop();
+        this.enable_injection(this.current_site.identity_prefix);
+        this.current_site.initialize("site_automation_div");
     }
 
     stop() {
-        for (let site of this.sites) {
-            this.disable_injection(site.identity_prefix);
-            site.close_window();
-        }
+        this.disable_injection(this.current_site.identity_prefix);
+        this.current_site.close_window();
     }
 
     enable_injection(service) {
@@ -58,7 +82,7 @@ class DisableUI extends AutomationUI {
 }
 
 class AutomationSiteUI {
-    constructor(name, identity_prefix, parent_id, logo_file, controller, start_url, incognito = false) {
+    constructor(name, identity_prefix, logo_file, controller, start_url, incognito = false) {
         /*
          * @param {string} name - Name of the site (i.e. "Google")
          * @param {string} identity_prefix - Prefix for UI elements (i.e. "google" would result in "google_ui_div"
@@ -70,7 +94,6 @@ class AutomationSiteUI {
          */
         this.name = name;
         this.identity_prefix = identity_prefix;
-        this.parent_id = parent_id;
         this.logo_file = logo_file;
         this.controller = controller;
         this.start_url = start_url;
@@ -94,13 +117,13 @@ class AutomationSiteUI {
 
     register_handler(suffix, handler) {
         this.handlers.push({ suffix: suffix, handler: handler, context: this });
-
     }
 
-    initialize() {
-        $(`#${this.parent_id}`).append(
+    initialize(parent_id) {
+        this.parent_id = parent_id;
+        $(`#${this.parent_id}`).html(
             `
-            <div class="gray">
+            <div class="gray" id="${this.identity_prefix}-container">
                 <div class="row">
                     <div class="col-3"><img src="${this.logo_file}"></div>
                     <div class="col-9">
@@ -124,6 +147,10 @@ class AutomationSiteUI {
         });
     }
 
+    destroy() {
+        $(`#${this.identity_prefix}-container`).remove();
+    }
+
     launch_listener(ui) {
         chrome.runtime.onMessage.addListener(
             async function listener(request, sender) {
@@ -135,7 +162,6 @@ class AutomationSiteUI {
                     }
                 }
                 if (is_this_site) {
-                    console.log(request);
                     let consumed_request = false;
                     for (const handler of ui.handlers) {
                         if (request[`${ui.identity_prefix}_${handler.suffix}`]) {
@@ -185,6 +211,9 @@ class AutomationSiteUI {
         );
         context.controller.disable_injection(context.identity_prefix);
         context.close_window();
+        chrome.runtime.sendMessage({
+            next_automation: true,
+        });
     }
 
     request_error(request) {
@@ -202,7 +231,10 @@ class AutomationSiteUI {
             `
         );
         this.controller.disable_injection(this.identity_prefix);
-        //this.close_window();
+        this.close_window();
+        chrome.runtime.sendMessage({
+            next_automation: true,
+        });
     }
 
     get_credentials(sender, request, context) {
@@ -324,7 +356,7 @@ class AutomationSiteUI {
                 `
             );
         } else if (request.type === "totp") {
-            if(request.login_challenge){
+            if (request.login_challenge) {
                 $(`#${context.identity_prefix}_ui_div`).html(
                     `
                     ${request.message != null ? "<p>" + request.message + "</p>" : ""}
@@ -338,7 +370,7 @@ class AutomationSiteUI {
             } else if (!(request.totp_seed || request.totp_url)) {
                 context.error("TOTP seed not provided");
                 return;
-            }  else {
+            } else {
                 let totp_url;
                 if (request.totp_url) {
                     totp_url = request.totp_url;
@@ -366,7 +398,7 @@ class AutomationSiteUI {
                 new QRCode(document.getElementById(`${context.identity_prefix}_qr_div`), totp_url);
             }
 
-           
+
         } else if (request.type === "sms") {
             $(`#${context.identity_prefix}_ui_div`).html(
                 `
@@ -382,14 +414,14 @@ class AutomationSiteUI {
         $(`#${context.identity_prefix}_code_form`).submit((e) => {
             e.preventDefault();
             let code = $(`#${context.identity_prefix}_code_input`).val();
-            
+
             if (code) {
                 let request_body = {
                     code: code,
                     totp_seed: request.totp_seed
                 }
-                
-                if(request.login_challenge){
+
+                if (request.login_challenge) {
                     request_body['login_challenge'] = true;
                 }
                 request_body[`${context.identity_prefix}_code`] = true;
@@ -453,9 +485,9 @@ class AutomationSiteUI {
             </div>
             `
         );
-       
+
         $(`#${context.identity_prefix}_continue_button`).click(() => {
-            if(request.method_enabled == 'sms'){
+            if (request.method_enabled == 'sms') {
                 let request_body = {
                     change_method: true,
                     method_enabled: 'sms',
@@ -471,7 +503,7 @@ class AutomationSiteUI {
                 request_body[`${context.identity_prefix}_sms`] = true;
                 chrome.tabs.sendMessage(sender.tab.id, request_body);
                 context.loading();
-                
+
             }
         });
 
@@ -482,8 +514,8 @@ class AutomationSiteUI {
 }
 
 class AmazonUI extends AutomationSiteUI {
-    constructor(name, identity_prefix, parent_id, logo_file, controller, start_url, incognito = false) {
-        super(name, identity_prefix, parent_id, logo_file, controller, start_url, incognito);
+    constructor(name, identity_prefix, logo_file, controller, start_url, incognito = false) {
+        super(name, identity_prefix, logo_file, controller, start_url, incognito);
         this.register_handler("approve_login", this.approve_login);
     }
 
@@ -502,12 +534,12 @@ class AmazonUI extends AutomationSiteUI {
 }
 
 class YahooUI extends AutomationSiteUI {
-    constructor(name, identity_prefix, parent_id, logo_file, controller, start_url, incognito = false) {
-        super(name, identity_prefix, parent_id, logo_file, controller, start_url, incognito);
+    constructor(name, identity_prefix, logo_file, controller, start_url, incognito = false) {
+        super(name, identity_prefix, logo_file, controller, start_url, incognito);
         this.register_handler("complete_captcha", this.complete_captcha);
     }
 
-    complete_captcha(sender, request, context){
+    complete_captcha(sender, request, context) {
         $(`#${context.identity_prefix}_ui_div`).html(
             `
             ${request.message != null ? "<p>" + request.message + "</p>" : ""}
