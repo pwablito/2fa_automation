@@ -58,24 +58,24 @@ class AutomationUI {
 
 class SetupUI extends AutomationUI {
     enable_injection(service) {
-        // Calls the enable_injection function in `setup_util.js`
+        // Calls the enable_injection function in `util.js`
         enable_injection(service, "setup")
     }
 
     disable_injection(service) {
-        // Calls the disable_injection function in `setup_util.js`
+        // Calls the disable_injection function in `util.js`
         disable_injection(service, "setup")
     }
 }
 
 class DisableUI extends AutomationUI {
     enable_injection(service) {
-        // Calls the enable_injection function in `setup_util.js`
+        // Calls the enable_injection function in `util.js`
         enable_injection(service, "disable")
     }
 
     disable_injection(service) {
-        // Calls the disable_injection function in `setup_util.js`
+        // Calls the disable_injection function in `util.js`
         disable_injection(service, "disable")
     }
 }
