@@ -92,7 +92,7 @@ chrome.runtime.onMessage.addListener(
 
             } else {
                 chrome.runtime.sendMessage({
-                    amazon_disable_error: true,
+                    amazon_error: true,
                     message: "2FA is already disabled for this account"
                 })
             }
