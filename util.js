@@ -4,7 +4,7 @@ function rafAsync() {
     });
 }
 
-export function checkElement(selector) {
+function checkElement(selector) {
     if (document.querySelector(selector) === null) {
         return rafAsync().then(() => checkElement(selector));
     } else {
@@ -12,7 +12,7 @@ export function checkElement(selector) {
     }
 }
 
-export function change(field, value) {
+function change(field, value) {
     field.value = value;
     field.dispatchEvent(new Event('input', { bubbles: true }));
     field.dispatchEvent(new Event('change', { bubbles: true }));
