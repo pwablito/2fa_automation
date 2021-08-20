@@ -8,7 +8,7 @@ let setup_injection_statuses = {
     "yahoo": false,
     "dropbox": false,
     "linkedin": false,
-    "pinterest": false,
+    //"pinterest": false,
 }
 let disable_injection_statuses = {
     "github": false,
@@ -20,7 +20,7 @@ let disable_injection_statuses = {
     "yahoo": false,
     "dropbox": false,
     "linkedin": false,
-    "pinterest": false,
+    //"pinterest": false,
 }
 
 let isStartingTabIncognito = false
@@ -75,11 +75,11 @@ chrome.tabs.onUpdated.addListener(function(tabId, info, tab) {
                 chrome.tabs.executeScript(tabId, { file: "setup_scripts/linkedin.js" })
             }
         }
-        if (setup_injection_statuses.pinterest) {
-            if (tab.url.includes("pinterest.com")) {
-                chrome.tabs.executeScript(tabId, { file: "setup_scripts/pinterest.js" })
-            }
-        }
+        // if (setup_injection_statuses.pinterest) {
+        //     if (tab.url.includes("pinterest.com")) {
+        //         chrome.tabs.executeScript(tabId, { file: "setup_scripts/pinterest.js" })
+        //     }
+        // }
         if (disable_injection_statuses.github) {
             if (tab.url.includes("github.com")) {
                 chrome.tabs.executeScript(tabId, { file: "disable_scripts/github.js" });
@@ -125,11 +125,11 @@ chrome.tabs.onUpdated.addListener(function(tabId, info, tab) {
                 chrome.tabs.executeScript(tabId, { file: "disable_scripts/linkedin.js" })
             }
         }
-        if (disable_injection_statuses.pinterest) {
-            if (tab.url.includes("pinterest.com")) {
-                chrome.tabs.executeScript(tabId, { file: "disable_scripts/pinterest.js" })
-            }
-        }
+        // if (disable_injection_statuses.pinterest) {
+        //     if (tab.url.includes("pinterest.com")) {
+        //         chrome.tabs.executeScript(tabId, { file: "disable_scripts/pinterest.js" })
+        //     }
+        // }
     }
 });
 
@@ -137,8 +137,8 @@ chrome.browserAction.onClicked.addListener(function(tab) {
     chrome.windows.create({
         url: chrome.runtime.getURL("popup.html"),
         type: "popup",
-        height: 500,
-        width: 375,
+        height: 550,
+        width: 400,
     });
     if (tab.incognito) {
         isStartingTabIncognito = true;
