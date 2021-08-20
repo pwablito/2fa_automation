@@ -16,9 +16,8 @@ class AutomationUI {
         });
         chrome.runtime.onMessage.addListener(
             (request, _) => {
-                if (request.next_automation) {
-                    $(`#next_site_automation`).show();
-                }
+                // For debug purposes in the UI only
+                console.log(request);
             }
         );
     }
@@ -36,7 +35,7 @@ class AutomationUI {
 
     next() {
         if (this.sites.length === 0) {
-            this.finished(); // TODO implement this function
+            $("#site_automation_div").html("Done"); // TODO improve this
         }
         this.current_site = this.sites.pop();
         this.enable_injection(this.current_site.identity_prefix);
@@ -211,9 +210,7 @@ class AutomationSiteUI {
         );
         context.controller.disable_injection(context.identity_prefix);
         context.close_window();
-        chrome.runtime.sendMessage({
-            next_automation: true,
-        });
+        $(`#next_site_automation`).show();
     }
 
     request_error(request) {
@@ -232,9 +229,7 @@ class AutomationSiteUI {
         );
         this.controller.disable_injection(this.identity_prefix);
         this.close_window();
-        chrome.runtime.sendMessage({
-            next_automation: true,
-        });
+        $(`#next_site_automation`).show();
     }
 
     get_credentials(sender, request, context) {
