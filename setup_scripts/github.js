@@ -126,24 +126,28 @@ async function handleReceivedMessage(request) {
     } else if (request.github_password) {
         document.querySelector("[type=password]").value = request.password;
         document.querySelector("[type=submit]").click();
-    } else if (request.github_start_sms) {
-        document.querySelector("input[value=sms][type=radio]").click();
-        getElementByXpath(document, "//button[contains(text(),'Continue')]").click();
-        chrome.runtime.sendMessage({
-            github_get_phone: true,
-        });
-    } else if (request.github_start_totp) {
-        document.querySelector("input[value=app][type=radio]").click();
-        getElementByXpath(document, "//button[contains(text(),'Continue')]").click();
-        console.log("In Start TOTP");
-        if (await waitUntilElementLoad(document, "[data-target='two-factor-setup-verification.mashedSecret']", 2)) {
-            await timer(500); // To wait for textContent to load in the div element
-            console.log(document.querySelector("[data-target='two-factor-setup-verification.mashedSecret']").innerHTML);
+    } else if (request.github_method) {
+        if (request.type === "sms") {
+            document.querySelector("input[value=sms][type=radio]").click();
+            getElementByXpath(document, "//button[contains(text(),'Continue')]").click();
             chrome.runtime.sendMessage({
-                github_get_code: true,
-                totp_secret: document.querySelector("[data-target='two-factor-setup-verification.mashedSecret']").textContent.replace(/\s+/g, '')
+                github_get_phone: true,
             });
-        } else { exitScriptWithError(); }
+        } else if (request.type === "totp") {
+            document.querySelector("input[value=app][type=radio]").click();
+            getElementByXpath(document, "//button[contains(text(),'Continue')]").click();
+            console.log("In Start TOTP");
+            if (await waitUntilElementLoad(document, "[data-target='two-factor-setup-verification.mashedSecret']", 2)) {
+                await timer(500); // To wait for textContent to load in the div element
+                console.log(document.querySelector("[data-target='two-factor-setup-verification.mashedSecret']").innerHTML);
+                chrome.runtime.sendMessage({
+                    github_get_code: true,
+                    totp_secret: document.querySelector("[data-target='two-factor-setup-verification.mashedSecret']").textContent.replace(/\s+/g, '')
+                });
+            } else { exitScriptWithError(); }
+        }
+    } else {
+        exitScriptWithError();
     }
 }
 
