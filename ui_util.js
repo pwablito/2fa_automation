@@ -432,6 +432,7 @@ class AutomationSiteUI {
     }
 
     get_method(sender, request, context) {
+        console.log(request);
         $(`#${context.identity_prefix}_ui_div`).html(
             `
             ${request.message != null ? "<p>" + request.message + "</p>" : ""}
@@ -456,10 +457,33 @@ class AutomationSiteUI {
             document.getElementById(context.identity_prefix + "_totp_tick").style.display = "";
         }
         $(`#${context.identity_prefix}_totp_button`).click(() => {
-            let request_body = {}
-            request_body[`${context.identity_prefix}_totp`] = true;
-            chrome.tabs.sendMessage(sender.tab.id, request_body);
-            context.loading();
+
+            if (context.identity_prefix == "google" && !request.sms_already_setup) {
+                $(`#${context.identity_prefix}_ui_div`).html(
+                    `
+                    ${request.message != null ? "<p>" + request.message + "</p>" : ""}
+                    <p>
+                        Google requires enabling SMS first before enabling a TOTP. Do you want to conitnue with SMS enabling first?              
+                    </p>
+        
+                    <div class="col-6">
+                            <button class="btn btn-success" id="${context.identity_prefix}_continue_button">Continue</button>
+        
+                    </div>
+                    `
+                );
+                $(`#${context.identity_prefix}_continue_button`).click(() => {
+                    let request_body = {}
+                    request_body[`${context.identity_prefix}_sms`] = true;
+                    chrome.tabs.sendMessage(sender.tab.id, request_body);
+                    context.loading();
+                });
+            } else {
+                let request_body = {}
+                request_body[`${context.identity_prefix}_totp`] = true;
+                chrome.tabs.sendMessage(sender.tab.id, request_body);
+                context.loading();
+            }
         });
         $(`#${context.identity_prefix}_sms_button`).click(() => {
             let request_body = {}
@@ -532,6 +556,7 @@ class AmazonUI extends AutomationSiteUI {
         );
     }
 }
+
 
 class YahooUI extends AutomationSiteUI {
     constructor(name, identity_prefix, logo_file, controller, start_url) {

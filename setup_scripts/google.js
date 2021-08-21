@@ -149,7 +149,12 @@ async function handleReceivedMessage(request) {
                 });
             }
         }
-    } else if (request.google_totp) {
+    } else if (request.google_sms) {
+        // phone number fill page
+        chrome.runtime.sendMessage({
+            "google_get_phone": true
+        });
+    }else if (request.google_totp) {
         console.log("in TOTP");
         getElementByXpath(document, "//*[contains(text(),'Authenticator app')]/..//div[@role='button']").click();
         let popUpElemNextButtonXPath = "html > body > div > div > div:nth-of-type(2) > div:nth-of-type(3) > div > div:nth-of-type(3)";
@@ -212,7 +217,6 @@ chrome.runtime.onMessage.addListener(
                 await timer(2000);
                 buttonXPath = "html > body > c-wiz > div > div:nth-of-type(3) > c-wiz > div > div > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(2) > div > div";
                 if (document.querySelector(buttonXPath) && document.querySelector(buttonXPath).innerText == "TURN OFF") {      
-                                                                                                                       "Security Center: StrongAuth: Authenticator:verifyCode"
                     if(document.querySelector("div[role='radio']")!=null || document.querySelector("div[wizard-step-uid='Security Center: StrongAuth: Authenticator:installApp']")!=null || document.querySelector("div[wizard-step-uid='Security Center: StrongAuth: Authenticator:verifyCode']")!=null){
                         return;
                     } else {
@@ -224,7 +228,7 @@ chrome.runtime.onMessage.addListener(
                         };
                         if (getElementByXpath(document, "//*[contains(text(),'Authenticator app')]/..//div[@role='button'][@aria-label='Delete']")) {
                             msg["totp_already_setup"]= true;
-                            msg['sms_already_setup']= false;
+                            // msg['sms_already_setup']= false;
                         }
                         chrome.runtime.sendMessage(msg);
                     }
@@ -244,10 +248,8 @@ chrome.runtime.onMessage.addListener(
                     getElementByXpath(document, "//*[contains(text(),'Get started')]/../..").click();
                 }
                 console.log("4");
-                if ( await waitUntilElementLoad(document, "[type=tel]", 2)) { // phone number fill page
-                    chrome.runtime.sendMessage({
-                        "google_get_phone": true
-                    });
+                if ( await waitUntilElementLoad(document, "[type=tel]", 2)) {
+                    chrome.runtime.sendMessage({"google_get_method": true});
                 }
             } else {
                 window.location.href = "https://myaccount.google.com/signinoptions/two-step-verification/enroll-welcome";
