@@ -82,7 +82,7 @@ class DisableUI extends AutomationUI {
 }
 
 class AutomationSiteUI {
-    constructor(name, identity_prefix, logo_file, controller, start_url, incognito = false) {
+    constructor(name, identity_prefix, logo_file, controller, start_url) {
         /*
          * @param {string} name - Name of the site (i.e. "Google")
          * @param {string} identity_prefix - Prefix for UI elements (i.e. "google" would result in "google_ui_div"
@@ -90,17 +90,15 @@ class AutomationSiteUI {
          * @param {string} logo_file - Path to the logo file to display on the side of the UI
          * @param {AutomationUI} controller - Controller which is an AutomationUI object (i.e. SetupUI or DisableUI)
          * @param {string} start_url - URL for the first page of the 2fa automation process (will be automatically opened)
-         * @param {boolean} incognito - Whether or not to open the target site in incognito mode
          */
         this.name = name;
         this.identity_prefix = identity_prefix;
         this.logo_file = logo_file;
         this.controller = controller;
         this.start_url = start_url;
-        this.incognito = incognito
-        this.window_id = null
-        this.handlers = []
-        this.init_default_handlers()
+        this.window_id = null;
+        this.handlers = [];
+        this.init_default_handlers();
     }
 
     init_default_handlers() {
@@ -135,39 +133,19 @@ class AutomationSiteUI {
         );
         this.launch_listener(this);
         this.loading();
-        let isIncognitoWindow = false;
-        // var strt_var = this.start_url;
-        // chrome.tabs.getSelected(null, function(tab, start_url) {
-        //     // tab = tab.id;
-        //     // tabUrl = tab.url;
-    
-        //     // alert(tab.url);
-        //     console.log(strt_var);
-        // });
-        chrome.tabs.query({
-            active: true,
-            currentWindow: true
-        }, function(tabs) {
-            var tabURL = tabs[0].url;
-            if (tabs[0].height == 551) {
-                isIncognitoWindow = true;
-            }
-            console.log(tabs[0].height);
-            console.log(isIncognitoWindow);
-            console.log(this.start_url)
+        chrome.runtime.getBackgroundPage(function (backgroundPage) { // To get incognito status from bacgroundpage
+            console.log(backgroundPage.isStartingTabIncognito); 
             chrome.windows.create({
                 url: this.start_url,
                 focused: false,
                 state: "minimized",
-                incognito: isIncognitoWindow,
+                incognito: backgroundPage.isStartingTabIncognito,
             }, (window) => {
                 this.window_id = window.id;
                 console.log(window.id);
                 chrome.windows.update(window.id, { state: 'minimized' });
             });
         }.bind(this));
-        
-  
     }
 
     destroy() {
@@ -536,8 +514,8 @@ class AutomationSiteUI {
 }
 
 class AmazonUI extends AutomationSiteUI {
-    constructor(name, identity_prefix, logo_file, controller, start_url, incognito = false) {
-        super(name, identity_prefix, logo_file, controller, start_url, incognito);
+    constructor(name, identity_prefix, logo_file, controller, start_url) {
+        super(name, identity_prefix, logo_file, controller, start_url);
         this.register_handler("approve_login", this.approve_login);
     }
 
@@ -556,8 +534,8 @@ class AmazonUI extends AutomationSiteUI {
 }
 
 class YahooUI extends AutomationSiteUI {
-    constructor(name, identity_prefix, logo_file, controller, start_url, incognito = false) {
-        super(name, identity_prefix, logo_file, controller, start_url, incognito);
+    constructor(name, identity_prefix, logo_file, controller, start_url) {
+        super(name, identity_prefix, logo_file, controller, start_url);
         this.register_handler("complete_captcha", this.complete_captcha);
     }
 

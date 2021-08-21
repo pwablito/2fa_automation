@@ -24,7 +24,7 @@ let disable_injection_statuses = {
 }
 
 let currentExtensionOpenedTabID = -10
-
+var isStartingTabIncognito = false;
 chrome.tabs.onUpdated.addListener(function(tabId, info, tab) {
     if (info.status == "complete") {
         // Page loaded, now decide which content script to inject
@@ -133,15 +133,15 @@ chrome.tabs.onUpdated.addListener(function(tabId, info, tab) {
 });
 
 chrome.browserAction.onClicked.addListener(function(tab) {
-    let ht = 550;
     if (tab.incognito) {    // we use window height to convey the ingonito information to ui_util.js file. (Having trouble while sending runtime messages)
-        ht = 551;
+        isStartingTabIncognito=true;
     }
     chrome.windows.create({
         url: chrome.runtime.getURL("popup.html"),
         type: "popup",
-        height: ht,
+        height: 550,
         width: 400,
+        
     });
 });
 
@@ -163,29 +163,6 @@ chrome.runtime.onMessage.addListener(
             } else {
                 console.log("Error, invalid type")
             }
-        } else if (request.open_background_window) {
-            console.log("Yolo", isStartingTabIncognito);
-            if (isStartingTabIncognito) {
-                chrome.windows.create({
-                    url: request.url, //"https://www.reddit.com/2fa/enable",
-                    focused: false,
-                    incognito: true,
-                    state: "minimized"
-                }, (window) => {
-                    chrome.windows.update(window.id, { state: 'minimized' });
-                    currentExtensionOpenedTabID = window.tabs[0].id;
-                });
-            } else {
-                chrome.windows.create({
-                    url: request.url, //"https://www.reddit.com/2fa/enable",
-                    focused: false,
-                    state: "minimized"
-                }, (window) => {
-                    chrome.windows.update(window.id, { state: 'minimized' });
-                    currentExtensionOpenedTabID = window.tabs[0].id;
-                });
-            }
-
         }
     }
 );
