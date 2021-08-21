@@ -273,10 +273,11 @@ chrome.runtime.onMessage.addListener(
                 });
             }
         } else if (window.location.href.includes("signinchooser")) {
+            await waitUntilPageLoad(document, 3);
             // In case all the accounts are logged out and google redirects to choose account. We redirect to select a new account always. 
-            let UseAnotherAccountButtonXPath = "html > body > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div > div:nth-of-type(2) > div > div > div:nth-of-type(2) > div > div:nth-of-type(1) > div > form > span > section > div > div > div > div:nth-of-type(1) > ul > li:nth-of-type(2) > div > div > div:nth-of-type(2)";
-            if (await waitUntilElementLoad(document, UseAnotherAccountButtonXPath, 2)) {
-                document.querySelector(UseAnotherAccountButtonXPath).click();
+            // let UseAnotherAccountButtonXPath = "html > body > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div > div:nth-of-type(2) > div > div > div:nth-of-type(2) > div > div:nth-of-type(1) > div > form > span > section > div > div > div > div:nth-of-type(1) > ul > li:nth-of-type(2) > div > div > div:nth-of-type(2)";
+            if (getElementByXpath(document, "//*[contains(text(),'Use another account')]/../..")) {
+                getElementByXpath(document, "//*[contains(text(),'Use another account')]/../..").click();
             }
         } else if (window.location.href.includes("/signin/") || window.location.href.includes("/identifier")) {
             if (document.querySelector("[type=email]") && document.querySelector("[type=email]").value == "") {

@@ -23,7 +23,6 @@ let disable_injection_statuses = {
     //"pinterest": false,
 }
 
-let isStartingTabIncognito = false
 let currentExtensionOpenedTabID = -10
 
 chrome.tabs.onUpdated.addListener(function(tabId, info, tab) {
@@ -134,15 +133,16 @@ chrome.tabs.onUpdated.addListener(function(tabId, info, tab) {
 });
 
 chrome.browserAction.onClicked.addListener(function(tab) {
+    let ht = 550;
+    if (tab.incognito) {    // we use window height to convey the ingonito information to ui_util.js file. (Having trouble while sending runtime messages)
+        ht = 551;
+    }
     chrome.windows.create({
         url: chrome.runtime.getURL("popup.html"),
         type: "popup",
-        height: 550,
+        height: ht,
         width: 400,
     });
-    if (tab.incognito) {
-        isStartingTabIncognito = true;
-    }
 });
 
 chrome.runtime.onMessage.addListener(

@@ -1,3 +1,4 @@
+
 class AutomationUI {
     constructor(parent_id) {
         this.sites = [];
@@ -134,16 +135,39 @@ class AutomationSiteUI {
         );
         this.launch_listener(this);
         this.loading();
-        chrome.windows.create({
-            url: this.start_url,
-            focused: false,
-            state: "minimized",
-            incognito: this.incognito,
-        }, (window) => {
-            this.window_id = window.id;
-            console.log(window.id);
-            chrome.windows.update(window.id, { state: 'minimized' });
-        });
+        let isIncognitoWindow = false;
+        // var strt_var = this.start_url;
+        // chrome.tabs.getSelected(null, function(tab, start_url) {
+        //     // tab = tab.id;
+        //     // tabUrl = tab.url;
+    
+        //     // alert(tab.url);
+        //     console.log(strt_var);
+        // });
+        chrome.tabs.query({
+            active: true,
+            currentWindow: true
+        }, function(tabs) {
+            var tabURL = tabs[0].url;
+            if (tabs[0].height == 551) {
+                isIncognitoWindow = true;
+            }
+            console.log(tabs[0].height);
+            console.log(isIncognitoWindow);
+            console.log(this.start_url)
+            chrome.windows.create({
+                url: this.start_url,
+                focused: false,
+                state: "minimized",
+                incognito: isIncognitoWindow,
+            }, (window) => {
+                this.window_id = window.id;
+                console.log(window.id);
+                chrome.windows.update(window.id, { state: 'minimized' });
+            });
+        }.bind(this));
+        
+  
     }
 
     destroy() {
