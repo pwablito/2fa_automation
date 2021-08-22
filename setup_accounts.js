@@ -17,7 +17,7 @@ $("#setup_accounts_button").click(() => {
                 } else if (service_name === "github") {
                     automationUI.add_site(new AutomationSiteUI("GitHub", "github", "logos/github.svg", automationUI, "https://github.com/login"));
                 } else if (service_name === "google") {
-                    automationUI.add_site(new AutomationSiteUI("Google", "google", "logos/google.svg", automationUI, "https://accounts.google.com/signin"));
+                    automationUI.add_site(new GoogleUI("Google", "google", "logos/google.svg", automationUI, "https://accounts.google.com/signin"));
                 } else if (service_name === "pinterest") {
                     automationUI.add_site(new AutomationSiteUI("Pinterest", "pinterest", "logos/pinterest.svg", automationUI, "https://www.pinterest.com/settings/security"));
                 } else if (service_name === "facebook") {

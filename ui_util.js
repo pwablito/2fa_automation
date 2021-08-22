@@ -169,6 +169,7 @@ class AutomationSiteUI {
                             consumed_request = true;
                             handler.handler(sender, request, handler.context);
                             if (handler.suffix === "error" || handler.suffix === "finished") {
+
                                 chrome.runtime.onMessage.removeListener(listener);
                             }
                         }
@@ -204,6 +205,8 @@ class AutomationSiteUI {
     }
 
     finished(sender, request, context) {
+        
+        
         $(`#${context.identity_prefix}_ui_div`).html(
             `
             ${request.message != null ? "<p>" + request.message + "</p>" : ""}
@@ -213,6 +216,8 @@ class AutomationSiteUI {
         context.controller.disable_injection(context.identity_prefix);
         context.close_window();
         $(`#next_site_automation`).show();
+        
+        
     }
 
     request_error(request) {
@@ -235,83 +240,130 @@ class AutomationSiteUI {
     }
 
     get_credentials(sender, request, context) {
-        $(`#${context.identity_prefix}_ui_div`).html(
-            `
-            ${request.message != null ? "<p>" + request.message + "</p>" : ""}
-            <p>Please enter your ${request.type === null ? "login" : request.type === "username" ? "username" : "email"} and password for ${context.name}</p>
-            <form id="${context.identity_prefix}_credentials_form">
-                <input type="${request.type !== null && request.type === "email" ? "email" : "text"}" id="${context.identity_prefix}_login_input" placeholder="${request.type === null ? "Login" : request.type === "username" ? "Username" : "Email"}" required>
-                <input type="password" id="${context.identity_prefix}_password_input" placeholder="Password" required>
-                <button class="btn btn-success" type="submit">Submit</button>
-            </form>
-            `
-        );
-        $(`#${context.identity_prefix}_credentials_form`).submit((e) => {
-            e.preventDefault();
-            let login = $(`#${context.identity_prefix}_login_input`).val();
-            let password = $(`#${context.identity_prefix}_password_input`).val();
-            if (login && password) {
-                let request_body = {
-                    login: login,
-                    password: password
-                }
-                request_body[`${context.identity_prefix}_credentials`] = true;
-                chrome.tabs.sendMessage(sender.tab.id, request_body);
-                context.loading();
+    
+        if(request.message == null && document.querySelector(`#${context.identity_prefix}`).getAttribute("password") && document.querySelector(`#${context.identity_prefix}`).getAttribute("email")){
+            let password = document.querySelector(`#${context.identity_prefix}`).getAttribute("password");
+            let login = document.querySelector(`#${context.identity_prefix}`).getAttribute("email");
+            let request_body = {
+                login: login,
+                password: password
             }
-        });
+            request_body[`${context.identity_prefix}_password`] = true;
+            request_body["next_step"] = request.next_step;
+            chrome.tabs.sendMessage(sender.tab.id, request_body);
+            context.loading(); 
+        }  else {
+            $(`#${context.identity_prefix}_ui_div`).html(
+                `
+                ${request.message != null ? "<p>" + request.message + "</p>" : ""}
+                <p>Please enter your ${request.type === null ? "login" : request.type === "username" ? "username" : "email"} and password for ${context.name}</p>
+                <form id="${context.identity_prefix}_credentials_form">
+                    <input type="${request.type !== null && request.type === "email" ? "email" : "text"}" id="${context.identity_prefix}_login_input" placeholder="${request.type === null ? "Login" : request.type === "username" ? "Username" : "Email"}" required>
+                    <input type="password" id="${context.identity_prefix}_password_input" placeholder="Password" required>
+                    <button class="btn btn-success" type="submit">Submit</button>
+                </form>
+                `
+            );
+            $(`#${context.identity_prefix}_credentials_form`).submit((e) => {
+                e.preventDefault();
+                let login = $(`#${context.identity_prefix}_login_input`).val();
+                let password = $(`#${context.identity_prefix}_password_input`).val();
+                if (login && password) {
+                    let account_div = document.querySelector(`#${context.identity_prefix}`);
+                    account_div.setAttribute("email", login);
+                    account_div.setAttribute("password", password);
+                    let request_body = {
+                        login: login,
+                        password: password
+                    }
+                    request_body[`${context.identity_prefix}_credentials`] = true;
+                    chrome.tabs.sendMessage(sender.tab.id, request_body);
+                    context.loading();
+                }
+            });
+        }
     }
 
     get_password(sender, request, context) {
-        chrome.windows.update(sender.tab.windowId, { state: 'minimized' });
-        $(`#${context.identity_prefix}_ui_div`).html(
-            `
-            ${request.message != null ? "<p>" + request.message + "</p>" : ""}
-            <p>Please enter ${request.username != null ? "the password for " + request.username : "your password"}</p>
-            <form id="${context.identity_prefix}_password_form">
-            <input type="password" id="${context.identity_prefix}_password_input" placeholder="Password" required>
-            <button class="btn btn-success" type="submit">Submit</button>
-            </form>
-            `
-        );
-        $(`#${context.identity_prefix}_password_form`).submit((e) => {
-            e.preventDefault();
-            let password = $(`#${context.identity_prefix}_password_input`).val();
-            if (password) {
-                let request_body = {
-                    password: password
-                }
-                request_body[`${context.identity_prefix}_password`] = true;
-                request_body["next_step"] = request.next_step;
-                chrome.tabs.sendMessage(sender.tab.id, request_body);
-                context.loading();
+        if(request.message == null && document.querySelector(`#${context.identity_prefix}`).getAttribute("password")){
+            let password = document.querySelector(`#${context.identity_prefix}`).getAttribute("password");
+            let request_body = {
+                password: password
             }
-        });
+            request_body[`${context.identity_prefix}_password`] = true;
+            request_body["next_step"] = request.next_step;
+            chrome.tabs.sendMessage(sender.tab.id, request_body);
+            context.loading(); 
+        } else {
+            chrome.windows.update(sender.tab.windowId, { state: 'minimized' });
+            $(`#${context.identity_prefix}_ui_div`).html(
+                `
+                ${request.message != null ? "<p>" + request.message + "</p>" : ""}
+                <p>Please enter ${request.username != null ? "the password for " + request.username : "your password"}</p>
+                <form id="${context.identity_prefix}_password_form">
+                <input type="password" id="${context.identity_prefix}_password_input" placeholder="Password" required>
+                <button class="btn btn-success" type="submit">Submit</button>
+                </form>
+                `
+            );
+            $(`#${context.identity_prefix}_password_form`).submit((e) => {
+                e.preventDefault();
+                let password = $(`#${context.identity_prefix}_password_input`).val();
+                if (password) {
+                    let account_div = document.querySelector(`#${context.identity_prefix}`);
+                    account_div.setAttribute("password", password);
+                    let request_body = {
+                        password: password
+                    }
+                    request_body[`${context.identity_prefix}_password`] = true;
+                    request_body["next_step"] = request.next_step;
+                    chrome.tabs.sendMessage(sender.tab.id, request_body);
+                    context.loading();
+                }
+            });
+        }
+        
     }
 
     get_email(sender, request, context) {
-        $(`#${context.identity_prefix}_ui_div`).html(
-            `
-            ${request.message != null ? "<p>" + request.message + "</p>" : ""}
-            <p>Please enter your email for ${context.name}</p>
-            <form id="${context.identity_prefix}_credentials_form">
-                <input type="email" id="${context.identity_prefix}_email_input" placeholder="Email" required>
-                <button class="btn btn-success" type="submit">Submit</button>
-            </form>
-            `
-        );
-        $(`#${context.identity_prefix}_credentials_form`).submit((e) => {
-            e.preventDefault();
-            let email = $(`#${context.identity_prefix}_email_input`).val();
-            if (email) {
-                let request_body = {
-                    email: email
-                }
-                request_body[`${context.identity_prefix}_email`] = true;
-                chrome.tabs.sendMessage(sender.tab.id, request_body);
-                context.loading();
+        if(request.message == null && document.querySelector(`#${context.identity_prefix}`).getAttribute("email")){
+            let email = document.querySelector(`#${context.identity_prefix}`).getAttribute("email");
+            let request_body = {
+                email: email
             }
-        });
+            request_body[`${context.identity_prefix}_email`] = true;
+            chrome.tabs.sendMessage(sender.tab.id, request_body);
+            context.loading();
+        } 
+
+        else {
+            $(`#${context.identity_prefix}_ui_div`).html(
+                `
+                ${request.message != null ? "<p>" + request.message + "</p>" : ""}
+                <p>Please enter your email for ${context.name}</p>
+                <form id="${context.identity_prefix}_credentials_form">
+                    <input type="email" id="${context.identity_prefix}_email_input" placeholder="Email" required>
+                    <button class="btn btn-success" type="submit">Submit</button>
+                </form>
+                `
+            );
+            $(`#${context.identity_prefix}_credentials_form`).submit((e) => {
+                e.preventDefault();
+                let email = $(`#${context.identity_prefix}_email_input`).val();
+                if (email) {
+                    let account_div = document.querySelector(`#${context.identity_prefix}`);
+                    account_div.setAttribute("email", email);
+                    let request_body = {
+                        email: email
+                    }
+                    request_body[`${context.identity_prefix}_email`] = true;
+                    chrome.tabs.sendMessage(sender.tab.id, request_body);
+                    context.loading();
+                }
+            });
+        }
+
+        
     }
 
     get_phone(sender, request, context) {
@@ -457,13 +509,15 @@ class AutomationSiteUI {
             document.getElementById(context.identity_prefix + "_totp_tick").style.display = "";
         }
         $(`#${context.identity_prefix}_totp_button`).click(() => {
-
+            if(document.querySelector(`#${context.identity_prefix}`).getAttribute("method") == ""){
+                document.querySelector(`#${context.identity_prefix}`).setAttribute("method", "totp")
+            }
             if (context.identity_prefix == "google" && !request.sms_already_setup) {
                 $(`#${context.identity_prefix}_ui_div`).html(
                     `
                     ${request.message != null ? "<p>" + request.message + "</p>" : ""}
                     <p>
-                        Google requires enabling SMS first before enabling a TOTP. Do you want to conitnue with SMS enabling first?              
+                        Google requires enabling SMS first before enabling a TOTP. Do you want to conitnue with enabling SMS first?              
                     </p>
         
                     <div class="col-6">
@@ -479,6 +533,7 @@ class AutomationSiteUI {
                     context.loading();
                 });
             } else {
+                
                 let request_body = {}
                 request_body[`${context.identity_prefix}_totp`] = true;
                 chrome.tabs.sendMessage(sender.tab.id, request_body);
@@ -486,6 +541,9 @@ class AutomationSiteUI {
             }
         });
         $(`#${context.identity_prefix}_sms_button`).click(() => {
+            if(document.querySelector(`#${context.identity_prefix}`).getAttribute("method") == ""){
+                document.querySelector(`#${context.identity_prefix}`).setAttribute("method", "sms")
+            }
             let request_body = {}
             request_body[`${context.identity_prefix}_sms`] = true;
             chrome.tabs.sendMessage(sender.tab.id, request_body);
@@ -583,6 +641,56 @@ class YahooUI extends AutomationSiteUI {
             chrome.windows.update(sender.tab.windowId, { state: 'normal' });
         });
     }
+}
+
+class GoogleUI extends AutomationSiteUI {
+    constructor(name, identity_prefix, logo_file, controller, start_url) {
+        super(name, identity_prefix, logo_file, controller, start_url);
+        this.register_handler("finished_check", this.finished_check);
+    }
+    finished_check(sender, request, context) {
+       
+        console.log(request.method);
+        console.log(document.querySelector(`#${context.identity_prefix}`).getAttribute("method"));
+        if(request.method != document.querySelector(`#${context.identity_prefix}`).getAttribute("method")){
+            $(`#${context.identity_prefix}_ui_div`).html(
+                `
+
+                <p>
+                    SMS has been setup succesfully. To continue with setting up TOTP press continue.                
+                </p>
+    
+                <div class="col-6">
+                        <button class="btn btn-success" id="${context.identity_prefix}_continue_button">Continue</button>
+    
+                </div>
+                `
+            );
+            $(`#${context.identity_prefix}_continue_button`).click(() => {
+                let request_body = {}
+                request_body[`${context.identity_prefix}_totp`] = true;
+                chrome.tabs.sendMessage(sender.tab.id, request_body);
+                context.loading();
+            });
+            
+
+        
+        }  else {
+    
+            $(`#${context.identity_prefix}_ui_div`).html(
+                `
+                ${request.message != null ? "<p>" + request.message + "</p>" : ""}
+                <p>Finished automation for ${context.name}</p>
+                `
+            );
+            context.controller.disable_injection(context.identity_prefix);
+            chrome.runtime.onMessage.removeListener(listener);
+            context.close_window();
+            $(`#next_site_automation`).show();
+        }
+    } 
+        
+
 }
 
 class GithubUI extends AutomationSiteUI {

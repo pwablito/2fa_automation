@@ -106,7 +106,8 @@ async function handleReceivedMessage(request) {
                 if (document.querySelector("html > body > div > div > div:nth-of-type(2) > div:nth-of-type(3) > div > div:nth-of-type(5) > span > span") !== null &&
                     document.querySelector("html > body > div > div > div:nth-of-type(2) > div:nth-of-type(3) > div > div:nth-of-type(5) > span > span").textContent === "Done") {
                     chrome.runtime.sendMessage({
-                        google_finished: true,
+                        google_finished_check: true,
+                        method: 'totp'
                     });
                 } else {
                     chrome.runtime.sendMessage({
@@ -145,7 +146,8 @@ async function handleReceivedMessage(request) {
                 getElementByXpath(document, "//span[contains(text(),'Turn on')]/../..").click();
                 await timer(200);
                 chrome.runtime.sendMessage({
-                    google_finished: true,
+                    google_finished_check: true,
+                    method: 'sms'
                 });
             }
         }
@@ -220,14 +222,16 @@ chrome.runtime.onMessage.addListener(
                     if(document.querySelector("div[role='radio']")!=null || document.querySelector("div[wizard-step-uid='Security Center: StrongAuth: Authenticator:installApp']")!=null || document.querySelector("div[wizard-step-uid='Security Center: StrongAuth: Authenticator:verifyCode']")!=null){
                         return;
                     } else {
+                        //Check which methods are enabled
                         console.log("2FA already exists");
+
                         let msg = {
-                            "google_get_method": true,
-                            "sms_already_setup": true,
+                            "google_finished_check": true,
+                            "method": "sms",
                             "message": "2FA is already enabled on this account"
                         };
                         if (getElementByXpath(document, "//*[contains(text(),'Authenticator app')]/..//div[@role='button'][@aria-label='Delete']")) {
-                            msg["totp_already_setup"]= true;
+                            msg["method"]= 'totp';
                             // msg['sms_already_setup']= false;
                         }
                         chrome.runtime.sendMessage(msg);
