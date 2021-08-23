@@ -85,7 +85,22 @@ async function handleReceivedMessage(request) {
     }else if (request.facebook_credentials) {
         document.querySelector("#email").value = request.login;
         document.querySelector("[type=password]").value = request.password;
-        getElementByXpath(document, "//button[contains(text(),'Submit')]").click();
+        document.querySelector("[name=login]").click();
+    } else if (request.facebook_code) {
+        if(request.login_challenge){
+            change(document.querySelector("#approvals_code"), request.code);
+            document.querySelector("#checkpointSubmitButton").click()
+            setTimeout(() => {
+                if (document.querySelector("#approvals_code")) {
+                    chrome.runtime.sendMessage({
+                        facebook_get_code: true,
+                        login_challenge: true,
+                        message: "Invalid code",
+                        type: request.type
+                    })
+                }
+            }, 4000);
+        }
     }
 }
 
@@ -98,7 +113,9 @@ chrome.runtime.onMessage.addListener(
 
 (async() => {
     try {
-        if (window.location.href.includes("security/2fac/settings")) {
+        if (window.location.href.includes("compat")) {
+            window.location.href = "https://www.facebook.com/security/2fac/settings";
+        } else if (window.location.href.includes("security/2fac/settings")) {
             await waitUntilPageLoad(document, 2);
             if (window.location.href.includes("?cquick=")) {
                 // Inside iframe
@@ -119,6 +136,28 @@ chrome.runtime.onMessage.addListener(
                 } else { exitScriptWithError(); }
             }
 
+        } else if(window.location.href.includes("facebook.com/checkpoint")) {
+            if(document.querySelector("input[aria-label='Login code']")){
+                if(document.querySelectorAll("strong").length > 1){
+                    chrome.runtime.sendMessage({
+                        facebook_get_code: true,
+                        login_challenge: true,
+                        type: 'totp'
+                    })
+                } else {
+                    chrome.runtime.sendMessage({
+                        facebook_get_code: true,
+                        login_challenge: true,
+                        type: 'sms'
+                    })
+                }            
+                
+            } else if(document.querySelector("input[value='dont_save']")){
+                document.querySelector("input[value='dont_save']").click()
+                document.querySelector("#checkpointSubmitButton").click()
+            } else if(document.querySelector("#checkpointSubmitButton")){
+                document.querySelector("#checkpointSubmitButton").click()
+            }
         } else if (window.location.href.includes("facebook.com/login/reauth.php")) {
             // console.log("reauth asking");
             // if (document.querySelector("html > body > div:first-of-type > div:first-of-type > div:first-of-type > div > form > div > div:nth-of-type(2) > table > tbody > tr:first-of-type > td > input") != null) {
@@ -139,7 +178,23 @@ chrome.runtime.onMessage.addListener(
                     facebook_get_password: true
                 });
             } else {exitScriptWithError();}
-        }
+        } else if (window.location.href === "https://www.facebook.com/" || window.location.href === "https://www.facebook.com/?sk=welcome") {
+            await waitUntilElementLoad(document, 2);
+            if (document.querySelector("#email")) {
+                // Sign in, then redirect to the security page
+                chrome.runtime.sendMessage({
+                    facebook_get_credentials: true,
+                    type: "email"
+                });
+            } else {
+                window.location.href = "https://www.facebook.com/security/2fac/settings";
+            }
+        } else if (window.location.href.includes("security/2fac/setup/intro")) {
+            chrome.runtime.sendMessage({
+                facebook_finished: true,
+                message: "2FA is already disabled."
+            });
+        }else { exitScriptWithError(); }
     } catch (e) {
         console.log(e);
         // Deal with the fact the chain failed

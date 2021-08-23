@@ -20,7 +20,7 @@ $("#disable_accounts_button").click(() => {
                 } else if (service_name === "pinterest") {
                     automationUI.add_site(new AutomationSiteUI("Pinterest", "pinterest", "logos/pinterest.svg", automationUI, "https://www.pinterest.com/settings/security"));
                 } else if (service_name === "facebook") {
-                    automationUI.add_site(new AutomationSiteUI("Facebook", "facebook", "logos/facebook.svg", automationUI, "https://www.facebook.com/security/2fac/setup/intro"));
+                    automationUI.add_site(new AutomationSiteUI("Facebook", "facebook", "logos/facebook.svg", automationUI, "https://www.facebook.com"));
                 } else if (service_name === "amazon") {
                     automationUI.add_site(new AmazonUI("Amazon", "amazon", "logos/amazon.svg", automationUI, "https://www.amazon.com/a/settings/approval/setup/register"));
                 } else if (service_name === "yahoo") {
