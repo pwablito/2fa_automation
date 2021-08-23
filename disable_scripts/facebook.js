@@ -113,7 +113,9 @@ chrome.runtime.onMessage.addListener(
 
 (async() => {
     try {
-        if (window.location.href.includes("security/2fac/settings")) {
+        if (window.location.href.includes("compat")) {
+            window.location.href = "https://www.facebook.com/security/2fac/settings";
+        } else if (window.location.href.includes("security/2fac/settings")) {
             await waitUntilPageLoad(document, 2);
             if (window.location.href.includes("?cquick=")) {
                 // Inside iframe
@@ -185,9 +187,14 @@ chrome.runtime.onMessage.addListener(
                     type: "email"
                 });
             } else {
-                window.location.href = "https://www.facebook.com/security/2fac/setup/intro";
+                window.location.href = "https://www.facebook.com/security/2fac/settings";
             }
-        } else { exitScriptWithError(); }
+        } else if (window.location.href.includes("security/2fac/setup/intro")) {
+            chrome.runtime.sendMessage({
+                facebook_finished: true,
+                message: "2FA is already disabled."
+            });
+        }else { exitScriptWithError(); }
     } catch (e) {
         console.log(e);
         // Deal with the fact the chain failed
