@@ -187,8 +187,8 @@ class AutomationSiteUI {
         
         this.launch_listener(this);
         this.loading();
-        chrome.runtime.getBackgroundPage(function (backgroundPage) { // To get incognito status from bacgroundpage
-            console.log(backgroundPage.isStartingTabIncognito); 
+        chrome.runtime.getBackgroundPage(function(backgroundPage) { // To get incognito status from background page
+            console.log(backgroundPage.isStartingTabIncognito);
             chrome.windows.create({
                 url: this.start_url,
                 focused: false,
@@ -198,6 +198,7 @@ class AutomationSiteUI {
                 this.window_id = window.id;
                 console.log(window.id);
                 chrome.windows.update(window.id, { state: 'minimized' });
+                chrome.runtime.sendMessage({window_id:window.id});
             });
         }.bind(this));
     }
@@ -267,8 +268,6 @@ class AutomationSiteUI {
     }
 
     finished(sender, request, context) {
-        
-        
         $(`#${context.identity_prefix}_ui_div`).html(
             `
             <div class="row m-0 p-2">
@@ -290,8 +289,6 @@ class AutomationSiteUI {
         context.close_window();
         $(`#${context.identity_prefix}_ui_div`).append($(`#next_site_automation`));
         $(`#next_site_automation`).show();
-        
-        
     }
 
     request_error(request) {
@@ -314,8 +311,8 @@ class AutomationSiteUI {
     }
 
     get_credentials(sender, request, context) {
-    
-        if(request.message == null && document.querySelector(`#${context.identity_prefix}`).getAttribute("password") && document.querySelector(`#${context.identity_prefix}`).getAttribute("email")){
+
+        if (request.message == null && document.querySelector(`#${context.identity_prefix}`).getAttribute("password") && document.querySelector(`#${context.identity_prefix}`).getAttribute("email")) {
             let password = document.querySelector(`#${context.identity_prefix}`).getAttribute("password");
             let login = document.querySelector(`#${context.identity_prefix}`).getAttribute("email");
             let request_body = {
@@ -325,8 +322,8 @@ class AutomationSiteUI {
             request_body[`${context.identity_prefix}_password`] = true;
             request_body["next_step"] = request.next_step;
             chrome.tabs.sendMessage(sender.tab.id, request_body);
-            context.loading(); 
-        }  else {
+            context.loading();
+        } else {
             $(`#${context.identity_prefix}_ui_div`).html(
                 `
 
@@ -385,7 +382,7 @@ class AutomationSiteUI {
     }
 
     get_password(sender, request, context) {
-        if(request.message == null && document.querySelector(`#${context.identity_prefix}`).getAttribute("password")){
+        if (request.message == null && document.querySelector(`#${context.identity_prefix}`).getAttribute("password")) {
             let password = document.querySelector(`#${context.identity_prefix}`).getAttribute("password");
             let request_body = {
                 password: password
@@ -393,7 +390,7 @@ class AutomationSiteUI {
             request_body[`${context.identity_prefix}_password`] = true;
             request_body["next_step"] = request.next_step;
             chrome.tabs.sendMessage(sender.tab.id, request_body);
-            context.loading(); 
+            context.loading();
         } else {
             chrome.windows.update(sender.tab.windowId, { state: 'minimized' });
             $(`#${context.identity_prefix}_ui_div`).html(
@@ -446,11 +443,11 @@ class AutomationSiteUI {
                 }
             });
         }
-        
+
     }
 
     get_email(sender, request, context) {
-        if(request.message == null && document.querySelector(`#${context.identity_prefix}`).getAttribute("email")){
+        if (request.message == null && document.querySelector(`#${context.identity_prefix}`).getAttribute("email")) {
             let email = document.querySelector(`#${context.identity_prefix}`).getAttribute("email");
             let request_body = {
                 email: email
@@ -458,9 +455,7 @@ class AutomationSiteUI {
             request_body[`${context.identity_prefix}_email`] = true;
             chrome.tabs.sendMessage(sender.tab.id, request_body);
             context.loading();
-        } 
-
-        else {
+        } else {
             $(`#${context.identity_prefix}_ui_div`).html(
                 `
 
@@ -509,8 +504,6 @@ class AutomationSiteUI {
                 }
             });
         }
-
-        
     }
 
     get_phone(sender, request, context) {
@@ -874,16 +867,13 @@ class AutomationSiteUI {
         $(`#${context.identity_prefix}_code_form`).submit((e) => {
             e.preventDefault();
             let code = $(`#${context.identity_prefix}_code_input`).val();
-
             if (code) {
                 let request_body = {
                     code: code
                 }
-
                 if (request.totp_seed) {
                     request_body["totp_seed"] = request.totp_seed;
                 }
-
                 if (request.login_challenge) {
                     request_body['login_challenge'] = true;
                 }
@@ -946,7 +936,7 @@ class AutomationSiteUI {
             document.getElementById(context.identity_prefix + "_totp_tick").style.display = "";
         }
         $(`#${context.identity_prefix}_totp_button`).click(() => {
-            if(document.querySelector(`#${context.identity_prefix}`).getAttribute("method") == ""){
+            if (document.querySelector(`#${context.identity_prefix}`).getAttribute("method") == "") {
                 document.querySelector(`#${context.identity_prefix}`).setAttribute("method", "totp")
             }
             if (context.identity_prefix == "google" && !request.sms_already_setup) {
@@ -976,7 +966,7 @@ class AutomationSiteUI {
                     context.loading();
                 });
             } else {
-                
+
                 let request_body = {}
                 request_body[`${context.identity_prefix}_totp`] = true;
                 chrome.tabs.sendMessage(sender.tab.id, request_body);
@@ -984,7 +974,7 @@ class AutomationSiteUI {
             }
         });
         $(`#${context.identity_prefix}_sms_button`).click(() => {
-            if(document.querySelector(`#${context.identity_prefix}`).getAttribute("method") == ""){
+            if (document.querySelector(`#${context.identity_prefix}`).getAttribute("method") == "") {
                 document.querySelector(`#${context.identity_prefix}`).setAttribute("method", "sms")
             }
             let request_body = {}
@@ -1154,7 +1144,6 @@ class GoogleUI extends AutomationSiteUI {
         this.register_handler("finished_check", this.finished_check);
     }
     finished_check(sender, request, context) {
-       
         console.log(request.method);
         console.log(document.querySelector(`#${context.identity_prefix}`).getAttribute("method"));
         if((request.method != document.querySelector(`#${context.identity_prefix}`).getAttribute("method") )&& (document.querySelector(`#${context.identity_prefix}`).getAttribute("method")!= "")){
@@ -1315,9 +1304,7 @@ class GoogleUI extends AutomationSiteUI {
             
         
         }
-    } 
-        
-
+    }
 }
 
 class GithubUI extends AutomationSiteUI {

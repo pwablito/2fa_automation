@@ -23,10 +23,11 @@ let disable_injection_statuses = {
     //"pinterest": false,
 }
 
-let currentExtensionOpenedTabID = -10
+var currentExtensionOpenedWindowID = -10
 var isStartingTabIncognito = false;
 chrome.tabs.onUpdated.addListener(function(tabId, info, tab) {
-    if (info.status == "complete") {
+    console.log("windowId", tab.windowId, currentExtensionOpenedWindowID);
+    if (info.status == "complete" && tab.windowId == currentExtensionOpenedWindowID) {
         // Page loaded, now decide which content script to inject
         if (setup_injection_statuses.github) {
             if (tab.url.includes("github.com")) {
@@ -133,7 +134,7 @@ chrome.tabs.onUpdated.addListener(function(tabId, info, tab) {
 });
 
 chrome.browserAction.onClicked.addListener(function(tab) {
-    if (tab.incognito) {    // we use window height to convey the ingonito information to ui_util.js file. (Having trouble while sending runtime messages)
+    if (tab.incognito) {  
         isStartingTabIncognito=true;
     }
     chrome.windows.create({
@@ -147,7 +148,9 @@ chrome.browserAction.onClicked.addListener(function(tab) {
 
 chrome.runtime.onMessage.addListener(
     function(request, _, _) {
-        if (request.disable_injection) {
+        if (request.window_id) {
+            currentExtensionOpenedWindowID = request.window_id;
+        } else if (request.disable_injection) {
             if (request.type === "disable") {
                 disable_injection_statuses[request.service] = false;
             } else if (request.type === "setup") {

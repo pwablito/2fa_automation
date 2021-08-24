@@ -53,19 +53,35 @@ chrome.runtime.onMessage.addListener(
                 "google_get_password": true
             });
         } else if (request.google_code) {
-            document.querySelector("c-wiz > div > div:nth-child(3) > c-wiz > div > div > div:nth-child(3) > div > div > div > div > div:nth-child(2) > div:nth-child(2) > div:nth-child(2) > div > div > div > div > input").value = request.code;
-            document.querySelector("c-wiz > div > div:nth-child(3) > c-wiz > div > div > div:nth-child(3) > div:nth-child(2) > div > div:nth-child(3) > div").click()
+            console.log("login challenge request");
+            if(document.querySelector("#idvPin")){
+                document.querySelector("#idvPin").value = request.code;
+                getElementByXpath(document, "//span[contains(text(),'Next')]/..").click();
+            } else if(document.querySelector("#totpPin")) {
+                document.querySelector("#totpPin").value = request.code,
+                getElementByXpath(document, "//span[contains(text(),'Next')]/..").click();
+            }
             setTimeout(() => {
-                if (document.querySelector("c-wiz > div > div:nth-child(3) > c-wiz > div > div > div:nth-child(3) > div > div > div > div > div:nth-child(2) > div:nth-child(2) > div:nth-child(2) > div > div > div > div > input") != null) {
+                if (document.querySelector("#idvPin") || document.querySelector("#totpPin")) {
                     chrome.runtime.sendMessage({
-                        google_get_code: true,
-                        type: "sms",
-                        message: "Incorrect code"
-                    })
-                } else {
-                    document.querySelector("c-wiz > div > div:nth-child(3) > c-wiz > div > div > div:nth-child(3) > div:nth-child(2) > div > div:nth-child(3) > div:nth-child(2)").click();
+                        "google_get_code": true,
+                        message: "Incorrect code."
+                    });
                 }
-            }, 4000);
+            }, 3000);
+            // document.querySelector("c-wiz > div > div:nth-child(3) > c-wiz > div > div > div:nth-child(3) > div > div > div > div > div:nth-child(2) > div:nth-child(2) > div:nth-child(2) > div > div > div > div > input").value = request.code;
+            // document.querySelector("c-wiz > div > div:nth-child(3) > c-wiz > div > div > div:nth-child(3) > div:nth-child(2) > div > div:nth-child(3) > div").click()
+            // setTimeout(() => {
+            //     if (document.querySelector("c-wiz > div > div:nth-child(3) > c-wiz > div > div > div:nth-child(3) > div > div > div > div > div:nth-child(2) > div:nth-child(2) > div:nth-child(2) > div > div > div > div > input") != null) {
+            //         chrome.runtime.sendMessage({
+            //             google_get_code: true,
+            //             type: "sms",
+            //             message: "Incorrect code"
+            //         })
+            //     } else {
+            //         document.querySelector("c-wiz > div > div:nth-child(3) > c-wiz > div > div > div:nth-child(3) > div:nth-child(2) > div > div:nth-child(3) > div:nth-child(2)").click();
+            //     }
+            // }, 4000);
         } else if (request.google_password) {
             document.querySelector("#password > div > div > div > input").value = request.password;
             document.querySelector("#passwordNext > div > button").click();
@@ -110,6 +126,24 @@ chrome.runtime.onMessage.addListener(
             } else {
                 window.location.href = "https://myaccount.google.com/signinoptions/two-step-verification";
             } 
+        } else if(window.location.href.includes("google.com/signin/v2/challenge")){
+            if(await waitUntilElementLoad(document, "#idvPin", 2)){
+                chrome.runtime.sendMessage({
+                    google_get_code: true,
+                    type: 'sms',
+                    login_challenge: true,
+                });
+            } else if(await waitUntilElementLoad(document, "#totpPin", 2)){
+                chrome.runtime.sendMessage({
+                    google_get_code: true,
+                    type: 'totp',
+                    login_challenge: true,
+                });
+            } else if(await waitUntilElementLoad(document, "input[type='password']", 2)){
+                chrome.runtime.sendMessage({
+                    google_get_password: true,
+                });
+            }
         } else if (window.location.href.includes("signinchooser")) {
             // In case all the accounts are logged out and google redirects to choose account. We redirect to select a new account always. 
             let UseAnotherAccountButtonXPath = "html > body > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div > div:nth-of-type(2) > div > div > div:nth-of-type(2) > div > div:nth-of-type(1) > div > form > span > section > div > div > div > div:nth-of-type(1) > ul > li:nth-of-type(2) > div > div > div:nth-of-type(2)";
