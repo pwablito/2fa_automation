@@ -148,7 +148,10 @@ class AutomationSiteUI {
         this.register_handler("get_method", this.get_method);
         this.register_handler("error", this.error_handler);
         this.register_handler("finished", this.finished);
+        this.register_handler("backup_code_download", this.backup_code_download);
+        this.register_handler("get_already_enabled_2fa", this.get_already_enabled_2fa);
         this.register_handler("change_method", this.change_method);
+        
     }
 
     register_handler(suffix, handler) {
@@ -267,7 +270,22 @@ class AutomationSiteUI {
         );
     }
 
+    backup_code_download(sender, request, context) {
+        document.querySelector(`#${context.identity_prefix}`).setAttribute("backup_code_download", true);
+    }
+
+    get_already_enabled_2fa(sender, request, context) {
+        let request_body = {
+            already_enabled_2fa: true,
+            backup_code_download: document.querySelector(`#${context.identity_prefix}`).getAttribute("backup_code_download")
+        }
+        chrome.tabs.sendMessage(sender.tab.id, request_body);
+    }
+
+    
+    
     finished(sender, request, context) {
+        console.log(request);// contains backup_codes_array
         $(`#${context.identity_prefix}_ui_div`).html(
             `
             <div class="row m-0 p-2">
