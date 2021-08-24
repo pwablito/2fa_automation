@@ -150,8 +150,11 @@ async function handleReceievedMessage(request) {
                         message: "Invalid code"
                     });
                 } else {
+                    // getElementByXpath(document, "//*[contains(text(),'Done')]/../..").click();
+                    // setup process completed. Start backup process
+                    window.location.href = "https://www.facebook.com/security/2fac/settings";
                     chrome.runtime.sendMessage({
-                        facebook_finished: true
+                        backup_code_download: true
                     });
                 }
             }
@@ -176,10 +179,13 @@ async function handleReceievedMessage(request) {
                         message: "Invalid code"
                     });
                 } else {
-                    // getElementByXpath(document, "//*[contains(text(),'Done')]/../..").click();
+                    window.location.href = "https://www.facebook.com/security/2fac/settings";
                     chrome.runtime.sendMessage({
-                        facebook_finished: true
+                        backup_code_download: true
                     });
+                    // chrome.runtime.sendMessage({
+                    //     facebook_finished: true
+                    // });
                 }
             }
         }
@@ -210,6 +216,41 @@ async function handleReceievedMessage(request) {
         } else {
             console.log("error");
         }
+    } else if (request.already_enabled_2fa) {
+        if (request.backup_code_download == "false") {
+            let msg = {
+                facebook_get_method: true,
+                message: "2FA is turned on.",
+            };
+            if (getElementByXpath(document, "//*[contains(text(),'Your Security Method')]/..//*[contains(text(), 'SMS')]")) {
+                msg["sms_already_setup"]= true;
+            }
+            if (getElementByXpath(document, "//*[contains(text(),'Your Security Method')]/..//*[contains(text(), 'Authentication App')]")) {
+                msg["totp_already_setup"]= true;
+            }
+            chrome.runtime.sendMessage(msg);
+              
+        } else {
+            if (await waitUntilElementLoad(document, "[href*='security/2fac/factors/recovery-code']", 2)) {
+                document.querySelector("[href*='security/2fac/factors/recovery-code']").click();
+            }
+            if (await waitUntilElementLoad(document,"[type=submit][value=true]" , )) {
+                document.querySelector("[type=submit][value=true]").click();
+            }
+            if (await waitUntilElementLoad(document, "[data-tooltip-content='Copy Recovery Code']", 3)) {
+                var codes = document.querySelectorAll("[data-tooltip-content='Copy Recovery Code']");
+                var codes_array = [];
+                for (i = 0; i < codes.length; ++i) {
+                    codes_array.push(codes[i].innerText);
+                    console.log(codes[i].innerText);
+                }
+                chrome.runtime.sendMessage({
+                        facebook_finished: true,
+                        backup_codes_array: codes[i].innerText
+                });
+            }
+           
+        }
     }
 }
 
@@ -234,21 +275,9 @@ chrome.runtime.onMessage.addListener(
                 // Inside iframe
                 if (getElementByXpath(document, "//*[contains(text(),'Turn Off')]")) {
                     console.log("2FA in");
-
-                    let msg = {
-                        facebook_get_method: true,
-                        message: "2FA is turned on.",
-                    };
-                    // let msg = {
-                    //     facebook_change_method: true,
-                    // }
-                    if (getElementByXpath(document, "//*[contains(text(),'Your Security Method')]/..//*[contains(text(), 'SMS')]")) {
-                        msg["sms_already_setup"] = true;
-                    }
-                    if (getElementByXpath(document, "//*[contains(text(),'Your Security Method')]/..//*[contains(text(), 'Authentication App')]")) {
-                        msg["totp_already_setup"] = true;
-                    }
-                    chrome.runtime.sendMessage(msg);
+                    chrome.runtime.sendMessage({
+                        facebook_get_already_enabled_2fa: true,
+                    });
                 }
             } else if (await waitUntilElementLoad(document, iFrameXPath, 2)) {
                 console.log("to go xframe");
