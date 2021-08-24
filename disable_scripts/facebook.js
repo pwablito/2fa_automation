@@ -36,11 +36,11 @@ async function waitUntilElementLoad(document, elemXPath, maxWait) {
 
 function exitScriptWithError() {
     // When debugging comment out code of this function. This will stop closing of background pages.
-    // chrome.runtime.sendMessage({
-    //     facebook_error: true,
-    //     message: "Sorry! Something went wrong. ",
-    //     message_for_dev: window.location.href
-    // });
+    chrome.runtime.sendMessage({
+        facebook_error: true,
+        message: "Sorry! Something went wrong. ",
+        message_for_dev: window.location.href
+    });
 }
 
 async function handleReceivedMessage(request) {
@@ -82,12 +82,12 @@ async function handleReceivedMessage(request) {
                 message: "Invalid Password",
             });
         } else { exitScriptWithError(); }
-    }else if (request.facebook_credentials) {
+    } else if (request.facebook_credentials) {
         document.querySelector("#email").value = request.login;
         document.querySelector("[type=password]").value = request.password;
         document.querySelector("[name=login]").click();
     } else if (request.facebook_code) {
-        if(request.login_challenge){
+        if (request.login_challenge) {
             change(document.querySelector("#approvals_code"), request.code);
             document.querySelector("#checkpointSubmitButton").click()
             setTimeout(() => {
@@ -136,9 +136,9 @@ chrome.runtime.onMessage.addListener(
                 } else { exitScriptWithError(); }
             }
 
-        } else if(window.location.href.includes("facebook.com/checkpoint")) {
-            if(document.querySelector("input[aria-label='Login code']")){
-                if(document.querySelectorAll("strong").length > 1){
+        } else if (window.location.href.includes("facebook.com/checkpoint")) {
+            if (document.querySelector("input[aria-label='Login code']")) {
+                if (document.querySelectorAll("strong").length > 1) {
                     chrome.runtime.sendMessage({
                         facebook_get_code: true,
                         login_challenge: true,
@@ -150,12 +150,12 @@ chrome.runtime.onMessage.addListener(
                         login_challenge: true,
                         type: 'sms'
                     })
-                }            
-                
-            } else if(document.querySelector("input[value='dont_save']")){
+                }
+
+            } else if (document.querySelector("input[value='dont_save']")) {
                 document.querySelector("input[value='dont_save']").click()
                 document.querySelector("#checkpointSubmitButton").click()
-            } else if(document.querySelector("#checkpointSubmitButton")){
+            } else if (document.querySelector("#checkpointSubmitButton")) {
                 document.querySelector("#checkpointSubmitButton").click()
             }
         } else if (window.location.href.includes("facebook.com/login/reauth.php")) {
@@ -170,14 +170,14 @@ chrome.runtime.onMessage.addListener(
             console.log("In reauth");
             await waitUntilPageLoad(document, 2);
             if (document.querySelector("iframe[src*='https://www.facebook.com/login/reauth.php']")) {
-                    console.log(document.querySelector("iframe[src*='https://www.facebook.com/login/reauth.php']").src);
-                    window.location = document.querySelector("iframe[src*='https://www.facebook.com/login/reauth.php']").src;
+                console.log(document.querySelector("iframe[src*='https://www.facebook.com/login/reauth.php']").src);
+                window.location = document.querySelector("iframe[src*='https://www.facebook.com/login/reauth.php']").src;
             } else if (await waitUntilElementLoad(document, "[type=password]", 2)) {
                 console.log("In reauth 2");
                 chrome.runtime.sendMessage({
                     facebook_get_password: true
                 });
-            } else {exitScriptWithError();}
+            } else { exitScriptWithError(); }
         } else if (window.location.href === "https://www.facebook.com/" || window.location.href === "https://www.facebook.com/?sk=welcome") {
             await waitUntilElementLoad(document, 2);
             if (document.querySelector("#email")) {
@@ -194,7 +194,7 @@ chrome.runtime.onMessage.addListener(
                 facebook_finished: true,
                 message: "2FA is already disabled."
             });
-        }else { exitScriptWithError(); }
+        } else { exitScriptWithError(); }
     } catch (e) {
         console.log(e);
         // Deal with the fact the chain failed

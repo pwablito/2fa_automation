@@ -22,11 +22,19 @@
 
 <body>
     <!-- Home button -->
-    <div style="position: absolute; margin-left: 10px; margin-top: 10px; width: 20px;">
-        <a type="button" id="home_button"><img src="home.svg" style="width: 100%"></a>
+    <div id="disable_accounts_header_div"  style="display: none;" class="row  align-items-center pb-2 pl-3 pr-0 mr-0">
+        <div class ="col-2">
+            <a type="button" id="home_button"><img src="home.svg" style="height: 40px; width: 40px "></a>
+        </div>
+        <div class ="col-8 justify-content-left pt-1" id="header">
+            <h4 class="text-left pt-1"> Disabling 2FA </h4>
+        </div>
+        <div class ="col-2" id="icon">
+        </div>
+        
     </div>
     <div id="select_accounts_div" class="container">
-        <h3>Select Accounts</h3>
+        <h3>Select the accounts that you want to disable 2FA</h3>
         <div class="row">
             <div class="col-4 box site-card" style>
                 <div class="gray h-100">
@@ -87,17 +95,40 @@
                 </div>
             </div>
         </div>
-        <button class="btn btn-outline-success disabled select_accounts" id="disable_accounts_button">Enable 2FA</button>
+        <button class="btn-lg btn-success disabled select_accounts" id="disable_accounts_button">Disable 2FA</button>
         <script src="select_account.js"></script>
     </div>
     <div id="disable_accounts_div" class="container" style="display: none;">
-        <h3>Setup 2FA</h3>
         <div class="text-align: left;">
             <div id="disable_processes_list"></div>
             <script src="util.js"></script>
             <script src="ui_util.js"></script>
             <script src="disable_accounts.js"></script>
         </div>
+    </div>
+
+    <div id="disable_accounts_footer_div" class="container pt-2 pl-2 pr-0" style="display: none;">
+        <div class = "row mr-0 pr-0">
+            <div class="col-9 pr-0">
+                <div id="website_progress_div" class="progress">
+                    <div id="website_progress_bar" class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+                    </div>
+                </div>
+            </div>
+            <div class="col-3 pl-0 pr-1 pt-0" id="website">
+            
+            </div>
+        </div>
+        <div class = "row mr-0 pr-0">
+            <div class="col-9 pr-0">
+                <div id="system_progress_div" class="progress mt-1">
+                    <div id="system_progress_bar" class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+            </div>
+            <div class="col-3 pl-0 pr-1 pt-1">
+                <p> <small> Total Progress </small></p>
+            </div>
+        </div>        
     </div>
     <div style="display:none">
         <div style="display:none" id='google' email='' password='' method=''></div>

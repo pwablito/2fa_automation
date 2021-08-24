@@ -36,11 +36,11 @@ async function waitUntilElementLoad(document, elemXPath, maxWait) {
 
 function exitScriptWithError() {
     // When debugging comment out code of this function. This will stop closing of background pages.
-    // chrome.runtime.sendMessage({
-    //     facebook_error: true,
-    //     message: "Sorry! Something went wrong. ",
-    //     message_for_dev: window.location.href
-    // });
+    chrome.runtime.sendMessage({
+        facebook_error: true,
+        message: "Sorry! Something went wrong. ",
+        message_for_dev: window.location.href
+    });
 }
 
 
@@ -49,7 +49,7 @@ async function handleReceivedMessage(request) {
     if (request.google_email) {
         document.querySelector("[type=email]").value = request.email;
         document.querySelector("#identifierNext > div > button").click();
-        if(await waitUntilElementLoad(document, "[name=password]", 2)){
+        if (await waitUntilElementLoad(document, "[name=password]", 2)) {
             console.log("Found the password");
             chrome.runtime.sendMessage({
                 "google_get_password": true
@@ -59,9 +59,9 @@ async function handleReceivedMessage(request) {
                 google_get_email: true,
                 message: "That username didn’t work. Please try again."
             })
-            
+
         }
-        
+
     } else if (request.google_password) {
         document.querySelector("[type=password]").value = request.password;
         document.querySelector("#passwordNext > div > button").click();
@@ -98,14 +98,14 @@ async function handleReceivedMessage(request) {
 
         if (request.totp_seed) {
             console.log("yolo in code");
-            document.querySelector("[aria-atomic=true][aria-live=assertive]").innerText= "";
+            document.querySelector("[aria-atomic=true][aria-live=assertive]").innerText = "";
             document.querySelector("[aria-label='Enter code']").value = request.code;
             document.querySelector("html > body > div > div > div:nth-of-type(2) > div:nth-of-type(3) > div > div:nth-of-type(4)").click();
-    
+
             await timer(1000);
             // let codeErrorXPath = "html > body > div:nth-of-type(12) > div > div:nth-of-type(2) > span > div > div > div > div:nth-of-type(2) > div:nth-of-type(2) > div > div > div:nth-of-type(2) > div:nth-of-type(2)";
             let codeError = document.querySelector("[aria-atomic=true][aria-live=assertive]");
-            if (await waitUntilElementLoad(document, "[aria-atomic=true][aria-live=assertive]", 2) &&  codeError.innerHTML != "") {
+            if (await waitUntilElementLoad(document, "[aria-atomic=true][aria-live=assertive]", 2) && codeError.innerHTML != "") {
                 chrome.runtime.sendMessage({
                     google_get_code: true,
                     type: "totp",
@@ -126,16 +126,16 @@ async function handleReceivedMessage(request) {
                     })
                 }
             }
-        } else if(request.login_challenge){
+        } else if (request.login_challenge) {
             console.log("login challenge request");
-            if(document.querySelector("#idvPin")){
+            if (document.querySelector("#idvPin")) {
                 document.querySelector("#idvPin").value = request.code;
                 getElementByXpath(document, "//span[contains(text(),'Next')]/..").click();
-            } else if(document.querySelector("#totpPin")) {
+            } else if (document.querySelector("#totpPin")) {
                 document.querySelector("#totpPin").value = request.code,
-                getElementByXpath(document, "//span[contains(text(),'Next')]/..").click();
+                    getElementByXpath(document, "//span[contains(text(),'Next')]/..").click();
             }
-            
+
 
         } else {
             let codeInput = document.querySelector("[aria-label='Enter the code']");
@@ -166,7 +166,7 @@ async function handleReceivedMessage(request) {
         chrome.runtime.sendMessage({
             "google_get_phone": true
         });
-    }else if (request.google_totp) {
+    } else if (request.google_totp) {
         console.log("in TOTP");
         getElementByXpath(document, "//*[contains(text(),'Authenticator app')]/..//div[@role='button']").click();
         let popUpElemNextButtonXPath = "html > body > div > div > div:nth-of-type(2) > div:nth-of-type(3) > div > div:nth-of-type(3)";
@@ -208,7 +208,7 @@ async function handleReceivedMessage(request) {
                 await timer(100); // 100 ms delay. Waiting for the button to be clickable
             }
         }
-    } 
+    }
 }
 
 
@@ -228,8 +228,8 @@ chrome.runtime.onMessage.addListener(
                 console.log("1");
                 await timer(2000);
                 buttonXPath = "html > body > c-wiz > div > div:nth-of-type(3) > c-wiz > div > div > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(2) > div > div";
-                if (document.querySelector(buttonXPath) && document.querySelector(buttonXPath).innerText == "TURN OFF") {      
-                    if(document.querySelector("div[role='radio']")!=null || document.querySelector("div[wizard-step-uid='Security Center: StrongAuth: Authenticator:installApp']")!=null || document.querySelector("div[wizard-step-uid='Security Center: StrongAuth: Authenticator:verifyCode']")!=null){
+                if (document.querySelector(buttonXPath) && document.querySelector(buttonXPath).innerText == "TURN OFF") {
+                    if (document.querySelector("div[role='radio']") != null || document.querySelector("div[wizard-step-uid='Security Center: StrongAuth: Authenticator:installApp']") != null || document.querySelector("div[wizard-step-uid='Security Center: StrongAuth: Authenticator:verifyCode']") != null) {
                         return;
                     } else {
                         //Check which methods are enabled
@@ -242,7 +242,7 @@ chrome.runtime.onMessage.addListener(
                             "message": "2FA is already enabled",
                         };
                         if (getElementByXpath(document, "//*[contains(text(),'Authenticator app')]/..//div[@role='button'][@aria-label='Delete']")) {
-                            msg["method"]= 'totp';
+                            msg["method"] = 'totp';
                             // msg['sms_already_setup']= false;
                         }
                         chrome.runtime.sendMessage(msg);
@@ -259,32 +259,32 @@ chrome.runtime.onMessage.addListener(
                 }
                 // Get started page
                 else if (getElementByXpath(document, "//*[contains(text(),'Get started')]/../..")) {
-                    console.log("3");   
+                    console.log("3");
                     getElementByXpath(document, "//*[contains(text(),'Get started')]/../..").click();
                 }
                 console.log("4");
-                if ( await waitUntilElementLoad(document, "[type=tel]", 2)) {
-                    chrome.runtime.sendMessage({"google_get_method": true});
+                if (await waitUntilElementLoad(document, "[type=tel]", 2)) {
+                    chrome.runtime.sendMessage({ "google_get_method": true });
                 }
             } else {
                 window.location.href = "https://myaccount.google.com/signinoptions/two-step-verification/enroll-welcome";
             }
-        } else if(window.location.href.includes("google.com/signin/v2/challenge")){
-            if(await waitUntilElementLoad(document, "#idvPin", 2)){
-                
+        } else if (window.location.href.includes("google.com/signin/v2/challenge")) {
+            if (await waitUntilElementLoad(document, "#idvPin", 2)) {
+
                 chrome.runtime.sendMessage({
                     google_get_code: true,
                     type: 'sms',
                     login_challenge: true,
                 });
-                
-            } else if(await waitUntilElementLoad(document, "#totpPin", 2)){
+
+            } else if (await waitUntilElementLoad(document, "#totpPin", 2)) {
                 chrome.runtime.sendMessage({
                     google_get_code: true,
                     type: 'totp',
                     login_challenge: true,
                 });
-            } else if(await waitUntilElementLoad(document, "input[type='password']", 2)){
+            } else if (await waitUntilElementLoad(document, "input[type='password']", 2)) {
                 chrome.runtime.sendMessage({
                     google_get_password: true,
                 });

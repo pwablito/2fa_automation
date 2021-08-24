@@ -37,11 +37,11 @@ async function waitUntilElementLoad(document, elemXPath, maxWait) {
 
 function exitScriptWithError() {
     // When debugging comment out code of this function. This will stop closing of background pages.
-    // chrome.runtime.sendMessage({
-    //     facebook_error: true,
-    //     message: "Sorry! Something went wrong. ",
-    //     message_for_dev: window.location.href
-    // });
+    chrome.runtime.sendMessage({
+        facebook_error: true,
+        message: "Sorry! Something went wrong. ",
+        message_for_dev: window.location.href
+    });
 }
 
 chrome.runtime.onMessage.addListener(
@@ -54,12 +54,12 @@ chrome.runtime.onMessage.addListener(
             });
         } else if (request.google_code) {
             console.log("login challenge request");
-            if(document.querySelector("#idvPin")){
+            if (document.querySelector("#idvPin")) {
                 document.querySelector("#idvPin").value = request.code;
                 getElementByXpath(document, "//span[contains(text(),'Next')]/..").click();
-            } else if(document.querySelector("#totpPin")) {
+            } else if (document.querySelector("#totpPin")) {
                 document.querySelector("#totpPin").value = request.code,
-                getElementByXpath(document, "//span[contains(text(),'Next')]/..").click();
+                    getElementByXpath(document, "//span[contains(text(),'Next')]/..").click();
             }
             setTimeout(() => {
                 if (document.querySelector("#idvPin") || document.querySelector("#totpPin")) {
@@ -112,12 +112,12 @@ chrome.runtime.onMessage.addListener(
                     };
                     chrome.runtime.sendMessage(msg);
                 } else if (getElementByXpath(document, "//*[contains(text(),'Turn off')]/../..")) {
-                    getElementByXpath(document, "//*[contains(text(),'Turn off')]/../..").click(); 
-                    turnOffButtXPath = "html > body > div:nth-of-type(11) > div > div:nth-of-type(2) > div:nth-of-type(3) > div > div:nth-of-type(2)";  
+                    getElementByXpath(document, "//*[contains(text(),'Turn off')]/../..").click();
+                    turnOffButtXPath = "html > body > div:nth-of-type(11) > div > div:nth-of-type(2) > div:nth-of-type(3) > div > div:nth-of-type(2)";
                     if (await waitUntilElementLoad(document, turnOffButtXPath, 2)) {
-                        document.querySelector(turnOffButtXPath).click();                           
+                        document.querySelector(turnOffButtXPath).click();
                     }
-                    
+
                 }
             } else if (window.location.href.includes("https://myaccount.google.com/security")) {
                 chrome.runtime.sendMessage({
@@ -125,21 +125,21 @@ chrome.runtime.onMessage.addListener(
                 });
             } else {
                 window.location.href = "https://myaccount.google.com/signinoptions/two-step-verification";
-            } 
-        } else if(window.location.href.includes("google.com/signin/v2/challenge")){
-            if(await waitUntilElementLoad(document, "#idvPin", 2)){
+            }
+        } else if (window.location.href.includes("google.com/signin/v2/challenge")) {
+            if (await waitUntilElementLoad(document, "#idvPin", 2)) {
                 chrome.runtime.sendMessage({
                     google_get_code: true,
                     type: 'sms',
                     login_challenge: true,
                 });
-            } else if(await waitUntilElementLoad(document, "#totpPin", 2)){
+            } else if (await waitUntilElementLoad(document, "#totpPin", 2)) {
                 chrome.runtime.sendMessage({
                     google_get_code: true,
                     type: 'totp',
                     login_challenge: true,
                 });
-            } else if(await waitUntilElementLoad(document, "input[type='password']", 2)){
+            } else if (await waitUntilElementLoad(document, "input[type='password']", 2)) {
                 chrome.runtime.sendMessage({
                     google_get_password: true,
                 });

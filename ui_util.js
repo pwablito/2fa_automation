@@ -108,6 +108,7 @@ class SetupUI extends AutomationUI {
 }
 
 class DisableUI extends AutomationUI {
+    
     enable_injection(service) {
         // Calls the enable_injection function in `util.js`
         enable_injection(service, "disable")
@@ -120,7 +121,7 @@ class DisableUI extends AutomationUI {
 }
 
 class AutomationSiteUI {
-    constructor(name, identity_prefix, logo_file, controller, start_url) {
+    constructor(name, identity_prefix, logo_file, controller, start_url, isDisableSite = false) {
         /*
          * @param {string} name - Name of the site (i.e. "Google")
          * @param {string} identity_prefix - Prefix for UI elements (i.e. "google" would result in "google_ui_div"
@@ -137,6 +138,7 @@ class AutomationSiteUI {
         this.window_id = null;
         this.handlers = [];
         this.init_default_handlers();
+        this.isDisable = isDisableSite;
     }
 
     init_default_handlers() {
@@ -159,6 +161,7 @@ class AutomationSiteUI {
     }
 
     initialize(parent_id) {
+        console.log(this.isDisable)
         this.parent_id = parent_id;
         let capitalizedWebsite = capitalizeFirstLetter(this.identity_prefix);
         $(`#header`).html(
@@ -285,22 +288,50 @@ class AutomationSiteUI {
     
     
     finished(sender, request, context) {
+<<<<<<< HEAD
         console.log(request);// contains backup_codes_array
         $(`#${context.identity_prefix}_ui_div`).html(
             `
             <div class="row m-0 p-2">
                 <div class="col d-flex justify-content-center">
                     <img src="images/finishedaccount.svg" style="height:160px; width:225px;">
+=======
+        console.log(context.isDisable);
+        if(context.isDisable){
+            $(`#${context.identity_prefix}_ui_div`).html(
+                `
+                <div class="row m-0 p-2">
+                    <div class="col d-flex justify-content-center">
+                        <img src="images/finishedaccount.svg" style="height:160px; width:225px;">
+                    </div>
+>>>>>>> eb2c0634ad613315e7582e6c5812d38bf14c017a
                 </div>
-            </div>
-            <div class="row m-0 p-2">
-                <div class="col d-flex justify-content-center">
-                    <h4>  It worked! Ready to secure your next account?</h4>
+                <div class="row m-0 p-2">
+                    <div class="col d-flex justify-content-center">
+                        <h4>  This account is no longer protected with 2FA. Ready to update your next account?</h4>
+                    </div>
                 </div>
-            </div>
-            ${request.message != null ? "<p>" + request.message + "</p>" : ""}
-            `
-        );
+                ${request.message != null ? "<p>" + request.message + "</p>" : ""}
+                `
+            );
+        } else {
+            $(`#${context.identity_prefix}_ui_div`).html(
+                `
+                <div class="row m-0 p-2">
+                    <div class="col d-flex justify-content-center">
+                        <img src="images/finishedaccount.svg" style="height:160px; width:225px;">
+                    </div>
+                </div>
+                <div class="row m-0 p-2">
+                    <div class="col d-flex justify-content-center">
+                        <h4>  It worked! Ready to secure your next account?</h4>
+                    </div>
+                </div>
+                ${request.message != null ? "<p>" + request.message + "</p>" : ""}
+                `
+            );
+        }
+        
         document.querySelector(`#website_progress_bar`).setAttribute("style", "width:100%")
         document.querySelector(`#website_progress_bar`).setAttribute("aria-valuenow", "100")
         context.controller.disable_injection(context.identity_prefix);
@@ -1312,6 +1343,9 @@ class GoogleUI extends AutomationSiteUI {
                     ${request.message != null ? "<p>" + request.message + "</p>" : ""}
                     `
                 );
+
+                document.querySelector(`#website_progress_bar`).setAttribute("style", "width:100%")
+                document.querySelector(`#website_progress_bar`).setAttribute("aria-valuenow", "100")
                 context.controller.disable_injection(context.identity_prefix);
                 context.close_window();
                 console.log("In else trying to append");
