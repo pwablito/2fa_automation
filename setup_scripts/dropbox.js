@@ -131,7 +131,16 @@ async function handleReceivedMessage(request) {
             console.log(request.code);
             change(document.querySelector("input[name='code']"), request.code);
             document.querySelector(".login-button").click();
-           
+            setTimeout(() => {
+                if (getElementByXpath(document, "//*[contains(text(),'Invalid')]")) {
+                    chrome.runtime.sendMessage({
+                        dropbox_get_code: true,
+                        type: request.type,
+                        login_challenge: true,
+                        message: getElementByXpath(document, "//*[contains(text(),'Invalid')]").innerHTML,
+                    });
+                }
+            }, 2000);
         } else {
             change(document.querySelector("#phone-code"), request.code);
             if (getElementByXpath(document, "//*[contains(text(),'Next')]/..")) {
@@ -166,8 +175,7 @@ async function handleReceivedMessage(request) {
                     totp_seed: request.totp_seed // in case of totp, we need to recieve the QR code value from the extnesion to send it back for next retry/
                 });
             } else { exitScriptWithError(); }
-        }
-        
+        }   
     } else if (request.dropbox_sms) {
         document.querySelector("#use-sms").click();
         if (getElementByXpath(document, "//*[contains(text(),'Next')]/..")) {
@@ -181,7 +189,6 @@ async function handleReceivedMessage(request) {
         if (getElementByXpath(document, "//*[contains(text(),'Next')]/..")) {
             getElementByXpath(document, "//*[contains(text(),'Next')]/..").click();
         }
-
         let = QRcodePageXPath = "[id='twofactor-offline-setup']";
         let enterManuallyButtonXPath = "[id='twofactor-offline-setup'] > div:nth-of-type(2) > div > ul > li:nth-of-type(2) > button";
         await waitUntilElementLoad(document, enterManuallyButtonXPath, 2);

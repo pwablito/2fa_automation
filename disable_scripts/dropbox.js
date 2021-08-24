@@ -56,6 +56,22 @@ async function handleReceivedMessage(request) {
                 type: "email"
             });
         }
+        console.log("Waiting for 2fa phone form element")
+        if(await waitUntilElementLoad(document, ".\\32 fa-phone-form", 3)){
+            if(document.querySelector(".two-factor-uses-authenticator")){
+                chrome.runtime.sendMessage({
+                    dropbox_get_code: true,
+                    type: 'totp',
+                    login_challenge: true,
+                })
+            } else {
+                chrome.runtime.sendMessage({
+                    dropbox_get_code: true,
+                    type: 'sms',
+                    login_challenge: true,
+                })
+            }
+        }
     } else if (request.dropbox_password) {
         change(document.querySelector("input[type='password']"), request.password);
         if (getElementByXpath(document, "//*[contains(text(),'Next')]/..")) {
@@ -103,8 +119,21 @@ async function handleReceivedMessage(request) {
         //     }
         // }, 2000);
     } else if (request.dropbox_code) {
-        change(document.querySelector("html > body > div:nth-of-type(12) > div:nth-of-type(1) > div:nth-of-type(2) > div > div > div > div:nth-of-type(1) > div:nth-of-type(2) > div > form > div:nth-of-type(2) > div > div:nth-of-type(2) > input"), request.code);
-        document.querySelector("html > body > div:nth-of-type(12) > div:nth-of-type(1) > div:nth-of-type(2) > div > div > div > div:nth-of-type(1) > div:nth-of-type(2) > div > form > button").click();
+        if(request.login_challenge){
+            console.log(request.code);
+            change(document.querySelector("input[name='code']"), request.code);
+            document.querySelector(".login-button").click();
+            setTimeout(() => {
+                if (getElementByXpath(document, "//*[contains(text(),'Invalid')]")) {
+                chrome.runtime.sendMessage({
+                    dropbox_get_code: true,
+                    type: request.type,
+                    login_challenge: true,
+                    message: getElementByXpath(document, "//*[contains(text(),'Invalid')]").innerHTML,
+                });
+            }
+            }, 2000);
+        }
     }
 }
 
@@ -152,10 +181,32 @@ chrome.runtime.onMessage.addListener(
             // });
             // }, 1000);
         } else if (window.location.href.includes("login")) {
-            chrome.runtime.sendMessage({
-                dropbox_get_credentials: true,
-                type: "email"
-            });
+            await waitUntilPageLoad(document, 2);
+            console.log("A");
+            if (document.querySelector("[name=login_email]") && document.querySelector("[name=login_password]")) {
+                console.log("B, sending message for credentials");
+                chrome.runtime.sendMessage({
+                    dropbox_get_credentials: true,
+                    type: "email"
+                });
+            } else if(document.querySelector(".\\32 fa-phone-form")){
+                if(document.querySelector(".two-factor-uses-authenticator")){
+                    chrome.runtime.sendMessage({
+                        dropbox_get_code: true,
+                        type: 'totp',
+                        login_challenge: true,
+                    })
+                } else {
+                    chrome.runtime.sendMessage({
+                        dropbox_get_code: true,
+                        type: 'sms',
+                        login_challenge: true,
+                    })
+                }
+                
+            } else {
+                exitScriptWithError();
+            }
         } else {
             window.location.href =  "https://www.dropbox.com/account/security";
         }
