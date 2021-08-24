@@ -68,7 +68,7 @@ async function handleReceivedMessage(request) {
         // }
     }
     if (request.twitter_password) {
-        document.querySelector("#password").value = request.password;
+        change(document.querySelector("#password"), request.password);
         document.querySelector("input[type='submit']").click()
     }
     if (request.twitter_sms) {
@@ -90,6 +90,7 @@ async function handleReceivedMessage(request) {
         })
     }
 }
+
 chrome.runtime.onMessage.addListener(
     function(request, _) {
         handleReceivedMessage(request).then()
@@ -150,5 +151,3 @@ chrome.runtime.onMessage.addListener(
         window.location.href = "https://twitter.com/settings/account/login_verification/enrollment";
     }
 })();
-
-// Check if signed in, this starts the automation

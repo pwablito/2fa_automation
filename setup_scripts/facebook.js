@@ -36,11 +36,11 @@ async function waitUntilElementLoad(document, elemXPath, maxWait) {
 
 function exitScriptWithError() {
     // When debugging comment out code of this function. This will stop closing of background pages.
-    // chrome.runtime.sendMessage({
-    //     facebook_error: true,
-    //     message: "Sorry! Something went wrong. ",
-    //     message_for_dev: window.location.href
-    // });
+    chrome.runtime.sendMessage({
+        facebook_error: true,
+        message: "Sorry! Something went wrong. ",
+        message_for_dev: window.location.href
+    });
 }
 
 
@@ -95,8 +95,7 @@ async function handleReceievedMessage(request) {
     } else if (request.facebook_sms) {
         if (getElementByXpath(document, "//*[contains(text(),'Use Text Message')]")) {
             getElementByXpath(document, "//*[contains(text(),'Use Text Message')]").click();
-        }
-        else if (document.querySelector("[href*='security/2fac/setup/select_phone']")) {
+        } else if (document.querySelector("[href*='security/2fac/setup/select_phone']")) {
             document.querySelector("[href*='security/2fac/setup/select_phone']").click()
         }
         if (await waitUntilElementLoad(document, "[placeholder='Mobile phone number']", 2)) {
@@ -122,7 +121,7 @@ async function handleReceievedMessage(request) {
 
         } else { exitScriptWithError(); }
     } else if (request.facebook_code) {
-        if(request.login_challenge){
+        if (request.login_challenge) {
             change(document.querySelector("#approvals_code"), request.code);
             document.querySelector("#checkpointSubmitButton").click()
         }
@@ -189,12 +188,12 @@ async function handleReceievedMessage(request) {
         document.querySelector("#pass").value = request.password;
         document.querySelector("[name=login]").click();
     } else if (request.facebook_totp) {
-        if ( getElementByXpath(document, "//*[contains(text(),'Use Authentication App')]")) {
+        if (getElementByXpath(document, "//*[contains(text(),'Use Authentication App')]")) {
             getElementByXpath(document, "//*[contains(text(),'Use Authentication App')]").click();
         } else if (document.querySelector("[href*='security/2fac/setup/qrcode']")) {
             document.querySelector("[href*='security/2fac/setup/qrcode']").click()
         }
-       
+
         if (await waitUntilElementLoad(document, "[src*= 'https://www.facebook.com/qr/show/code']", 4)) {
             chrome.runtime.sendMessage({
                 facebook_get_code: true,
@@ -244,10 +243,10 @@ chrome.runtime.onMessage.addListener(
                     //     facebook_change_method: true,
                     // }
                     if (getElementByXpath(document, "//*[contains(text(),'Your Security Method')]/..//*[contains(text(), 'SMS')]")) {
-                        msg["sms_already_setup"]= true;
+                        msg["sms_already_setup"] = true;
                     }
                     if (getElementByXpath(document, "//*[contains(text(),'Your Security Method')]/..//*[contains(text(), 'Authentication App')]")) {
-                        msg["totp_already_setup"]= true;
+                        msg["totp_already_setup"] = true;
                     }
                     chrome.runtime.sendMessage(msg);
                 }
@@ -269,9 +268,9 @@ chrome.runtime.onMessage.addListener(
                 console.log("to go xframe");
                 window.location.href = document.querySelector(iFrameXPath).src;
             }
-        } else if(window.location.href.includes("facebook.com/checkpoint")) {
-            if(document.querySelector("input[aria-label='Login code']")){
-                if(document.querySelectorAll("strong").length > 1){
+        } else if (window.location.href.includes("facebook.com/checkpoint")) {
+            if (document.querySelector("input[aria-label='Login code']")) {
+                if (document.querySelectorAll("strong").length > 1) {
                     chrome.runtime.sendMessage({
                         facebook_get_code: true,
                         login_challenge: true,
@@ -283,18 +282,18 @@ chrome.runtime.onMessage.addListener(
                         login_challenge: true,
                         type: 'sms'
                     })
-                }            
-                
-            } else if(document.querySelector("input[value='dont_save']")){
+                }
+
+            } else if (document.querySelector("input[value='dont_save']")) {
                 document.querySelector("input[value='dont_save']").click()
                 document.querySelector("#checkpointSubmitButton").click()
-            } else if(document.querySelector("#checkpointSubmitButton")){
+            } else if (document.querySelector("#checkpointSubmitButton")) {
                 document.querySelector("#checkpointSubmitButton").click()
             }
-        }else if (window.location.href.includes("facebook.com/login/reauth.php")) {
+        } else if (window.location.href.includes("facebook.com/login/reauth.php")) {
             console.log("In reauth");
             await waitUntilPageLoad(document, 2);
-           if (await waitUntilElementLoad(document, "[type=password]", 2)) {
+            if (await waitUntilElementLoad(document, "[type=password]", 2)) {
                 console.log("In reauth 2");
                 chrome.runtime.sendMessage({
                     facebook_get_password: true

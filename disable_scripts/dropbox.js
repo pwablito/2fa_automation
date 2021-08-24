@@ -36,11 +36,11 @@ async function waitUntilElementLoad(document, elemXPath, maxWait) {
 
 function exitScriptWithError() {
     // When debugging comment out code of this function. This will stop closing of background pages.
-    // chrome.runtime.sendMessage({
-    //     dropbox_error: true,
-    //     message: "Sorry! Something went wrong. ",
-    //     message_for_dev : window.location.href
-    // });
+    chrome.runtime.sendMessage({
+        dropbox_error: true,
+        message: "Sorry! Something went wrong. ",
+        message_for_dev: window.location.href
+    });
 }
 
 async function handleReceivedMessage(request) {
@@ -57,8 +57,8 @@ async function handleReceivedMessage(request) {
             });
         }
         console.log("Waiting for 2fa phone form element")
-        if(await waitUntilElementLoad(document, ".\\32 fa-phone-form", 3)){
-            if(document.querySelector(".two-factor-uses-authenticator")){
+        if (await waitUntilElementLoad(document, ".\\32 fa-phone-form", 3)) {
+            if (document.querySelector(".two-factor-uses-authenticator")) {
                 chrome.runtime.sendMessage({
                     dropbox_get_code: true,
                     type: 'totp',
@@ -119,19 +119,19 @@ async function handleReceivedMessage(request) {
         //     }
         // }, 2000);
     } else if (request.dropbox_code) {
-        if(request.login_challenge){
+        if (request.login_challenge) {
             console.log(request.code);
             change(document.querySelector("input[name='code']"), request.code);
             document.querySelector(".login-button").click();
             setTimeout(() => {
                 if (getElementByXpath(document, "//*[contains(text(),'Invalid')]")) {
-                chrome.runtime.sendMessage({
-                    dropbox_get_code: true,
-                    type: request.type,
-                    login_challenge: true,
-                    message: getElementByXpath(document, "//*[contains(text(),'Invalid')]").innerHTML,
-                });
-            }
+                    chrome.runtime.sendMessage({
+                        dropbox_get_code: true,
+                        type: request.type,
+                        login_challenge: true,
+                        message: getElementByXpath(document, "//*[contains(text(),'Invalid')]").innerHTML,
+                    });
+                }
             }, 2000);
         }
     }
@@ -189,8 +189,8 @@ chrome.runtime.onMessage.addListener(
                     dropbox_get_credentials: true,
                     type: "email"
                 });
-            } else if(document.querySelector(".\\32 fa-phone-form")){
-                if(document.querySelector(".two-factor-uses-authenticator")){
+            } else if (document.querySelector(".\\32 fa-phone-form")) {
+                if (document.querySelector(".two-factor-uses-authenticator")) {
                     chrome.runtime.sendMessage({
                         dropbox_get_code: true,
                         type: 'totp',
@@ -203,12 +203,12 @@ chrome.runtime.onMessage.addListener(
                         login_challenge: true,
                     })
                 }
-                
+
             } else {
                 exitScriptWithError();
             }
         } else {
-            window.location.href =  "https://www.dropbox.com/account/security";
+            window.location.href = "https://www.dropbox.com/account/security";
         }
     } catch (e) {
         console.log(e);
