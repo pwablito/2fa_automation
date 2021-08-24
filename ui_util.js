@@ -143,6 +143,7 @@ class AutomationSiteUI {
                 this.window_id = window.id;
                 console.log(window.id);
                 chrome.windows.update(window.id, { state: 'minimized' });
+                chrome.runtime.sendMessage({window_id:window.id});
             });
         }.bind(this));
     }
