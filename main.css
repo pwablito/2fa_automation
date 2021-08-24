@@ -1,5 +1,28 @@
 body {
     min-width: 375px;
-    padding: 10px;
+    padding-top: 10px;
+    padding-bottom: 0px;
+    padding-left: 0px;
+    padding-right: -10px;
     text-align: center;
+}
+
+h3 {
+    font-size: 1.6rem;
+}
+
+.btn-success{
+    border-color: #22BAF1 !important;
+    background-color: #22BAF1 !important;
+}
+
+.btn-success.disabled, .btn-success:disabled {
+    border-color: #22BAF1 !important;
+    background-color: #22BAF1 !important;
+    color: #fff;
+}
+
+.progress-bar {
+    color: #22BAF1;
+    background-color: #22BAF1;
 }

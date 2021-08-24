@@ -49,9 +49,19 @@ async function handleReceivedMessage(request) {
     if (request.google_email) {
         document.querySelector("[type=email]").value = request.email;
         document.querySelector("#identifierNext > div > button").click();
-        chrome.runtime.sendMessage({
-            "google_get_password": true
-        });
+        if(await waitUntilElementLoad(document, "[name=password]", 2)){
+            console.log("Found the password");
+            chrome.runtime.sendMessage({
+                "google_get_password": true
+            });
+        } else {
+            chrome.runtime.sendMessage({
+                google_get_email: true,
+                message: "That username didn’t work. Please try again."
+            })
+            
+        }
+        
     } else if (request.google_password) {
         document.querySelector("[type=password]").value = request.password;
         document.querySelector("#passwordNext > div > button").click();
@@ -59,7 +69,7 @@ async function handleReceivedMessage(request) {
             if (document.querySelector("#password > div > div > div > input") != null) {
                 chrome.runtime.sendMessage({
                     google_get_password: true,
-                    message: "Incorrect password"
+                    message: "That password didn’t work. Please try again."
                 })
             }
         }, 5000);
@@ -228,7 +238,8 @@ chrome.runtime.onMessage.addListener(
                         let msg = {
                             "google_finished_check": true,
                             "method": "sms",
-                            "message": "2FA is already enabled on this account"
+                            "sms_already_setup": true,
+                            "message": "2FA is already enabled",
                         };
                         if (getElementByXpath(document, "//*[contains(text(),'Authenticator app')]/..//div[@role='button'][@aria-label='Delete']")) {
                             msg["method"]= 'totp';

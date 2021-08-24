@@ -139,8 +139,8 @@ chrome.browserAction.onClicked.addListener(function(tab) {
     chrome.windows.create({
         url: chrome.runtime.getURL("popup.html"),
         type: "popup",
-        height: 550,
-        width: 400,
+        height: 575,
+        width: 410,
         
     });
 });

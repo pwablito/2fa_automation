@@ -43,6 +43,7 @@ function exitScriptWithError() {
 }
 
 async function handleReceivedMessage(request) {
+    console.log(request)
     if (request.yahoo_email) {
         document.querySelector("#login-username").value = request.email;
         document.querySelector("#login-signin").click();

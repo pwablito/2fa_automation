@@ -3,8 +3,8 @@
 }
 
 .gray {
-    background: #ddd;
-    padding: 5px;
+    background: #F6F6F6;
+    /* padding: 5px; */
     position: relative;
 }
 
@@ -19,8 +19,24 @@
 }
 
 img {
-    width: 100%;
+    width: 75px;
+    height: 75px;
 }
+
+.qrcode > img {
+    width: 100px;
+    height: 100px;
+    display: inline !important;
+}
+
+.qr_code_placeholder > img {
+    width: 100px;
+    height: 100px;
+    display: inline !important;
+}
+
+
+
 
 label {
     padding: 15px;

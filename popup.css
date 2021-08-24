@@ -1,3 +1,21 @@
 body {
     padding: 10px;
 }
+
+.btn-success .btn-success:hover, .btn-success:active, .btn-success:visited{
+    background-color: #22BAF1;
+    border-color: #22BAF1;
+}
+
+.btn-danger .btn-danger:hover, .btn-danger:active, .btn-danger:visited{
+    background-color: #F15922;
+    border-color: #F15922;
+}
+
+.medium{
+    font-size: .95rem;
+}
+
+h3 {
+    font-size: 1.6rem;
+}

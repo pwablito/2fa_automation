@@ -5,7 +5,9 @@ var automationUI = new SetupUI("setup_processes_list");
 $("#setup_accounts_button").click(() => {
     if (!$("#setup_accounts_button").hasClass("disabled")) {
         $("#select_accounts_div").hide();
+        $("#setup_accounts_header_div").show();
         $("#setup_accounts_div").show();
+        $("#setup_accounts_footer_div").show();
         let boxes = $(".checkbox");
         boxes.each((index) => {
             if (boxes[index].checked) {

@@ -1,18 +1,25 @@
 
+function capitalizeFirstLetter(string) {
+    return string.charAt(0).toUpperCase() + string.slice(1);
+  }
+
 class AutomationUI {
     constructor(parent_id) {
         this.sites = [];
+        this.percentage_increment = 0;
+        this.total_number_of_sites 
         this.parent_id = parent_id;
         $(`#${this.parent_id}`).html(
             `
             <div id="site_automation_div"></div>
-            <button id="next_site_automation" class="btn btn-success" style="display: none;">Next</button>
+            <button id="next_site_automation" class="btn-lg btn-success" style="display: none;">Next</button>
             `
         );
         $("#next_site_automation").click(() => {
             this.disable_injection(this.current_site.identity_prefix);
-            this.current_site.destroy();
             $(`#next_site_automation`).hide();
+            $(`#${this.parent_id}`).append($(`#next_site_automation`))
+            this.current_site.destroy();
             this.next();
         });
         chrome.runtime.onMessage.addListener(
@@ -28,6 +35,10 @@ class AutomationUI {
             throw "Site must be an AutomationSiteUI object"
         }
         this.sites.push(site);
+        this.total_number_of_sites = this.sites.length
+        this.percentage_increment = 100/this.total_number_of_sites;
+        console.log(this.percentage_increment.toString())
+        console.log(this.total_number_of_sites.toString())
     }
 
     run() {
@@ -35,9 +46,36 @@ class AutomationUI {
     }
 
     next() {
+
+        
         if (this.sites.length === 0) {
-            $("#site_automation_div").html("Done"); // TODO improve this
-        }
+
+            $("#site_automation_div").html(
+                `
+                <div class="row m-0 p-2">
+                    <div class="col d-flex justify-content-center">
+                        <img src="images/finishedall.svg" style="height:147px; width:225px;">
+                    </div>
+                </div>
+                <div class="row m-0 p-2">
+                    <div class="col d-flex justify-content-center">
+                        <h4>  You are all done setting up your accounts! </h4>
+                    </div>
+                </div>
+                <div class="row m-0 p-2">
+                    <div class="col d-flex justify-content-center">
+                        <a class="btn-lg btn-success" href="popup.html" role="button">  Finish! </a>
+                    </div>
+                </div>
+                `
+            );
+        } 
+        let percentage_completed = (this.total_number_of_sites - this.sites.length) * this.percentage_increment;
+        document.querySelector("#system_progress_bar").setAttribute("style", "width: " + percentage_completed.toString() + "%;");
+        document.querySelector("#system_progress_bar").setAttribute("aria-valuenow", percentage_completed.toString());
+
+        
+
         this.current_site = this.sites.pop();
         this.enable_injection(this.current_site.identity_prefix);
         this.current_site.initialize("site_automation_div");
@@ -119,18 +157,34 @@ class AutomationSiteUI {
 
     initialize(parent_id) {
         this.parent_id = parent_id;
+        let capitalizedWebsite = capitalizeFirstLetter(this.identity_prefix);
+        $(`#header`).html(
+            `
+            <h4 class="pt-1" id="header"> Setting up ${capitalizedWebsite} </h4>
+            `
+        )
+        $(`#icon`).html(
+            `
+            <img src="${this.logo_file}" style="height: 40px; width: 40px">
+            `
+        )
+
+        $(`#website`).html(
+            `
+            <p> <small> ${capitalizedWebsite} </small></p>
+            `
+        )
+
+
         $(`#${this.parent_id}`).html(
             `
-            <div class="gray" id="${this.identity_prefix}-container">
-                <div class="row">
-                    <div class="col-3"><img src="${this.logo_file}"></div>
-                    <div class="col-9">
-                        <div id="${this.identity_prefix}_ui_div" class="row" style="text-align: left;"></div>
-                    </div>
-                </div>
+            <div class="gray p-0" id="${this.identity_prefix}-container" style="height: 400px;">
+                <div id="${this.identity_prefix}_ui_div" ></div> 
             </div>
             `
         );
+
+        
         this.launch_listener(this);
         this.loading();
         chrome.runtime.getBackgroundPage(function (backgroundPage) { // To get incognito status from bacgroundpage
@@ -149,6 +203,8 @@ class AutomationSiteUI {
     }
 
     destroy() {
+        //$(`#site-automation-div`).append($(`#next_site_automation`))
+        //$(`#next_site_automation`).hide();
         $(`#${this.identity_prefix}-container`).remove();
     }
 
@@ -188,16 +244,22 @@ class AutomationSiteUI {
     }
 
     loading() {
+        let capitalizedWebsite =capitalizeFirstLetter(this.identity_prefix);
         $(`#${this.identity_prefix}_ui_div`).html(
             `
-            <div class="row">
-                <div class="col-10">
-                Please wait...
+            <div class="row m-0 p-2">
+                <div class="col d-flex justify-content-center">
+                    <img src="${this.logo_file}" style="height:100px; width:100px;">
                 </div>
-                <div class="col-2">
-                    <div class="spinner-border" role="status">
-                        <span class="sr-only">Loading...</span>
-                    </div>
+            </div>
+            <div class="row m-0 p-2">
+                <div class="col d-flex justify-content-center">
+                    <h4>  ${capitalizedWebsite} is loading....</h4>
+                </div>
+            </div>
+            <div class="row m-0 p-2">
+                <div class="col d-flex justify-content-center">
+                    <img src="images/loading.svg" style="height:200px; width:200px;">
                 </div>
             </div>
             `
@@ -209,12 +271,24 @@ class AutomationSiteUI {
         
         $(`#${context.identity_prefix}_ui_div`).html(
             `
+            <div class="row m-0 p-2">
+                <div class="col d-flex justify-content-center">
+                    <img src="images/finishedaccount.svg" style="height:160px; width:225px;">
+                </div>
+            </div>
+            <div class="row m-0 p-2">
+                <div class="col d-flex justify-content-center">
+                    <h4>  It worked! Ready to secure your next account?</h4>
+                </div>
+            </div>
             ${request.message != null ? "<p>" + request.message + "</p>" : ""}
-            <p>Finished automation for ${context.name}</p>
             `
         );
+        document.querySelector(`#website_progress_bar`).setAttribute("style", "width:100%")
+        document.querySelector(`#website_progress_bar`).setAttribute("aria-valuenow", "100")
         context.controller.disable_injection(context.identity_prefix);
         context.close_window();
+        $(`#${context.identity_prefix}_ui_div`).append($(`#next_site_automation`));
         $(`#next_site_automation`).show();
         
         
@@ -255,15 +329,41 @@ class AutomationSiteUI {
         }  else {
             $(`#${context.identity_prefix}_ui_div`).html(
                 `
-                ${request.message != null ? "<p>" + request.message + "</p>" : ""}
-                <p>Please enter your ${request.type === null ? "login" : request.type === "username" ? "username" : "email"} and password for ${context.name}</p>
+
+                <div class="row m-0 p-2">
+                    <div class="col d-flex justify-content-center">
+                        <img src="images/username.svg" style="height:120px; width:200px;">
+                    </div>
+                </div>
+                <div class="row m-0 p-2">
+                    <div class="col d-flex justify-content-center">
+                        <h4>  Let&#39;s get you logged in. </h4>
+                    </div>
+                </div>
+                <div class="row m-0 p-0">
+                    <div class="col d-flex justify-content-center">
+                    ${request.message != null ? "<p class='mb-0' style='color:#dc3545;'>" + request.message + "</p>" : ""}
+                       </div>
+                </div>
                 <form id="${context.identity_prefix}_credentials_form">
-                    <input type="${request.type !== null && request.type === "email" ? "email" : "text"}" id="${context.identity_prefix}_login_input" placeholder="${request.type === null ? "Login" : request.type === "username" ? "Username" : "Email"}" required>
-                    <input type="password" id="${context.identity_prefix}_password_input" placeholder="Password" required>
-                    <button class="btn btn-success" type="submit">Submit</button>
+                    <div class="row m-0 pt-3 pb-1 pr-4 pl-4 justify-content-center">
+                        <div class="input-group input-group-lg">
+                            <input type="${request.type !== null && request.type === "email" ? "email" : "text"}" id="${context.identity_prefix}_login_input" class="form-control" aria-label="Large" aria-describedby="inputGroup-sizing-sm" id="${context.identity_prefix}_email_input" placeholder="${request.type === null ? "Login" : request.type === "username" ? "Username" : "Email"}" required>
+                         </div>
+                    </div>
+                    <div class="row m-0 pt-3 pb-1 pr-4 pl-4 justify-content-center">
+                        <div class="input-group input-group-lg">
+                            <input type="password" class="form-control" aria-label="Large" aria-describedby="inputGroup-sizing-sm" id="${context.identity_prefix}_password_input" placeholder="Password" required>
+                        </div>
+                    </div>
+                    <div class="row m-0 p-2 justify-content-center">
+                        <button class="btn-lg btn-success" type="submit">Submit</button>
+                    </div>
                 </form>
                 `
             );
+            document.querySelector(`#website_progress_bar`).setAttribute("style", "width:20%")
+            document.querySelector(`#website_progress_bar`).setAttribute("aria-valuenow", "20")
             $(`#${context.identity_prefix}_credentials_form`).submit((e) => {
                 e.preventDefault();
                 let login = $(`#${context.identity_prefix}_login_input`).val();
@@ -298,14 +398,38 @@ class AutomationSiteUI {
             chrome.windows.update(sender.tab.windowId, { state: 'minimized' });
             $(`#${context.identity_prefix}_ui_div`).html(
                 `
-                ${request.message != null ? "<p>" + request.message + "</p>" : ""}
-                <p>Please enter ${request.username != null ? "the password for " + request.username : "your password"}</p>
+                <div class="row m-0 p-2">
+                    <div class="col d-flex justify-content-center">
+                        <img src="images/password.svg" style="height:166px; width:200px;">
+                    </div>
+                </div>
+                <div class="row m-0 p-2">
+                    <div class="col d-flex justify-content-center">
+                        <h4>  Enter your password. </h4>
+                       </div>
+                </div>
+                <div class="row m-0 p-0">
+                    <div class="col d-flex justify-content-center">
+                    ${request.message != null ? "<p style='color:#dc3545;'>" + request.message + "</p>" : ""}
+                       </div>
+                </div>
+                        
+                    
                 <form id="${context.identity_prefix}_password_form">
-                <input type="password" id="${context.identity_prefix}_password_input" placeholder="Password" required>
-                <button class="btn btn-success" type="submit">Submit</button>
+                    <div class="row m-0 pt-3 pb-1 pr-4 pl-4 justify-content-center">
+                        <div class="input-group input-group-lg">
+                            <input type="password" class="form-control" aria-label="Large" aria-describedby="inputGroup-sizing-sm" id="${context.identity_prefix}_password_input" placeholder="Password" required>
+                         </div>
+                    </div>
+                    <div class="row m-0 p-2 justify-content-center">
+                        <button class="btn-lg btn-success" type="submit">Submit</button>
+                    </div>
                 </form>
+
                 `
             );
+            document.querySelector(`#website_progress_bar`).setAttribute("style", "width:20%")
+            document.querySelector(`#website_progress_bar`).setAttribute("aria-valuenow", "20")
             $(`#${context.identity_prefix}_password_form`).submit((e) => {
                 e.preventDefault();
                 let password = $(`#${context.identity_prefix}_password_input`).val();
@@ -339,14 +463,37 @@ class AutomationSiteUI {
         else {
             $(`#${context.identity_prefix}_ui_div`).html(
                 `
-                ${request.message != null ? "<p>" + request.message + "</p>" : ""}
-                <p>Please enter your email for ${context.name}</p>
+
+                <div class="row m-0 p-2">
+                    <div class="col d-flex justify-content-center">
+                        <img src="images/username.svg" style="height:120px; width:200px;">
+                    </div>
+                </div>
+                <div class="row m-0 p-2">
+                    <div class="col d-flex justify-content-center">
+                        <h4>  Let&#39;s get you logged in. First we need to know what account you want to use. </h4>
+                    </div>
+                </div>
+                <div class="row m-0 p-0">
+                    <div class="col d-flex justify-content-center">
+                    ${request.message != null ? "<p class='mb-0' style='color:#dc3545;'>" + request.message + "</p>" : ""}
+                       </div>
+                </div>
                 <form id="${context.identity_prefix}_credentials_form">
-                    <input type="email" id="${context.identity_prefix}_email_input" placeholder="Email" required>
-                    <button class="btn btn-success" type="submit">Submit</button>
+                    <div class="row m-0 pt-3 pb-1 pr-4 pl-4 justify-content-center">
+                        <div class="input-group input-group-lg">
+                            <input type="email" class="form-control" aria-label="Large" aria-describedby="inputGroup-sizing-sm" id="${context.identity_prefix}_email_input" placeholder="Email" required>
+                         </div>
+                    </div>
+                    <div class="row m-0 p-2 justify-content-center">
+                        <button class="btn-lg btn-success" type="submit">Submit</button>
+                    </div>
                 </form>
+                
                 `
             );
+            document.querySelector(`#website_progress_bar`).setAttribute("style", "width:10%")
+            document.querySelector(`#website_progress_bar`).setAttribute("aria-valuenow", "10")
             $(`#${context.identity_prefix}_credentials_form`).submit((e) => {
                 e.preventDefault();
                 let email = $(`#${context.identity_prefix}_email_input`).val();
@@ -369,14 +516,50 @@ class AutomationSiteUI {
     get_phone(sender, request, context) {
         $(`#${context.identity_prefix}_ui_div`).html(
             `
-            ${request.message != null ? "<p>" + request.message + "</p>" : ""}
-            <p>Please enter your phone number to setup 2FA for ${context.name}</p>
-            <form id="${context.identity_prefix}_phone_form">
-                <input type="tel" id="${context.identity_prefix}_phone_input" placeholder="Phone number" required>
-                <button class="btn btn-success" type="submit">Submit</button>
+
+            <div class="row m-0 pt-0">
+                <div class="col">
+                  <img src="images/sms.svg" style="height: 150px; width:141px;">
+                </div>
+            </div>
+            <div class="row m-0 pl-5 pr-5 pb-1 pt-1">
+                <div class="col">
+                    <h4> Set Up Your Phone</h4>
+                </div>
+            </div>
+            <div class="row m-0 pl-5 pr-5 pb-0 pt-0">
+                <div class="col">
+                    <p class="mb-0"> What phone number do you want to use? </p>
+                </div>
+            </div>
+            <div class="row m-0 p-0">
+                <div class="col d-flex justify-content-center">
+                    ${request.message != null ? "<p style='color:#dc3545;' class='mb-0'><small>" + "There was a problem with that number. Please try a different number." + "</small></p>" : ""}
+                </div>
+            </div>
+            
+        
+            <form id="${context.identity_prefix}_phone_form" class="mb-0">
+                <div class="row m-0 pt-1 pb-1 pr-4 pl-4 justify-content-center">
+                    <div class="input-group input-group-lg">
+                      <input type="tel" class="form-control" aria-label="Large" aria-describedby="inputGroup-sizing-sm" id="${context.identity_prefix}_phone_input" placeholder="Phone number" required>
+                    </div>
+                </div>
+                <div class="row m-0 p-2 justify-content-center">
+                    <button class="btn-lg btn-success" type="submit">Submit</button>
+                </div>
             </form>
+
             `
         );
+        if(context.identity_prefix == "google" && document.querySelector(`#${context.identity_prefix}`).getAttribute("method")=="totp"){
+            document.querySelector(`#website_progress_bar`).setAttribute("style", "width:50%")
+            document.querySelector(`#website_progress_bar`).setAttribute("aria-valuenow", "50")
+        } else {
+            document.querySelector(`#website_progress_bar`).setAttribute("style", "width:60%")
+            document.querySelector(`#website_progress_bar`).setAttribute("aria-valuenow", "60")
+        }
+        
         $(`#${context.identity_prefix}_phone_form`).submit((e) => {
             e.preventDefault();
             let phone = $(`#${context.identity_prefix}_phone_input`).val();
@@ -408,14 +591,61 @@ class AutomationSiteUI {
             if (request.login_challenge) {
                 $(`#${context.identity_prefix}_ui_div`).html(
                     `
-                    ${request.message != null ? "<p>" + request.message + "</p>" : ""}
-                    <p>Please enter the code generated by your authenticator app</p>
-                    <form id="${context.identity_prefix}_code_form">
-                        <input type="text" id="${context.identity_prefix}_code_input" placeholder="Code" required>
-                        <button class="btn btn-success" type="submit">Submit</button>
-                    </form>
+
+                    <div class="row m-0 pt-0">
+                            <div class="col qr_code_placeholder" id="${context.identity_prefix}_qrcode_placeholder">
+                                <img src="images/authcode.svg" style="height: 150px; width:150px;">
+                            </div>
+                        </div>
+                        <div class="row m-0 pl-5 pr-5 pb-1 pt-1">
+                            <div class="col">
+                                <h4> You have 2FA enabled.</h4>
+                            </div>
+                        </div>
+                        <div class="row m-0 pl-5 pr-5 pb-0 pt-0">
+                            <div class="col">
+                                <p> Enter the 6-digit code from your authenticator app. </p>
+                            </div>
+                        </div>
+                        <div class="row m-0 p-0">
+                            <div class="col d-flex justify-content-center">
+                                ${request.message != null ? "<p style='color:#dc3545;'>" + request.message + "</p>" : ""}
+                           </div>
+                        </div>
+                            
+                        
+                        <form id="${context.identity_prefix}_code_form" class="mb-0">
+                            <div class="row m-0 pt-1 pb-1 pr-4 pl-4 justify-content-center">
+                                <div class="input-group input-group-lg">
+                                    <input type="text" class="form-control" aria-label="Large" aria-describedby="inputGroup-sizing-sm" id="${context.identity_prefix}_code_input" placeholder="Code" required>
+                                </div>
+                            </div>
+                            <div class="row m-0 p-2 justify-content-center">
+                                <button class="btn-lg btn-success" type="submit">Submit</button>
+                            </div>
+                        </form>
+    
                     `
+
                 );
+                
+                $(`#${context.identity_prefix}_code_form`).submit((e) => {
+                    e.preventDefault();
+                    let code = $(`#${context.identity_prefix}_code_input`).val();
+        
+                    if (code) {
+                        let request_body = {
+                            code: code
+                        }
+        
+                        if (request.login_challenge) {
+                            request_body['login_challenge'] = true;
+                        }
+                        request_body[`${context.identity_prefix}_code`] = true;
+                        chrome.tabs.sendMessage(sender.tab.id, request_body);
+                        context.loading();
+                    }
+                });
             } else if (!(request.totp_seed || request.totp_url)) {
                 context.error("TOTP seed not provided");
                 return;
@@ -429,36 +659,217 @@ class AutomationSiteUI {
                 }
                 $(`#${context.identity_prefix}_ui_div`).html(
                     `
-                    ${request.message != null ? "<p>" + request.message + "</p>" : ""}
-                    <p>Download Google Authenticator, scan this QR code, and enter the generated code</p>
-                    <div class="row">
-                        <div class="col-6">
-                            <form id="${context.identity_prefix}_code_form">
-                            <input type="text" id="${context.identity_prefix}_code_input" placeholder="Code" required>
-                                <button class="btn btn-success" type="submit">Submit</button>
-                            </form>
-                        </div>
-                        <div class="col-6">
-                            <div id="${context.identity_prefix}_qr_div" style="width: 100%;">
+
+                    <div class="row m-0 pt-3">
+                        <div class="col">
+                            <img src="images/authapp.png" style="height: 100px; width:100px;">
                         </div>
                     </div>
+                    <div class="row m-0 pl-5 pr-5 pb-1 pt-1">
+                        <div class="col">
+                            <h4> Set Up Authenticator</h4>
+                        </div>
+                    </div>
+                    <div class="row m-0 pl-5 pr-5 pb-0 pt-0">
+                        <div class="col">
+                            <ul class="text-left mb-0">
+                                <li> Install authenticator app</li>
+                                <li> Select <strong> Set up account</strong></li>
+                                <li> Choose <strong> Scan a barcode app</strong></li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="row m-0 center-text">
+                        <div class="col">
+                            <div class="qrcode" id="${context.identity_prefix}_qr_div" style="width: 100%;">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row m-0 p-1 justify-content-center">
+                        <button class="btn-lg btn-success" id="${context.identity_prefix}_next_button">Next</button>
+                    </div>
+                    
                     `
                 );
-                new QRCode(document.getElementById(`${context.identity_prefix}_qr_div`), totp_url);
+
+                if(context.identity_prefix == "google" && document.querySelector(`#${context.identity_prefix}`).getAttribute("method")=="totp"){
+                    document.querySelector(`#website_progress_bar`).setAttribute("style", "width:80%")
+                    document.querySelector(`#website_progress_bar`).setAttribute("aria-valuenow", "800")
+                } else {
+                    document.querySelector(`#website_progress_bar`).setAttribute("style", "width:60%")
+                    document.querySelector(`#website_progress_bar`).setAttribute("aria-valuenow", "60")
+                }
+                
+                let elm = new QRCode(document.getElementById(`${context.identity_prefix}_qr_div`), totp_url);
+
+                $(`#${context.identity_prefix}_next_button`).click(() => {
+                    $(`#${context.identity_prefix}_ui_div`).html(
+                        `
+                        <div class="row m-0 pt-0">
+                            <div class="col qr_code_placeholder" id="${context.identity_prefix}_qrcode_placeholder">
+                                <img src="images/authcode.svg" style="height: 150px; width:150px;">
+                            </div>
+                        </div>
+                        <div class="row m-0 pl-5 pr-5 pb-1 pt-1">
+                            <div class="col">
+                                <h4> Set Up Authenticator</h4>
+                            </div>
+                        </div>
+                        <div class="row m-0 pl-5 pr-5 pb-0 pt-0">
+                            <div class="col">
+                                <p> Enter the 6-digit code you see in the app. </p>
+                            </div>
+                        </div>
+                        <div class="row m-0 p-0">
+                            <div class="col d-flex justify-content-center">
+                                ${request.message != null ? "<p style='color:#dc3545;'>" + request.message + "</p>" : ""}
+                           </div>
+                        </div>
+                            
+                        
+                        <form id="${context.identity_prefix}_code_form" class="mb-0">
+                            <div class="row m-0 pt-1 pb-1 pr-4 pl-4 justify-content-center">
+                                <div class="input-group input-group-lg">
+                                    <input type="text" class="form-control" aria-label="Large" aria-describedby="inputGroup-sizing-sm" id="${context.identity_prefix}_code_input" placeholder="Code" required>
+                                </div>
+                            </div>
+                            <div class="row m-0 p-2 justify-content-center">
+                                <button class="btn-lg btn-success" type="submit">Submit</button>
+                            </div>
+                        </form>
+                        <div class="row m-0 p-0">
+                            <div class="col">
+                            <a href="#" id="${context.identity_prefix}_view_qrcode"> <small>  Need to scan barcode again? </small> </a>
+                            </div>
+                        </div>         
+                        `
+                    );
+
+                    if(context.identity_prefix == "google" && document.querySelector(`#${context.identity_prefix}`).getAttribute("method")=="totp"){
+                        document.querySelector(`#website_progress_bar`).setAttribute("style", "width:90%")
+                        document.querySelector(`#website_progress_bar`).setAttribute("aria-valuenow", "90")
+                    } else {
+                        document.querySelector(`#website_progress_bar`).setAttribute("style", "width:80%")
+                        document.querySelector(`#website_progress_bar`).setAttribute("aria-valuenow", "80")
+                    }
+                    $(`#${context.identity_prefix}_view_qrcode`).click(() => {
+                        document.getElementById(`${context.identity_prefix}_qrcode_placeholder`).innerHTML = "";
+                        new QRCode(document.getElementById(`${context.identity_prefix}_qrcode_placeholder`), totp_url);
+                    });
+
+                    $(`#${context.identity_prefix}_code_form`).submit((e) => {
+                        e.preventDefault();
+                        let code = $(`#${context.identity_prefix}_code_input`).val();
+            
+                        if (code) {
+                            let request_body = {
+                                code: code
+                            }
+            
+                            if (request.totp_seed) {
+                                request_body["totp_seed"] = request.totp_seed;
+                            }
+            
+                            if (request.login_challenge) {
+                                request_body['login_challenge'] = true;
+                            }
+                            request_body[`${context.identity_prefix}_code`] = true;
+                            chrome.tabs.sendMessage(sender.tab.id, request_body);
+                            context.loading();
+                        }
+                    });
+                });
             }
 
-
         } else if (request.type === "sms") {
-            $(`#${context.identity_prefix}_ui_div`).html(
+
+            if (request.login_challenge) {
+                $(`#${context.identity_prefix}_ui_div`).html(
+                    `
+
+                    <div class="row m-0 pt-0">
+                        <div class="col">
+                            <img src="images/sms.svg" style="height: 150px; width:141px;">
+                        </div>
+                    </div>
+                    <div class="row m-0 pl-5 pr-5 pb-1 pt-1">
+                        <div class="col">
+                            <h4> You have 2FA enabled.</h4>
+                        </div>
+                    </div>
+                    <div class="row m-0 pl-5 pr-5 pb-0 pt-0">
+                        <div class="col">
+                            <p> Google just sent you a text message with a verification code to your phone. Enter the code below. </p>
+                        </div>
+                    </div>
+                    <div class="row m-0 p-0">
+                        <div class="col d-flex justify-content-center">
+                            ${request.message != null ? "<p style='color:#dc3545;'>" + request.message + "</p>" : ""}
+                        </div>
+                    </div>
+                
+            
+                    <form id="${context.identity_prefix}_code_form" class="mb-0">
+                        <div class="row m-0 pt-1 pb-1 pr-4 pl-4 justify-content-center">
+                            <div class="input-group input-group-lg">
+                            <input type="text" class="form-control" aria-label="Large" aria-describedby="inputGroup-sizing-sm" id="${context.identity_prefix}_code_input" placeholder="Code" required>
+                            </div>
+                        </div>
+                        <div class="row m-0 p-2 justify-content-center">
+                            <button class="btn-lg btn-success" type="submit">Submit</button>
+                        </div>
+                    </form>
+                    `
+                );
+            } else {
+                $(`#${context.identity_prefix}_ui_div`).html(
+                    `
+                    <div class="row m-0 pt-0">
+                        <div class="col">
+                            <img src="images/sms.svg" style="height: 150px; width:141px;">
+                        </div>
+                    </div>
+                    <div class="row m-0 pl-5 pr-5 pb-1 pt-1">
+                        <div class="col">
+                            <h4> Confirm that it works</h4>
+                        </div>
+                    </div>
+                    <div class="row m-0 pl-5 pr-5 pb-0 pt-0">
+                        <div class="col">
+                            <p> Google just sent you a text message with a verification code to your phone. Enter the code below. </p>
+                        </div>
+                    </div>
+                    <div class="row m-0 p-0">
+                        <div class="col d-flex justify-content-center">
+                            ${request.message != null ? "<p style='color:#dc3545;'>" + request.message + "</p>" : ""}
+                        </div>
+                    </div>
+                
+            
+                    <form id="${context.identity_prefix}_code_form" class="mb-0">
+                        <div class="row m-0 pt-1 pb-1 pr-4 pl-4 justify-content-center">
+                            <div class="input-group input-group-lg">
+                            <input type="text" class="form-control" aria-label="Large" aria-describedby="inputGroup-sizing-sm" id="${context.identity_prefix}_code_input" placeholder="Code" required>
+                            </div>
+                        </div>
+                        <div class="row m-0 p-2 justify-content-center">
+                            <button class="btn-lg btn-success" type="submit">Submit</button>
+                        </div>
+                    </form>
+        
                 `
-                ${request.message != null ? "<p>" + request.message + "</p>" : ""}
-                <p>Please enter the code sent to your phone via SMS</p>
-                <form id="${context.identity_prefix}_code_form">
-                    <input type="text" id="${context.identity_prefix}_code_input" placeholder="Code" required>
-                    <button class="btn btn-success" type="submit">Submit</button>
-                </form>
-                `
-            );
+                );
+                if(context.identity_prefix == "google" && document.querySelector(`#${context.identity_prefix}`).getAttribute("method")=="totp"){
+                    document.querySelector(`#website_progress_bar`).setAttribute("style", "width:65%")
+                    document.querySelector(`#website_progress_bar`).setAttribute("aria-valuenow", "65")
+                } else {
+                    document.querySelector(`#website_progress_bar`).setAttribute("style", "width:80%")
+                    document.querySelector(`#website_progress_bar`).setAttribute("aria-valuenow", "80")
+                }
+                
+            }    
+            
         }
         $(`#${context.identity_prefix}_code_form`).submit((e) => {
             e.preventDefault();
@@ -487,19 +898,45 @@ class AutomationSiteUI {
         console.log(request);
         $(`#${context.identity_prefix}_ui_div`).html(
             `
-            ${request.message != null ? "<p>" + request.message + "</p>" : ""}
-            <div class="row">
-                <div class="col-6">
-                    <p>Please choose a type of 2FA to set up for ${context.name}</p>
-                </div>
-                <div class="col-6">
-                    <button class="btn btn-success" id="${context.identity_prefix}_totp_button">TOTP</button> <span id = "${context.identity_prefix}_totp_tick" style="display:none"> &#10004</span>
-                    <br><br>
-                    <button class="btn btn-success" id="${context.identity_prefix}_sms_button">SMS</button> <span id = "${context.identity_prefix}_sms_tick" style="display:none"> &#10004</span>
+            <div class="row m-0">
+                <div class="col">
+                    <img src="images/selectmethod.svg" style="height: 100px; width:100px;">
                 </div>
             </div>
+            <div class="row m-0 pl-5 pr-5 pb-2 pt-2">
+                <div class="col">
+                    ${request.message != null ? "<h4> You already have 2FA enabled! </h4>" : "<h4> Lets pick a method to protect your account.</h4>"}
+                    
+                </div>
+            </div>
+            <div class="row m-0">
+                <div class="col-3 pl-1 pr-0 pt-3">
+                    <img src="images/authapp.png" style="height: 90px; width: 85px;">
+                </div>
+                <div class="col-5 pl-0 pr-0 pb-1">
+                    <p class="text-left mb-0"> <strong style="color: #71CF6F"> Recommended </strong> - <br> Use an app like Google Authenticator to get verification codes.</p>
+                </div>
+                <div class="col-4 pl-0 pt-3">
+                    <button class="btn-sm btn-success" id="${context.identity_prefix}_totp_button"> Use Authenticator App <span id = "${context.identity_prefix}_totp_tick" style="display:none"> &#10004</span> </button> 
+                </div>
+
+            </div>
+            <div class="row m-0 pt-3">
+                <div class="col-3 pl-0 pr-4 pt-0">
+                    <img src="images/sms.svg" style="height: 90px; width: 85px;">
+                </div>
+                <div class="col-5 pl-0 pr-0">
+                    <p class="text-left">  Use text messages (SMS) to receive verification codes.</p>
+                </div>
+                <div class="col-4 pl-0 pt-2">
+                    <button class="btn-sm btn-success" id="${context.identity_prefix}_sms_button"> Use Text Messages <span id = "${context.identity_prefix}_sms_tick" style="display:none"> &#10004</span> </button> 
+                </div>
+            </div>
+
             `
         );
+        document.querySelector(`#website_progress_bar`).setAttribute("style", "width:35%")
+        document.querySelector(`#website_progress_bar`).setAttribute("aria-valuenow", "35")
         if (request.sms_already_setup) {
             document.getElementById(context.identity_prefix + "_sms_button").disabled = "disabled";
             document.getElementById(context.identity_prefix + "_sms_tick").style.display = "";
@@ -515,14 +952,20 @@ class AutomationSiteUI {
             if (context.identity_prefix == "google" && !request.sms_already_setup) {
                 $(`#${context.identity_prefix}_ui_div`).html(
                     `
-                    ${request.message != null ? "<p>" + request.message + "</p>" : ""}
-                    <p>
-                        Google requires enabling SMS first before enabling a TOTP. Do you want to conitnue with enabling SMS first?              
-                    </p>
+                    <div class="row m-0 pt-0">
+                        <div class="col">
+                            <img src="images/smsfirst.svg" style="height: 200px; width:170px;">
+                        </div>
+                    </div>
         
-                    <div class="col-6">
-                            <button class="btn btn-success" id="${context.identity_prefix}_continue_button">Continue</button>
-        
+                    <div class="row m-0 pl-5 pr-5 pb-0 pt-0">
+                        <div class="col">
+                            <p> Before setting up an authenticator app, Google requires you first enable text messages. Let&#39;s do that first. </p>
+                        </div>
+                    </div>
+                        
+                    <div class="row m-0 p-2 justify-content-center">
+                        <button class="btn-lg btn-success" id="${context.identity_prefix}_continue_button">Continue</button>
                     </div>
                     `
                 );
@@ -552,46 +995,90 @@ class AutomationSiteUI {
     }
 
     change_method(sender, request, context) {
-        $(`#${context.identity_prefix}_ui_div`).html(
-            `
-            <div class="row">
-                <div class="col-6">
-                    <p>You are currently using ${request.method_enabled == "sms" ? "SMS" : " an authenticator app" } to login to your account at ${this.name}. </p>
-                    <p>Would you like to change this method? </p>
-                </div>
-                <div class="col-6">
-                    <button class="btn btn-success" id="${context.identity_prefix}_continue_button">Yes</button>
-                    <br><br>
-                    <button class="btn btn-success" id="${context.identity_prefix}_cancel_button">No</button>
-                </div>
-            </div>
-            `
-        );
-
-        $(`#${context.identity_prefix}_continue_button`).click(() => {
-            if (request.method_enabled == 'sms') {
-                let request_body = {
-                    change_method: true,
-                    method_enabled: 'sms',
-                }
-                request_body[`${context.identity_prefix}_totp`] = true;
-                chrome.tabs.sendMessage(sender.tab.id, request_body);
-                context.loading();
+        if(request.method_enabled == document.querySelector(`#${context.identity_prefix}`).getAttribute("method")){
+            context.finished(sender, request, context)
+        } else {
+            if(request.method_enabled == "sms"){
+                $(`#${context.identity_prefix}_ui_div`).html(
+                    `
+                    <div class="row m-0 pt-2">
+                        <div class="col">
+                            <img src="images/selectmethod.svg" style="height: 100px; width:100px;">
+                        </div>
+                    </div>
+                    <div class="row m-0 pl-2 pr-2 pb-2 pt-2">
+                        <div class="col">
+                            <h4> You are currently using SMS to receive verification codes for this account. Do you want to use a different method? </h4>
+                        </div>
+                    </div>
+                    <div class="row m-0">
+                        
+                        <div class="col-6 p-2">
+                            <button class="btn-sm btn-danger" id="${context.identity_prefix}_cancel_button"> Keep Using SMS </button> 
+                        </div>
+                        <div class="col-6 p-2">
+                            <button class="btn-sm btn-success" id="${context.identity_prefix}_continue_button"> Change Method </button> 
+                        </div>
+                    </div>    
+                    `
+                );
+                document.querySelector(`#website_progress_bar`).setAttribute("style", "width:40%")
+                document.querySelector(`#website_progress_bar`).setAttribute("aria-valuenow", "40")
             } else {
-                let request_body = {
-                    change_method: true,
-                    method_enabled: 'totp',
-                }
-                request_body[`${context.identity_prefix}_sms`] = true;
-                chrome.tabs.sendMessage(sender.tab.id, request_body);
-                context.loading();
-
+                $(`#${context.identity_prefix}_ui_div`).html(
+                    `
+                    <div class="row m-0 pt-2">
+                        <div class="col">
+                            <img src="images/selectmethod.svg" style="height: 100px; width:100px;">
+                        </div>
+                    </div>
+                    <div class="row m-0 pl-2 pr-2 pb-2 pt-2">
+                        <div class="col">
+                            <h4> You are currently using an authenticator app to receive verification codes for this account. Do you want to use a different method? </h4>
+                        </div>
+                    </div>
+                    <div class="row m-0">
+                        <div class="col-6 p-2">
+                            <button class="btn-sm btn-danger" id="${context.identity_prefix}_cancel_button"> Keep Using App </button> 
+                        </div>
+                        <div class="col-6 p-2">
+                            <button class="btn-sm btn-success" id="${context.identity_prefix}_continue_button"> Change Method </button> 
+                        </div>
+                    </div>
+        
+                    `
+                );
+                document.querySelector(`#website_progress_bar`).setAttribute("style", "width:40%")
+                document.querySelector(`#website_progress_bar`).setAttribute("aria-valuenow", "40")
             }
-        });
-
-        $(`#${context.identity_prefix}_cancel_button`).click(() => {
-            context.finished(sender, request, context);
-        });
+        
+    
+            $(`#${context.identity_prefix}_continue_button`).click(() => {
+                if (request.method_enabled == 'sms') {
+                    let request_body = {
+                        change_method: true,
+                        method_enabled: 'sms',
+                    }
+                    request_body[`${context.identity_prefix}_totp`] = true;
+                    chrome.tabs.sendMessage(sender.tab.id, request_body);
+                    context.loading();
+                } else {
+                    let request_body = {
+                        change_method: true,
+                        method_enabled: 'totp',
+                    }
+                    request_body[`${context.identity_prefix}_sms`] = true;
+                    chrome.tabs.sendMessage(sender.tab.id, request_body);
+                    context.loading();
+    
+                }
+            });
+    
+            $(`#${context.identity_prefix}_cancel_button`).click(() => {
+                context.finished(sender, request, context);
+            });
+        }
+        
     }
 }
 
@@ -605,11 +1092,23 @@ class AmazonUI extends AutomationSiteUI {
         $(`#${context.identity_prefix}_ui_div`).html(
             `
             ${request.message != null ? "<p>" + request.message + "</p>" : ""}
-            <p>
-                Amazon requires that you approve your login attempts manually each time you sign in.
-                To do this, please follow the link sent to your phone and email.
-                There, click "Approve" and then close the window. Then check back here for more instructions.
-            </p>
+
+            <div class="row m-0 pt-2">
+                <div class="col">
+                    <img src="images/smsfirst.svg" style="height: 170px; width:200px;">
+                </div>
+            </div>
+                <div class="row m-0 pl-2 pr-2 pb-2 pt-2">
+                    <div class="col">
+                        <p>  <p>
+                        Amazon requires that you approve your login attempts manually each time you sign in.
+                        To do this, please follow the link sent to your phone and email.
+                        There, click "Approve". This page will update in a few seconds.
+                    </p> </p>
+                    </div>
+                </div>
+            
+           
             `
         );
     }
@@ -626,15 +1125,21 @@ class YahooUI extends AutomationSiteUI {
         $(`#${context.identity_prefix}_ui_div`).html(
             `
             ${request.message != null ? "<p>" + request.message + "</p>" : ""}
-            <p>
-                Yahoo requires that you prove that you're not a robot before continuing.
-                To complete this check please click the next button.                
-            </p>
 
-            <div class="col-6">
-                    <button class="btn btn-success" id="${context.identity_prefix}_continue_button">Continue</button>
-
+            <div class="row m-0 pt-2">
+                <div class="col">
+                    <img src="images/robot.svg" style="height: 103px; width:225px;">
+                </div>
             </div>
+                <div class="row m-0 pl-2 pr-2 pb-2 pt-2">
+                    <div class="col">
+                        <p> Yahoo requires that you prove that you're not a robot before continuing.
+                        To complete this check please click the next button. </p>
+                    </div>
+                </div>
+                <div class="row m-0">
+                    <button class="btn btn-success" id="${context.identity_prefix}_continue_button">Continue</button>
+                </div>
             `
         );
         $(`#${context.identity_prefix}_continue_button`).click(() => {
@@ -652,18 +1157,27 @@ class GoogleUI extends AutomationSiteUI {
        
         console.log(request.method);
         console.log(document.querySelector(`#${context.identity_prefix}`).getAttribute("method"));
-        if(request.method != document.querySelector(`#${context.identity_prefix}`).getAttribute("method")){
+        if((request.method != document.querySelector(`#${context.identity_prefix}`).getAttribute("method") )&& (document.querySelector(`#${context.identity_prefix}`).getAttribute("method")!= "")){
+            console.log("either methods are the same or method is not null")
             $(`#${context.identity_prefix}_ui_div`).html(
                 `
 
-                <p>
-                    SMS has been setup succesfully. To continue with setting up TOTP press continue.                
-                </p>
-    
-                <div class="col-6">
-                        <button class="btn btn-success" id="${context.identity_prefix}_continue_button">Continue</button>
-    
-                </div>
+                    <div class="row m-0 pt-4">
+                        <div class="col">
+                            <img src="images/authapp.png" style="height: 200px; width:189px;">
+                        </div>
+                    </div>
+        
+                    <div class="row m-0 pl-5 pr-5 pb-0 pt-4">
+                        <div class="col">
+                            <p> That worked! Ready to enable your authenticator app now? </p>
+                        </div>
+                    </div>
+                        
+                    <div class="row m-0 p-2 justify-content-center">
+                        <button class="btn-lg btn-success" id="${context.identity_prefix}_continue_button">Continue</button>
+                    </div>
+
                 `
             );
             $(`#${context.identity_prefix}_continue_button`).click(() => {
@@ -675,18 +1189,131 @@ class GoogleUI extends AutomationSiteUI {
             
 
         
-        }  else {
-    
+        }  else if(document.querySelector(`#${context.identity_prefix}`).getAttribute("method")==""){
             $(`#${context.identity_prefix}_ui_div`).html(
                 `
-                ${request.message != null ? "<p>" + request.message + "</p>" : ""}
-                <p>Finished automation for ${context.name}</p>
+                <div class="row m-0">
+                    <div class="col">
+                        <img src="images/selectmethod.svg" style="height: 100px; width:100px;">
+                    </div>
+                </div>
+                <div class="row m-0 pl-5 pr-5 pb-2 pt-2">
+                    <div class="col">
+                        ${request.message != null ? "<h4> You already have 2FA enabled! </h4>" : "<h4> Lets pick a method to protect your account.</h4>"}
+                        
+                    </div>
+                </div>
+                <div class="row m-0">
+                    <div class="col-3 pl-1 pr-0 pt-3">
+                        <img src="images/authapp.png" style="height: 90px; width: 85px;">
+                    </div>
+                    <div class="col-5 pl-0 pr-0 pb-1">
+                        <p class="text-left mb-0"> <strong style="color: #71CF6F"> Recommended </strong> - <br> Use an app like Google Authenticator to get verification codes.</p>
+                    </div>
+                    <div class="col-4 pl-0 pt-3">
+                        <button class="btn-sm btn-success" id="${context.identity_prefix}_totp_button"> Use Authenticator App <span id = "${context.identity_prefix}_totp_tick" style="display:none"> &#10004</span> </button> 
+                    </div>
+    
+                </div>
+                <div class="row m-0 pt-3">
+                    <div class="col-3 pl-0 pr-4 pt-0">
+                        <img src="images/sms.svg" style="height: 90px; width: 85px;">
+                    </div>
+                    <div class="col-5 pl-0 pr-0">
+                        <p class="text-left">  Use text messages (SMS) to receive verification codes.</p>
+                    </div>
+                    <div class="col-4 pl-0 pt-2">
+                        <button class="btn-sm btn-success" id="${context.identity_prefix}_sms_button"> Use Text Messages <span id = "${context.identity_prefix}_sms_tick" style="display:none"> &#10004</span> </button> 
+                    </div>
+                </div>
+    
                 `
             );
-            context.controller.disable_injection(context.identity_prefix);
-            chrome.runtime.onMessage.removeListener(listener);
-            context.close_window();
-            $(`#next_site_automation`).show();
+            if (request.sms_already_setup) {
+                document.getElementById(context.identity_prefix + "_sms_button").disabled = "disabled";
+                document.getElementById(context.identity_prefix + "_sms_tick").style.display = "";
+            }
+            if (request.totp_already_setup) {
+                document.getElementById(context.identity_prefix + "_totp_button").disabled = "disabled";
+                document.getElementById(context.identity_prefix + "_totp_tick").style.display = "";
+            }
+            $(`#${context.identity_prefix}_totp_button`).click(() => {
+                if(document.querySelector(`#${context.identity_prefix}`).getAttribute("method") == ""){
+                    document.querySelector(`#${context.identity_prefix}`).setAttribute("method", "totp")
+                }
+                if (context.identity_prefix == "google" && !request.sms_already_setup) {
+                    $(`#${context.identity_prefix}_ui_div`).html(
+                        `
+                        <div class="row m-0 pt-0">
+                            <div class="col">
+                                <img src="images/smsfirst.svg" style="height: 200px; width:170px;">
+                            </div>
+                        </div>
+            
+                        <div class="row m-0 pl-5 pr-5 pb-0 pt-0">
+                            <div class="col">
+                                <p> Before setting up an authenticator app, Google requires you first enable text messages. Let&#39;s do that first. </p>
+                            </div>
+                        </div>
+                            
+                        <div class="row m-0 p-2 justify-content-center">
+                            <button class="btn-lg btn-success" id="${context.identity_prefix}_continue_button">Continue</button>
+                        </div>
+                        `
+                    );
+                    $(`#${context.identity_prefix}_continue_button`).click(() => {
+                        let request_body = {}
+                        request_body[`${context.identity_prefix}_sms`] = true;
+                        chrome.tabs.sendMessage(sender.tab.id, request_body);
+                        context.loading();
+                    });
+                } else {
+                    
+                    let request_body = {}
+                    request_body[`${context.identity_prefix}_totp`] = true;
+                    chrome.tabs.sendMessage(sender.tab.id, request_body);
+                    context.loading();
+                }
+            });
+            $(`#${context.identity_prefix}_sms_button`).click(() => {
+                if(document.querySelector(`#${context.identity_prefix}`).getAttribute("method") == ""){
+                    document.querySelector(`#${context.identity_prefix}`).setAttribute("method", "sms")
+                }
+                let request_body = {}
+                request_body[`${context.identity_prefix}_sms`] = true;
+                chrome.tabs.sendMessage(sender.tab.id, request_body);
+                context.loading();
+            });
+            
+        } else {
+            if(document.querySelector("#finished")){
+                return;
+            } else {
+                $(`#${context.identity_prefix}_ui_div`).html(
+                    `
+    
+                    <div class="row m-0 p-2">
+                        <div class="col d-flex justify-content-center" id="finished">
+                            <img src="images/finishedaccount.svg" style="height:160px; width:225px;">
+                        </div>
+                    </div>
+                    <div class="row m-0 p-2">
+                        <div class="col d-flex justify-content-center">
+                            <h4>  It worked! Ready to secure your next account?</h4>
+                        </div>
+                    </div>
+                    ${request.message != null ? "<p>" + request.message + "</p>" : ""}
+                    `
+                );
+                context.controller.disable_injection(context.identity_prefix);
+                context.close_window();
+                console.log("In else trying to append");
+                console.log(document.querySelector("#next_site_automation"));
+                $(`#${context.identity_prefix}_ui_div`).append($(`#next_site_automation`));
+                $(`#next_site_automation`).show();
+            }
+            
+        
         }
     } 
         
@@ -699,15 +1326,21 @@ class GithubUI extends AutomationSiteUI {
         $(`#${context.identity_prefix}_ui_div`).html(
             `
             ${request.message != null ? "<p>" + request.message + "</p>" : ""}
-            <p>
-                Yahoo requires that you prove that you're not a robot before continuing.
-                To complete this check please click the next button.                
-            </p>
 
-            <div class="col-6">
-                    <button class="btn btn-success" id="${context.identity_prefix}_continue_button">Continue</button>
-
+            <div class="row m-0 pt-2">
+                <div class="col">
+                    <img src="images/robot.svg" style="height: 103px; width:225px;">
+                </div>
             </div>
+                <div class="row m-0 pl-2 pr-2 pb-2 pt-2">
+                    <div class="col">
+                        <p> Github requires that you prove that you're not a robot before continuing.
+                        To complete this check please click the next button. </p>
+                    </div>
+                </div>
+                <div class="row m-0">
+                    <button class="btn btn-success" id="${context.identity_prefix}_continue_button">Continue</button>
+                </div>
             `
         );
         $(`#${context.identity_prefix}_continue_button`).click(() => {
