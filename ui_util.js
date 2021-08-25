@@ -271,9 +271,15 @@ class AutomationSiteUI {
     }
 
     get_backup_code_download(sender, request, context) {
+
+        
         console.log("Seting attribute to true");
-        document.querySelector(`#${context.identity_prefix}`).setAttribute("backup_code_download", true);
-        console.log(document.querySelector(`#${context.identity_prefix}`));
+        if (request.backup_codes_array) {   // if we get the backup codes already through the registration process
+            document.querySelector(`#${context.identity_prefix}`).setAttribute("backup_codes_array", request.backup_codes_array);
+        } else { // in case we need to redirect and get back up codes at the end
+            document.querySelector(`#${context.identity_prefix}`).setAttribute("backup_code_download", true);
+            console.log(document.querySelector(`#${context.identity_prefix}`));
+        }
     }
 
     get_already_enabled_2fa(sender, request, context) {
@@ -291,6 +297,12 @@ class AutomationSiteUI {
     
     finished(sender, request, context) {
         console.log(request);// contains backup_codes_array
+        if (request.backup_codes_array) {
+            document.querySelector(`#${context.identity_prefix}`).setAttribute("backup_codes_array", request.backup_codes_array);
+        }
+        console.log(document.querySelector(`#${context.identity_prefix}`));
+        // we have backup codes here in the hidden element backup_codes_array
+
         $(`#${context.identity_prefix}_ui_div`).html(
             `
             <div class="row m-0 p-2">
