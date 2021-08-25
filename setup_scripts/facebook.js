@@ -152,10 +152,12 @@ async function handleReceievedMessage(request) {
                 } else {
                     // getElementByXpath(document, "//*[contains(text(),'Done')]/../..").click();
                     // setup process completed. Start backup process
-                    window.location.href = "https://www.facebook.com/security/2fac/settings";
                     chrome.runtime.sendMessage({
-                        backup_code_download: true
+                        facebook_get_backup_code_download: true,
                     });
+                    console.log("backup_code_download sent");
+                    window.location.href = "https://www.facebook.com/security/2fac/settings";
+                   
                 }
             }
         } else { // for sms
@@ -179,10 +181,12 @@ async function handleReceievedMessage(request) {
                         message: "Invalid code"
                     });
                 } else {
-                    window.location.href = "https://www.facebook.com/security/2fac/settings";
                     chrome.runtime.sendMessage({
-                        backup_code_download: true
+                        facebook_get_backup_code_download: true,
                     });
+                    console.log("backup_code_download sent");
+                    window.location.href = "https://www.facebook.com/security/2fac/settings";
+               
                     // chrome.runtime.sendMessage({
                     //     facebook_finished: true
                     // });
@@ -234,7 +238,7 @@ async function handleReceievedMessage(request) {
             if (await waitUntilElementLoad(document, "[href*='security/2fac/factors/recovery-code']", 2)) {
                 document.querySelector("[href*='security/2fac/factors/recovery-code']").click();
             }
-            if (await waitUntilElementLoad(document,"[type=submit][value=true]" , )) {
+            if (await waitUntilElementLoad(document,"[type=submit][value=true]" , 2)) {
                 document.querySelector("[type=submit][value=true]").click();
             }
             if (await waitUntilElementLoad(document, "[data-tooltip-content='Copy Recovery Code']", 3)) {
@@ -246,7 +250,7 @@ async function handleReceievedMessage(request) {
                 }
                 chrome.runtime.sendMessage({
                         facebook_finished: true,
-                        backup_codes_array: codes[i].innerText
+                        backup_codes_array: codes_array
                 });
             }
            
