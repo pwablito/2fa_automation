@@ -1,3 +1,6 @@
 [submodule "qrcodejs"]
 	path = qrcodejs
 	url = git@github.com:davidshimjs/qrcodejs.git
+[submodule "filesaverjs"]
+	path = filesaverjs
+	url = git@github.com:eligrey/FileSaver.js.git
