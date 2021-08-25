@@ -155,6 +155,16 @@ async function handleReceivedMessage(request) {
                 } else { exitScriptWithError(); }
                
                 if (await waitUntilElementLoad(document, "#backup-code-list-container", 2)) {
+                    var codes = document.querySelectorAll("[class='twofactor-backup-list__code']");
+                    var codes_array = [];
+                    for (i = 0; i < codes.length; ++i) {
+                        codes_array.push(codes[i].innerText);
+                        console.log(codes[i].innerText);
+                    }
+                    chrome.runtime.sendMessage({
+                            dropbox_get_backup_code_download: true,
+                            backup_codes_array: codes_array
+                    });
                     getElementByXpath(document, "//*[contains(text(),'Next')]/..").click();
                 } else if (await waitUntilElementLoad(document,"#notify-msg",1) && document.querySelector("#notify-msg").innerText.includes("updated")) {
                     chrome.runtime.sendMessage({

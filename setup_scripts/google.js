@@ -208,6 +208,44 @@ async function handleReceivedMessage(request) {
                 await timer(100); // 100 ms delay. Waiting for the button to be clickable
             }
         }
+    // } else if (request.start_backup) {
+    //     window.location.href = "https://myaccount.google.com/signinoptions/two-step-verification";
+    } else if (request.already_enabled_2fa) {
+        if (request.backup_code_download == "false") {
+           //Check which methods are enabled
+            console.log("2FA already exists");
+
+            let msg = {
+                "google_finished_check": true,
+                "method": "sms",
+                "sms_already_setup": true,
+                "message": "2FA is already enabled",
+            };
+            if (getElementByXpath(document, "//*[contains(text(),'Authenticator app')]/..//div[@role='button'][@aria-label='Delete']")) {
+                msg["method"] = 'totp';
+                // msg['sms_already_setup']= false;
+            }
+            chrome.runtime.sendMessage(msg);
+              
+        } else {
+            await waitUntilPageLoad(document, 3);
+            if (getElementByXpath(document, "//*[contains(text(),'Backup codes')]/..//div[@role='button']")) {
+                getElementByXpath(document, "//*[contains(text(),'Backup codes')]/..//div[@role='button']").click();
+            }
+            if (await waitUntilElementLoad(document, "table", 3)) {
+                var codes = getElementByXpath(document, "//*[contains(text(),'Keep these backup codes')]/..//table").querySelectorAll("span[jsname]");
+                var codes_array = [];
+                for (i = 0; i < codes.length; ++i) {
+                    codes_array.push(codes[i].innerText);
+                    console.log(codes[i].innerText);
+                }
+                chrome.runtime.sendMessage({
+                        google_finished: true,
+                        backup_codes_array: codes_array
+                });
+            }
+           
+        }
     }
 }
 
@@ -232,20 +270,10 @@ chrome.runtime.onMessage.addListener(
                     if (document.querySelector("div[role='radio']") != null || document.querySelector("div[wizard-step-uid='Security Center: StrongAuth: Authenticator:installApp']") != null || document.querySelector("div[wizard-step-uid='Security Center: StrongAuth: Authenticator:verifyCode']") != null) {
                         return;
                     } else {
-                        //Check which methods are enabled
-                        console.log("2FA already exists");
-
-                        let msg = {
-                            "google_finished_check": true,
-                            "method": "sms",
-                            "sms_already_setup": true,
-                            "message": "2FA is already enabled",
-                        };
-                        if (getElementByXpath(document, "//*[contains(text(),'Authenticator app')]/..//div[@role='button'][@aria-label='Delete']")) {
-                            msg["method"] = 'totp';
-                            // msg['sms_already_setup']= false;
-                        }
-                        chrome.runtime.sendMessage(msg);
+                        chrome.runtime.sendMessage({
+                            google_get_already_enabled_2fa: true,
+                        });
+                       
                     }
                 } else if (document.querySelector(buttonXPath) && document.querySelector(buttonXPath).innerText == "TURN ON") {
                     console.log("2");

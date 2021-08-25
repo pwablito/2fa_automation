@@ -360,7 +360,6 @@ class SetupUI extends AutomationUI {
 }
 
 class DisableUI extends AutomationUI {
-    
     enable_injection(service) {
         // Calls the enable_injection function in `util.js`
         enable_injection(service, "disable")
@@ -373,7 +372,7 @@ class DisableUI extends AutomationUI {
 }
 
 class AutomationSiteUI {
-    constructor(name, identity_prefix, logo_file, controller, start_url, isDisableSite = false) {
+    constructor(name, identity_prefix, logo_file, controller, start_url) {
         /*
          * @param {string} name - Name of the site (i.e. "Google")
          * @param {string} identity_prefix - Prefix for UI elements (i.e. "google" would result in "google_ui_div"
@@ -390,7 +389,6 @@ class AutomationSiteUI {
         this.window_id = null;
         this.handlers = [];
         this.init_default_handlers();
-        this.isDisable = isDisableSite;
     }
 
     init_default_handlers() {
@@ -402,7 +400,7 @@ class AutomationSiteUI {
         this.register_handler("get_method", this.get_method);
         this.register_handler("error", this.error_handler);
         this.register_handler("finished", this.finished);
-        this.register_handler("backup_code_download", this.backup_code_download);
+        this.register_handler("get_backup_code_download", this.get_backup_code_download);
         this.register_handler("get_already_enabled_2fa", this.get_already_enabled_2fa);
         this.register_handler("change_method", this.change_method);
         
@@ -413,7 +411,6 @@ class AutomationSiteUI {
     }
 
     initialize(parent_id) {
-        console.log(this.isDisable)
         this.parent_id = parent_id;
         let capitalizedWebsite = capitalizeFirstLetter(this.identity_prefix);
         $(`#header`).html(
@@ -525,21 +522,38 @@ class AutomationSiteUI {
         );
     }
 
-    backup_code_download(sender, request, context) {
-        document.querySelector(`#${context.identity_prefix}`).setAttribute("backup_code_download", true);
+    get_backup_code_download(sender, request, context) {
+
+        
+        console.log("Seting attribute to true");
+        if (request.backup_codes_array) {   // if we get the backup codes already through the registration process
+            document.querySelector(`#${context.identity_prefix}`).setAttribute("backup_codes_array", request.backup_codes_array);
+        } else { // in case we need to redirect and get back up codes at the end
+            document.querySelector(`#${context.identity_prefix}`).setAttribute("backup_code_download", true);
+            console.log(document.querySelector(`#${context.identity_prefix}`));
+        }
     }
 
     get_already_enabled_2fa(sender, request, context) {
+        console.log("getting attribute");
+        console.log(document.querySelector(`#${context.identity_prefix}`));
         let request_body = {
             already_enabled_2fa: true,
             backup_code_download: document.querySelector(`#${context.identity_prefix}`).getAttribute("backup_code_download")
         }
         chrome.tabs.sendMessage(sender.tab.id, request_body);
+        
     }
 
     
     
     finished(sender, request, context) {
+        if (request.backup_codes_array) {
+            document.querySelector(`#${context.identity_prefix}`).setAttribute("backup_codes_array", request.backup_codes_array);
+        }
+        console.log(document.querySelector(`#${context.identity_prefix}`));
+        // we have backup codes here in the hidden element backup_codes_array
+
         console.log(context.isDisable);
         if(context.isDisable){
             $(`#${context.identity_prefix}_ui_div`).html(
@@ -565,22 +579,22 @@ class AutomationSiteUI {
                         <img src="images/finishedaccount.svg" style="height:160px; width:225px;">
                     </div>
                 </div>
-                <div class="row m-0 p-2">
-                    <div class="col d-flex justify-content-center">
-                        <h4>  It worked! Ready to secure your next account?</h4>
-                    </div>
+            </div>
+            <div class="row m-0 p-2">
+                <div class="col d-flex justify-content-center">
+                    <h4>  It worked! Ready to secure your next account?</h4>
                 </div>
-                ${request.message != null ? "<p>" + request.message + "</p>" : ""}
-                `
-            );
-        }
-        
+            </div>
+            ${request.message != null ? "<p>" + request.message + "</p>" : ""}
+            `
+        );
         document.querySelector(`#website_progress_bar`).setAttribute("style", "width:100%")
         document.querySelector(`#website_progress_bar`).setAttribute("aria-valuenow", "100")
         context.controller.disable_injection(context.identity_prefix);
         context.close_window();
         $(`#${context.identity_prefix}_ui_div`).append($(`#next_site_automation`));
         $(`#next_site_automation`).show();
+        }
     }
 
     request_error(request) {
@@ -1442,7 +1456,6 @@ class GoogleUI extends AutomationSiteUI {
             console.log("either methods are the same or method is not null")
             $(`#${context.identity_prefix}_ui_div`).html(
                 `
-
                     <div class="row m-0 pt-4">
                         <div class="col">
                             <img src="images/authapp.png" style="height: 200px; width:189px;">
@@ -1570,31 +1583,36 @@ class GoogleUI extends AutomationSiteUI {
             if(document.querySelector("#finished")){
                 return;
             } else {
-                $(`#${context.identity_prefix}_ui_div`).html(
-                    `
-    
-                    <div class="row m-0 p-2">
-                        <div class="col d-flex justify-content-center" id="finished">
-                            <img src="images/finishedaccount.svg" style="height:160px; width:225px;">
-                        </div>
-                    </div>
-                    <div class="row m-0 p-2">
-                        <div class="col d-flex justify-content-center">
-                            <h4>  It worked! Ready to secure your next account?</h4>
-                        </div>
-                    </div>
-                    ${request.message != null ? "<p>" + request.message + "</p>" : ""}
-                    `
-                );
+                console.log(request);
+                document.querySelector(`#${context.identity_prefix}`).setAttribute("backup_code_download", true);
+                console.log(document.querySelector(`#${context.identity_prefix}`));
 
-                document.querySelector(`#website_progress_bar`).setAttribute("style", "width:100%")
-                document.querySelector(`#website_progress_bar`).setAttribute("aria-valuenow", "100")
-                context.controller.disable_injection(context.identity_prefix);
-                context.close_window();
-                console.log("In else trying to append");
-                console.log(document.querySelector("#next_site_automation"));
-                $(`#${context.identity_prefix}_ui_div`).append($(`#next_site_automation`));
-                $(`#next_site_automation`).show();
+                // var request_body = {}
+                // request_body[`start_backup`] = true;
+                // chrome.tabs.sendMessage(sender.tab.id, request_body);
+                // context.loading();    
+
+                // $(`#${context.identity_prefix}_ui_div`).html(
+                //     `
+                //     <div class="row m-0 p-2">
+                //         <div class="col d-flex justify-content-center" id="finished">
+                //             <img src="images/finishedaccount.svg" style="height:160px; width:225px;">
+                //         </div>
+                //     </div>
+                //     <div class="row m-0 p-2">
+                //         <div class="col d-flex justify-content-center">
+                //             <h4>  It worked! Ready to secure your next account?</h4>
+                //         </div>
+                //     </div>
+                //     ${request.message != null ? "<p>" + request.message + "</p>" : ""}
+                //     `
+                // );
+                // context.controller.disable_injection(context.identity_prefix);
+                // context.close_window();
+                // console.log("In else trying to append");
+                // console.log(document.querySelector("#next_site_automation"));
+                // $(`#${context.identity_prefix}_ui_div`).append($(`#next_site_automation`));
+                // $(`#next_site_automation`).show();
             }
             
         
