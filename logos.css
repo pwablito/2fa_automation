@@ -35,9 +35,27 @@ img {
     display: inline !important;
 }
 
+.backup_gray {
+    width: 75px;
+    height: 75px;
+    box-shadow: 0 0 5px rgba(0,0,0,.05), 2px 2px 5px rgba(0,0,0,.1);
+    border-radius: 4px;
+    
+}
 
+.backup_gray > div >  img {
+    width: 50px;
+    height: 50px;
+    margin: 12.5px;
+}
 
 
 label {
     padding: 15px;
+}
+
+.box_gray {
+    width: 75px;
+    height: 75px;
+    padding: 0px !important;
 }

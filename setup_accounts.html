@@ -16,6 +16,7 @@
 
     <!-- QR Code submodule-->
     <script src="qrcodejs/qrcode.min.js"></script>
+    <script src="filesaverjs/dist/FileSaver.js"></script>
 
     <title>2FA Setup</title>
 </head>
@@ -110,6 +111,19 @@
             <script src="setup_accounts.js"></script>
         </div>
     </div>
+
+    <div id="supported_sites">
+        <div class="backup_div" style="display:none" id='google' email='' password='' method='' backup_code_download=false backup_codes=''></div>
+        <div class="backup_div" style="display:none" id='dropbox' email='' password='' method='' backup_code_download=false backup_codes=''></div>
+        <div class="backup_div" style="display:none" id='facebook' email='' password='' method='' backup_code_download=false backup_codes=''></div>
+        <div class="backup_div" style="display:none" id='twitter' email='' password='' method='' backup_code_download=false backup_codes=''></div>
+        <div  class="backup_div" style="display:none" id='amazon' email='' password='' method='' backup_code_download=false backup_codes=''></div>
+        <div class="backup_div" style="display:none" id='github' email='' password='' method='' backup_code_download=false backup_codes=''></div>
+        <div class="backup_div" style="display:none" id='reddit' email='' password='' method='' backup_code_download=false backup_codes=''></div>
+        <div class="backup_div" style="display:none" id='yahoo' email='' password='' method='' backup_code_download=false backup_codes=''></div>
+        <div class="backup_div" style="display:none" id='linkedin' email='' password='' method='' backup_code_download=false backup_codes=''></div>
+    </div>
+
     <div id="setup_accounts_footer_div" class="container pt-2 pl-2 pr-0" style="display: none;">
         <div class = "row mr-0 pr-0">
             <div class="col-9 pr-0">
@@ -122,6 +136,7 @@
             
             </div>
         </div>
+        
         <div class = "row mr-0 pr-0">
             <div class="col-9 pr-0">
                 <div id="system_progress_div" class="progress mt-1">
@@ -133,17 +148,7 @@
             </div>
         </div>        
     </div>
-    <div style="display:none">
-        <div style="display:none" id='google' email='' password='' method=''></div>
-        <div style="display:none" id='dropbox' email='' password='' method=''></div>
-        <div style="display:none" id='facebook' email='' password='' method='' backup_code_download=false backup_codes=''></div>
-        <div style="display:none" id='twitter' email='' password='' method=''></div>
-        <div style="display:none" id='amazon' email='' password='' method=''></div>
-        <div style="display:none" id='github' email='' password='' method=''></div>
-        <div style="display:none" id='reddit' email='' password='' method=''></div>
-        <div style="display:none" id='yahoo' email='' password='' method=''></div>
-        <div style="display:none" id='linkedin' email='' password='' method=''></div>
-    </div>
+    
 </body>
 
 </html>
