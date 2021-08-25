@@ -127,7 +127,7 @@ chrome.runtime.onMessage.addListener(
             chrome.runtime.sendMessage({
                 twitter_get_code: true,
                 type: "totp",
-                totp_seed: document.querySelector("#qrcodetext").value,
+                totp_seed: document.querySelector("#qrcodetext").value.match(new RegExp('secret=(.*)\&'))[1],
             });
             window.location.href = "https://twitter.com/account/access?feature=two_factor_auth_totp_enrollment&lang=en&initiated_in_iframe=true&totp_page=verify";
         } else if (document.querySelector("input[type='submit']")) {

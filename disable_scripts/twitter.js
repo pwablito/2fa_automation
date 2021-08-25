@@ -124,7 +124,8 @@ if (window.location.href.includes("twitter.com/account/access?feature=two_factor
                             document.querySelector("html > body > div > div > div > div:nth-of-type(1) > div:nth-of-type(2) > div > div > div > div > div > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(2) > div > span > span").click()
                         }
                         chrome.runtime.sendMessage({
-                            twitter_totp_disabled: true
+                            twitter_error: true,
+                            message: "Already disabled"
                         })
                     }, 2000)
                 }
