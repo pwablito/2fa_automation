@@ -1185,7 +1185,6 @@ class GoogleUI extends AutomationSiteUI {
             console.log("either methods are the same or method is not null")
             $(`#${context.identity_prefix}_ui_div`).html(
                 `
-
                     <div class="row m-0 pt-4">
                         <div class="col">
                             <img src="images/authapp.png" style="height: 200px; width:189px;">
@@ -1313,28 +1312,36 @@ class GoogleUI extends AutomationSiteUI {
             if(document.querySelector("#finished")){
                 return;
             } else {
-                $(`#${context.identity_prefix}_ui_div`).html(
-                    `
-    
-                    <div class="row m-0 p-2">
-                        <div class="col d-flex justify-content-center" id="finished">
-                            <img src="images/finishedaccount.svg" style="height:160px; width:225px;">
-                        </div>
-                    </div>
-                    <div class="row m-0 p-2">
-                        <div class="col d-flex justify-content-center">
-                            <h4>  It worked! Ready to secure your next account?</h4>
-                        </div>
-                    </div>
-                    ${request.message != null ? "<p>" + request.message + "</p>" : ""}
-                    `
-                );
-                context.controller.disable_injection(context.identity_prefix);
-                context.close_window();
-                console.log("In else trying to append");
-                console.log(document.querySelector("#next_site_automation"));
-                $(`#${context.identity_prefix}_ui_div`).append($(`#next_site_automation`));
-                $(`#next_site_automation`).show();
+                console.log(request);
+                document.querySelector(`#${context.identity_prefix}`).setAttribute("backup_code_download", true);
+                console.log(document.querySelector(`#${context.identity_prefix}`));
+
+                // var request_body = {}
+                // request_body[`start_backup`] = true;
+                // chrome.tabs.sendMessage(sender.tab.id, request_body);
+                // context.loading();    
+
+                // $(`#${context.identity_prefix}_ui_div`).html(
+                //     `
+                //     <div class="row m-0 p-2">
+                //         <div class="col d-flex justify-content-center" id="finished">
+                //             <img src="images/finishedaccount.svg" style="height:160px; width:225px;">
+                //         </div>
+                //     </div>
+                //     <div class="row m-0 p-2">
+                //         <div class="col d-flex justify-content-center">
+                //             <h4>  It worked! Ready to secure your next account?</h4>
+                //         </div>
+                //     </div>
+                //     ${request.message != null ? "<p>" + request.message + "</p>" : ""}
+                //     `
+                // );
+                // context.controller.disable_injection(context.identity_prefix);
+                // context.close_window();
+                // console.log("In else trying to append");
+                // console.log(document.querySelector("#next_site_automation"));
+                // $(`#${context.identity_prefix}_ui_div`).append($(`#next_site_automation`));
+                // $(`#next_site_automation`).show();
             }
             
         
