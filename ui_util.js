@@ -57,247 +57,273 @@ class AutomationUI {
     next() {
 
         if (this.sites.length === 0) {
-            if(this instanceof DisableUI){
+            
+            if(this instanceof SetupUI){
+                
                 let sites_done = [];
             
-            $("#supported_sites").children().each(function(){
-                if($(this).attr("backup_codes") != ""){
-                    sites_done.push($(this).attr("id"))
-                }            
-            });
-
-            $("#header").html(
-                `
-                    <h4 class="pt-1" id="header"> View Backup Codes</h4>
-                `
-            )
-            $("#site_automation_div").html(
-                `
-                <div class="row m-0 p-2">
-                    <div class="col d-flex justify-content-center">
-                        <img src="images/finishedall.svg" style="height:147px; width:225px;">
-                    </div>
-                </div>
-                <div class="row m-0 p-2">
-                    <div class="col d-flex justify-content-center">
-                        <h4>  You are all done setting up your accounts! </h4>
-                    </div>
-                </div>
-                <div class="row m-0 p-2">
-                    <div class="col d-flex justify-content-center">
-                        <button class="btn-lg btn-success" id="button_to_backups" role="button">  Finish! </button>
-                    </div>
-                </div>
-                `
-            );
-            $(`#button_to_backups`).click(() => {
-                console.log(sites_done)
-                $("#site_automation_div").html(
-                    `
-                    <div class="row m-0 p-2">
-                        <div class="col d-flex justify-content-center">
-                            <img src="images/backupcodes.svg" style="height:100px; width:215px;">
-                        </div>
-                    </div>
-                    <div class="row m-0 p-2">
-                        <div class="col d-flex justify-content-center">
-                            <h6 class="m-0">  The sites below provide backup codes in case you lose access to your phone. Click below to view or download them. </h6>
-                        </div>
-                    </div>
-                    <div class="row m-0 pl-4 pr-4 pb-2 justify-content-center">
-                        <div class= "col-4 pl-2 pr-2 d-flex justify-content-center">
-                            <div class= "box box_gray">
-                                <div class="gray backup_gray rounded")>
-                                    <div id="${sites_done[0]}_backup"> <img src="logos/${sites_done[0]}.svg"> </div>   
-                                </div>
-                            </div>
-                        </div>
-                        ${sites_done.length > 1 ? 
-                        `
-                        <div class= "col-4 pl-2 pr-2 d-flex justify-content-center">
-                            <div class= "box box_gray">
-                                <div class="gray backup_gray rounded">
-                                    <div id="${sites_done[1]}_backup"> <img src="logos/${sites_done[1]}.svg"> </div>   
-                                </div>
-                            </div>
-                        </div>
-                        ` : ``}
-                        ${sites_done.length > 2 ? 
-                        `
-                        <div class= "col-4 pl-2 pr-2 d-flex justify-content-center">
-                            <div class= "box box_gray">
-                                <div class="gray backup_gray rounded">
-                                    <div id="${sites_done[2]}_backup"> <img src="logos/${sites_done[2]}.svg"> </div>   
-                                </div>
-                            </div>
-                        </div>
-                        ` : ``}
-                        ${sites_done.length > 3 ? 
-                        `
-                    </div>    
-                    <div class= "row m-0 pl-2 pr-2 justify-content-center">
-                        <div class= "col-4 pl-2 pr-2 d-flex justify-content-center">
-                            <div class= "box box_gray">
-                                <div class="gray backup_gray rounded">
-                                    <div id="${sites_done[3]}_backup"> <img src="logos/${sites_done[3]}.svg"> </div>   
-                                </div>
-                            </div>
-                        </div>
-                        ` : ``}
-                        ${sites_done.length > 4 ? 
-                        `
-                        <div class= "col-4 pl-2 pr-2 d-flex justify-content-center">
-                            <div class= "box box_gray">
-                                <div class="gray backup_gray rounded">
-                                    <div id="${sites_done[4]}_backup"> <img src="logos/${sites_done[4]}.svg"> </div>   
-                                </div>
-                            </div>
-                        </div>
-                        ` : ``}
-                        ${sites_done.length > 5 ? 
-                        `
-                        <div class= "col-4 pl-2 pr-2 d-flex justify-content-center">
-                            <div class= "box box_gray">
-                            <div class="gray backup_gray rounded">
-                                <div id="${sites_done[5]}_backup"> <img src="logos/${sites_done[5]}.svg"> </div>   
-                                </div>
-                            </div>
-                        </div>
-                        ` : ``}
-
-                        
-                         
-                    </div>
-                    <div class="row m-0 p-2">
-                        <div class="container pt-2">
-                            <a class="btn-lg btn-success" id="completed_button" href="popup.html"> Finished </a>
-                        </div>
-                    </div>
-                    `
-                );
-                $('.backup_gray').click( function( event )  {
-                    let site = event.currentTarget.children[0].id.slice(0,-7);
-                    let backup_codes_whole = $(`#${site}`).attr("backup_codes");
-                    let backup_codes_list = backup_codes_whole.split(",");
-                    
-
-                    $('#site_automation_div').hide();
-
-                    $(`#icon`).html(
-                        `
-                        <img src="logos/${site}.svg" style="height: 40px; width: 40px">
-                        `
-                    )
-
-                    $(`#${site}`).show()
-                    console.log(backup_codes_list.length)
-                    if(backup_codes_list.length>5){
-                        let half = backup_codes_list.length/2;
-                        let first_list = backup_codes_list.slice(0, half);
-                        let second_list = backup_codes_list.slice(-half);
-                        $(`#${site}`).html(
-                            `
-                            <div class="container">
-                                <div class="row m-0">
-                                    <div class="col m-2">
-                                        <img src="logos/${site}.svg" style="height: 75px; width: 75px">
-                                    </div>
-                                </div>
-                                <div class="row m-0">
-                                    <div class = "col-6">
-                                        <ul class="list-group row" id="${site}_backup_codes_list1">
-                                        </ul>
-                                    </div>
-                                    <div class = "col-6">
-                                        <ul class="list-group row" id="${site}_backup_codes_list2">
-                                        </ul>
-                                    </div>
-                                </div>
-                                <div class="row mt-2 mb-2">
-                                    <div class="col m-2">
-                                        <button class="btn-lg btn-success print_button"> Print </button>
-                                    </div>
-                                    <div class="col m-2">
-                                        <button class="btn-lg btn-success download_button"> Download </button>
-                                    </div>
-                                </div>
-                                <div class="row m-0">
-                                    <div class="col m-1">
-                                        <button class="btn-lg btn-success completed_backup_button"> All Done </button>
-                                    </div>
-                                </div>
-                            </div>
-                            `
-                        );
-                        first_list.forEach(element =>
-                            $(`#${site}_backup_codes_list1`).append(`<li class="list-group-item col backup-code-list-item p-1"> ${element} </li>`)
-                        );
-                        second_list.forEach(element =>
-                            $(`#${site}_backup_codes_list2`).append(`<li class="list-group-item col backup-code-list-item p-1"> ${element} </li>`)
-                        );
-                        $(`.print_button`).click(() =>{
-                            window.print();
-                        });
-                        $(`.download_button`).click({backups: backup_codes_list, website: site}, download_backups);
-                        $(`.completed_backup_button`).click(() =>{
-                            $(`.backup_div`).hide();
-                            $('#site_automation_div').show();
-                        });
-                        
-
-                    } else {
-                        $(`#${site}`).html(
-                            `
-                            <div class="container">
-                                <div class="row m-0 justify-content-center">
-                                    <div class="col m-2">
-                                        <img src="logos/${site}.svg" style="height: 75px; width: 75px">
-                                    </div>
-                                </div>
-                                <div class="row mt-4 justify-content-center">
-                                    <ul class="list-group row m-0" id="${site}_backup_codes_list">
-                                    </ul>
-                                </div>
-
-                                <div class="row mt-5 mb-2">
-                                    <div class="col m-2">
-                                        <button class="btn-lg btn-success print_button" > Print </button>
-                                    </div>
-                                    <div class="col m-2">
-                                        <button class="btn-lg btn-success download_button" > Download </button>
-                                    </div>
-                                </div>
-                                <div class="row m-0 mb-4">
-                                    <div class="col m-1 mb-4">
-                                        <button class="btn-lg btn-success completed_backup_button" > All Done </button>
-                                    </div>
-                                </div>
-                            </div>
-                            `
-                        );
-                        backup_codes_list.forEach(element =>
-                            $(`#${site}_backup_codes_list`).append(`<li class="list-group-item col backup-code-list-item"> ${element} </li>`)
-                        );
-                        $(`.print_button`).click(() =>{
-                            window.print();
-                        });
-                        $(`.download_button`).click({backups: backup_codes_list, website: site}, download_backups);
-                        $(`.completed_backup_button`).click(() =>{
-                            $(`.backup_div`).hide();
-                            $('#site_automation_div').show();
-                        });
-                    }
-                    
-                    
-                    
+                $("#supported_sites").children().each(function(){
+                    if($(this).attr("backup_codes") != ""){
+                        sites_done.push($(this).attr("id"))
+                    }            
                 });
 
-                
+                if(sites_done.length > 0){
+                    $("#header").html(
+                        `
+                            <h4 class="pt-1" id="header"> View Backup Codes</h4>
+                        `
+                    )
+                    $("#site_automation_div").html(
+                        `
+                        <div class="row m-0 p-2">
+                            <div class="col d-flex justify-content-center">
+                                <img src="images/finishedall.svg" style="height:147px; width:225px;">
+                            </div>
+                        </div>
+                        <div class="row m-0 p-2">
+                            <div class="col d-flex justify-content-center">
+                                <h4>  You are all done setting up your accounts! </h4>
+                            </div>
+                        </div>
+                        <div class="row m-0 p-2">
+                            <div class="col d-flex justify-content-center">
+                                <button class="btn-lg btn-success" id="button_to_backups" role="button">  Finish! </button>
+                            </div>
+                        </div>
+                        `
+                    );
+                    $(`#button_to_backups`).click(() => {
+                        console.log(sites_done)
+                        $("#site_automation_div").html(
+                            `
+                            <div class="row m-0 p-2">
+                                <div class="col d-flex justify-content-center">
+                                    <img src="images/backupcodes.svg" style="height:100px; width:215px;">
+                                </div>
+                            </div>
+                            <div class="row m-0 p-2">
+                                <div class="col d-flex justify-content-center">
+                                    <h6 class="m-0">  The sites below provide backup codes in case you lose access to your phone. Click below to view or download them. </h6>
+                                </div>
+                            </div>
+                            <div class="row m-0 pl-4 pr-4 pb-2 justify-content-center">
+                                <div class= "col-4 pl-2 pr-2 d-flex justify-content-center">
+                                    <div class= "box box_gray">
+                                        <div class="gray backup_gray rounded")>
+                                            <div id="${sites_done[0]}_backup"> <img src="logos/${sites_done[0]}.svg"> </div>   
+                                        </div>
+                                    </div>
+                                </div>
+                                ${sites_done.length > 1 ? 
+                                `
+                                <div class= "col-4 pl-2 pr-2 d-flex justify-content-center">
+                                    <div class= "box box_gray">
+                                        <div class="gray backup_gray rounded">
+                                            <div id="${sites_done[1]}_backup"> <img src="logos/${sites_done[1]}.svg"> </div>   
+                                        </div>
+                                    </div>
+                                </div>
+                                ` : ``}
+                                ${sites_done.length > 2 ? 
+                                `
+                                <div class= "col-4 pl-2 pr-2 d-flex justify-content-center">
+                                    <div class= "box box_gray">
+                                        <div class="gray backup_gray rounded">
+                                            <div id="${sites_done[2]}_backup"> <img src="logos/${sites_done[2]}.svg"> </div>   
+                                        </div>
+                                    </div>
+                                </div>
+                                ` : ``}
+                                ${sites_done.length > 3 ? 
+                                `
+                            </div>    
+                            <div class= "row m-0 pl-2 pr-2 justify-content-center">
+                                <div class= "col-4 pl-2 pr-2 d-flex justify-content-center">
+                                    <div class= "box box_gray">
+                                        <div class="gray backup_gray rounded">
+                                            <div id="${sites_done[3]}_backup"> <img src="logos/${sites_done[3]}.svg"> </div>   
+                                        </div>
+                                    </div>
+                                </div>
+                                ` : ``}
+                                ${sites_done.length > 4 ? 
+                                `
+                                <div class= "col-4 pl-2 pr-2 d-flex justify-content-center">
+                                    <div class= "box box_gray">
+                                        <div class="gray backup_gray rounded">
+                                            <div id="${sites_done[4]}_backup"> <img src="logos/${sites_done[4]}.svg"> </div>   
+                                        </div>
+                                    </div>
+                                </div>
+                                ` : ``}
+                                ${sites_done.length > 5 ? 
+                                `
+                                <div class= "col-4 pl-2 pr-2 d-flex justify-content-center">
+                                    <div class= "box box_gray">
+                                    <div class="gray backup_gray rounded">
+                                        <div id="${sites_done[5]}_backup"> <img src="logos/${sites_done[5]}.svg"> </div>   
+                                        </div>
+                                    </div>
+                                </div>
+                                ` : ``}
+    
+                                
+                                
+                            </div>
+                            <div class="row m-0 p-2">
+                                <div class="container pt-2">
+                                    <a class="btn-lg btn-success" id="completed_button" href="popup.html"> Finished </a>
+                                </div>
+                            </div>
+                            `
+                        );
+                        $('.backup_gray').click( function( event )  {
+                            let site = event.currentTarget.children[0].id.slice(0,-7);
+                            let backup_codes_whole = $(`#${site}`).attr("backup_codes");
+                            let backup_codes_list = backup_codes_whole.split(",");
+                            
+    
+                            $('#site_automation_div').hide();
+    
+                            $(`#icon`).html(
+                                `
+                                <img src="logos/${site}.svg" style="height: 40px; width: 40px">
+                                `
+                            )
+    
+                            $(`#${site}`).show()
+                            console.log(backup_codes_list.length)
+                            if(backup_codes_list.length>5){
+                                let half = backup_codes_list.length/2;
+                                let first_list = backup_codes_list.slice(0, half);
+                                let second_list = backup_codes_list.slice(-half);
+                                $(`#${site}`).html(
+                                    `
+                                    <div class="container">
+                                        <div class="row m-0">
+                                            <div class="col m-2">
+                                                <img src="logos/${site}.svg" style="height: 75px; width: 75px">
+                                            </div>
+                                        </div>
+                                        <div class="row m-0">
+                                            <div class = "col-6">
+                                                <ul class="list-group row" id="${site}_backup_codes_list1">
+                                                </ul>
+                                            </div>
+                                            <div class = "col-6">
+                                                <ul class="list-group row" id="${site}_backup_codes_list2">
+                                                </ul>
+                                            </div>
+                                        </div>
+                                        <div class="row mt-2 mb-2">
+                                            <div class="col m-2">
+                                                <button class="btn-lg btn-success print_button"> Print </button>
+                                            </div>
+                                            <div class="col m-2">
+                                                <button class="btn-lg btn-success download_button"> Download </button>
+                                            </div>
+                                        </div>
+                                        <div class="row m-0">
+                                            <div class="col m-1">
+                                                <button class="btn-lg btn-success completed_backup_button"> All Done </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    `
+                                );
+                                first_list.forEach(element =>
+                                    $(`#${site}_backup_codes_list1`).append(`<li class="list-group-item col backup-code-list-item p-1"> ${element} </li>`)
+                                );
+                                second_list.forEach(element =>
+                                    $(`#${site}_backup_codes_list2`).append(`<li class="list-group-item col backup-code-list-item p-1"> ${element} </li>`)
+                                );
+                                $(`.print_button`).click(() =>{
+                                    window.print();
+                                });
+                                $(`.download_button`).click({backups: backup_codes_list, website: site}, download_backups);
+                                $(`.completed_backup_button`).click(() =>{
+                                    $(`.backup_div`).hide();
+                                    $('#site_automation_div').show();
+                                });
+                            
+    
+                        } else {
+                            $(`#${site}`).html(
+                                `
+                                <div class="container">
+                                    <div class="row m-0 justify-content-center">
+                                        <div class="col m-2">
+                                            <img src="logos/${site}.svg" style="height: 75px; width: 75px">
+                                        </div>
+                                    </div>
+                                    <div class="row mt-4 justify-content-center">
+                                        <ul class="list-group row m-0" id="${site}_backup_codes_list">
+                                        </ul>
+                                    </div>
+    
+                                    <div class="row mt-5 mb-2">
+                                        <div class="col m-2">
+                                            <button class="btn-lg btn-success print_button" > Print </button>
+                                        </div>
+                                        <div class="col m-2">
+                                            <button class="btn-lg btn-success download_button" > Download </button>
+                                        </div>
+                                    </div>
+                                    <div class="row m-0 mb-4">
+                                        <div class="col m-1 mb-4">
+                                            <button class="btn-lg btn-success completed_backup_button" > All Done </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                `
+                            );
+                            backup_codes_list.forEach(element =>
+                                $(`#${site}_backup_codes_list`).append(`<li class="list-group-item col backup-code-list-item"> ${element} </li>`)
+                            );
+                            $(`.print_button`).click(() =>{
+                                window.print();
+                            });
+                            $(`.download_button`).click({backups: backup_codes_list, website: site}, download_backups);
+                            $(`.completed_backup_button`).click(() =>{
+                                $(`.backup_div`).hide();
+                                $('#site_automation_div').show();
+                            });
+                        }
+                        
+                        
+                        
+                    });
+    
+                    
+    
+                    
+                    document.querySelector("#system_progress_bar").setAttribute("style", "width: 100%");
+                    document.querySelector("#system_progress_bar").setAttribute("aria-valuenow", "100");
+                });
+                } else {
+                    $("#site_automation_div").html(
+                        `
+                        <div class="row m-0 p-2">
+                            <div class="col d-flex justify-content-center">
+                                <img src="images/finishedall.svg" style="height:147px; width:225px;">
+                            </div>
+                        </div>
+                        <div class="row m-0 p-2">
+                            <div class="col d-flex justify-content-center">
+                                <h4>  You are all done setting up your accounts! </h4>
+                            </div>
+                        </div>
+                        <div class="row m-0 p-2">
+                            <div class="col d-flex justify-content-center">
+                                <a class="btn-lg btn-success" href="popup.html" role="button">  Finish! </a>
+                            </div>
+                        </div>
+                        `
+                    );
+                }
 
                 
-                document.querySelector("#system_progress_bar").setAttribute("style", "width: 100%");
-                document.querySelector("#system_progress_bar").setAttribute("aria-valuenow", "100");
-            });
             } else {
                 $("#site_automation_div").html(
                     `
@@ -549,7 +575,7 @@ class AutomationSiteUI {
     
     finished(sender, request, context) {
         if (request.backup_codes_array) {
-            document.querySelector(`#${context.identity_prefix}`).setAttribute("backup_codes_array", request.backup_codes_array);
+            document.querySelector(`#${context.identity_prefix}`).setAttribute("backup_codes", request.backup_codes_array);
         }
         console.log(document.querySelector(`#${context.identity_prefix}`));
         // we have backup codes here in the hidden element backup_codes_array

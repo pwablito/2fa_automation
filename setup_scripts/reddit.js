@@ -45,6 +45,7 @@ function exitScriptWithError() {
 }
 
 async function handleReceivedMessage(request) {
+    console.log(request);
     if (request.reddit_credentials) {
         document.querySelector("[name=username]").value = request.login;
         document.querySelector("[type=password]").value = request.password;
@@ -59,29 +60,52 @@ async function handleReceivedMessage(request) {
             }
         }, 2000);
     } else if (request.reddit_password) {
+
         change(document.querySelector('[type=password]'), request.password);
         document.querySelector("[type=submit]").click();
-        setTimeout(() => {
-            if (document.querySelector("[class$=errorMessage][data-for=password]").textContent !== "") {
-                document.querySelector("[class$=errorMessage][data-for=password]").textContent = "";
+        if(request.next_step == "generate_backup_codes"){
+            console.log("Told to generate codes")
+            if(await waitUntilElementLoad(document, "#backup-codes > li", 5)){
+                console.log("Found backup codes");
+                let list_codes = document.querySelector("#backup-codes");
+                console.log(list_codes);
+                let codes_array = [];
+                for(i= 0; i < list_codes.children.length; i++){
+                    codes_array.push(list_codes.children[i].innerText);
+                    console.log(list_codes.children[i].innerText);
+                }
+                console.log(codes_array);
                 chrome.runtime.sendMessage({
-                    reddit_get_password: true,
-                    message: "Incorrect password"
-                });
-            } else if (document.querySelector("#canvas-fallback-content").textContent != "") {
-                chrome.runtime.sendMessage({
-                    reddit_get_code: true,
-                    type: "totp",
-                    totp_seed: document.querySelector("#canvas-fallback-content").textContent,
-                });
-            } else if (document.querySelector("[class$=submitStatusMessage]").textContent !== "") {
-                chrome.runtime.sendMessage({
-                    reddit_error: true,
-                    message: "2FA is already enabled.",
-                    message_for_dev: window.location.href
-                });
-            } else { exitScriptWithError(); }
-        }, 2000);
+                    reddit_finished: true,
+                    backup_codes_array: codes_array
+                })
+            }
+            
+
+        } else {
+            setTimeout(() => {
+                if (document.querySelector("[class$=errorMessage][data-for=password]").textContent !== "") {
+                    document.querySelector("[class$=errorMessage][data-for=password]").textContent = "";
+                    chrome.runtime.sendMessage({
+                        reddit_get_password: true,
+                        message: "Incorrect password"
+                    });
+                } else if (document.querySelector("#canvas-fallback-content").textContent != "") {
+                    chrome.runtime.sendMessage({
+                        reddit_get_code: true,
+                        type: "totp",
+                        totp_seed: document.querySelector("#canvas-fallback-content").textContent,
+                    });
+                } else if (document.querySelector("[class$=submitStatusMessage]").textContent !== "") {
+                    chrome.runtime.sendMessage({
+                        reddit_error: true,
+                        message: "2FA is already enabled.",
+                        message_for_dev: window.location.href
+                    });
+                } else { exitScriptWithError(); }
+            }, 2000);
+        }
+        
     } else if (request.reddit_code) {
         change(document.querySelector("#otp"), request.code);
         getElementByXpath(document, "//button[contains(text(),'Complete setup')]").click();
@@ -95,9 +119,7 @@ async function handleReceivedMessage(request) {
                     message: "Invalid code"
                 })
             } else {
-                chrome.runtime.sendMessage({
-                    reddit_finished: true
-                });
+                window.location.href = "https://www.reddit.com/2fa/backup-keys/";
             }
         }, 2000);
     }
@@ -132,7 +154,15 @@ chrome.runtime.onMessage.addListener(
             }
         } else if (window.location.href === "https://www.reddit.com/") {
             window.location.href = "https://www.reddit.com/2fa/enable";
-        } else { exitScriptWithError(); }
+        } else if(window.location.href === "https://www.reddit.com/2fa/backup-keys/") { 
+            chrome.runtime.sendMessage({
+                reddit_get_password: true,
+                next_step: "generate_backup_codes",
+            });
+
+        } else {
+            exitScriptWithError(); 
+        }
     } catch (e) {
         console.log(e);
         // Deal with the fact the chain failed

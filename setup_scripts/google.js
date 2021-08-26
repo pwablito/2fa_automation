@@ -52,7 +52,7 @@ async function handleReceivedMessage(request) {
         if (await waitUntilElementLoad(document, "[name=password]", 2)) {
             console.log("Found the password");
             chrome.runtime.sendMessage({
-                "google_get_password": true
+                google_get_password: true
             });
         } else {
             chrome.runtime.sendMessage({
