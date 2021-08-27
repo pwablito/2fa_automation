@@ -43,13 +43,14 @@ function exitScriptWithError() {
 }
 
 async function handleReceivedMessage(request) {
+    console.log(request)
     if (request.twitter_credentials) {
-        change(document.querySelector("input[name='session[username_or_email]'"), request.username);
+        change(document.querySelector("input[name='session[username_or_email]'"), request.login);
         change(document.querySelector("input[name='session[password]'"), request.password);
         document.querySelector("div[data-testid='LoginForm_Login_Button']").click();
     }
-    if (request.twitter_phone_number) {
-        document.querySelector("#phone_number").value = request.number;
+    if (request.twitter_phone) {
+        document.querySelector("#phone_number").value = request.phone;
         document.querySelector("body > div.PageContainer > div > form > input.EdgeButton.EdgeButton--primary").click();
     }
     if (request.twitter_code) {
@@ -102,7 +103,8 @@ chrome.runtime.onMessage.addListener(
         if (document.querySelector("#code") !== null) {
             //TODO add message saying the number the message was sent to.
             chrome.runtime.sendMessage({
-                twitter_get_code: true
+                twitter_get_code: true,
+                type: "sms"
             });
         } else if (document.querySelector("#password") != null) {
             chrome.runtime.sendMessage({
@@ -110,11 +112,19 @@ chrome.runtime.onMessage.addListener(
             });
         } else if (document.querySelector("#phone_number") !== null) {
             chrome.runtime.sendMessage({
-                twitter_logged_in: true
+                twitter_get_phone: true
             });
         } else if (document.querySelector("input[type='submit']") != null) {
             console.log(" Not sure what this page is doing");
             document.querySelector("input[type='submit']").click()
+        } else if(document.querySelector(".Button.EdgeButton.EdgeButton--primary")){
+            if(document.querySelector(".Button.EdgeButton.EdgeButton--primary").text == "Try Again"){
+                chrome.runtime.sendMessage({
+                    twitter_error: true,
+                    message: "You've exceeded the maximum amount of attempts to verify your phone."
+                });
+            }
+            
         } else {
             location.reload();
         }
@@ -136,17 +146,39 @@ chrome.runtime.onMessage.addListener(
     } else if (window.location.href.includes("twitter.com/i/bouncer/static?view=two_factor_sms_exit") || window.location.href.includes("twitter.com/i/bouncer/static?view=two_factor_totp_exit")) {
         chrome.runtime.sendMessage({
             twitter_finished: true,
-            twitter_backup_code: document.querySelector(".TextGroup-blue-larger").textContent
+            backup_codes_array: document.querySelector(".TextGroup-blue-larger").textContent
         });
     } else if (window.location.href.includes("twitter.com/login")) {
         chrome.runtime.sendMessage({
-            twitter_logged_in: false
+            twitter_get_credentials: true
         });
     } else if (window.location.href.includes("twitter.com/settings/account/login_verification") && !window.location.href.includes("enrollment")) {
         console.log(window.location.href);
-        chrome.runtime.sendMessage({
-            twitter_get_method: true
-        });
+        
+
+        if(await waitUntilElementLoad(document, "input[type='checkbox']", 2)){
+            let checkboxes = document.querySelectorAll("input[type='checkbox']")
+            request_body = {
+                twitter_get_method: true,
+            }
+            if(checkboxes.length < 3){
+                location.reload()
+            } else {
+                for(let i = 0; i < 3; i++){
+                    if(checkboxes[i].checked){
+                        if(i == 0) {
+                            request_body['sms_already_setup'] = true
+                        }
+                        if(i == 2) {
+                            request_body['totp_already_setup'] = true
+                        }
+                    } 
+                }
+                chrome.runtime.sendMessage(request_body);
+            } 
+        }
+        
+
     } else if (window.location.href.includes("twitter.com/home")) {
         window.location.href = "https://twitter.com/settings/account/login_verification/enrollment";
     }

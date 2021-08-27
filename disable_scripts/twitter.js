@@ -1,9 +1,5 @@
 console.log("twitter.js disable script injected");
 
-function getElementByXpath(doc, xpath) {
-    return doc.evaluate(xpath, doc, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
-}
-
 function change(field, value) {
     field.value = value;
     field.dispatchEvent(new Event('input', { bubbles: true }));
@@ -11,6 +7,30 @@ function change(field, value) {
     field.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, cancelable: false, key: '', char: '' }));
     field.dispatchEvent(new KeyboardEvent('keypress', { bubbles: true, cancelable: false, key: '', char: '' }));
     field.dispatchEvent(new KeyboardEvent('keyup', { bubbles: true, cancelable: false, key: '', char: '' }));
+}
+
+function getElementByXpath(doc, xpath) {
+    return doc.evaluate(xpath, doc, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+}
+
+function timer(ms) { return new Promise(res => setTimeout(res, ms)); }
+
+async function waitUntilPageLoad(document, maxWait) {
+    for (let i = 0; i < maxWait * 10; i++) {
+        if (document.readyState !== 'loading') { return true; }
+        console.log(i);
+        await timer(100); // then the created Promise can be awaited
+    }
+    return false;
+}
+
+async function waitUntilElementLoad(document, elemXPath, maxWait) {
+    for (let i = 0; i < maxWait * 10; i++) {
+        if (document.querySelector(elemXPath)) { return true; }
+        console.log(i);
+        await timer(100); // then the created Promise can be awaited
+    }
+    return false;
 }
 
 chrome.runtime.onMessage.addListener(
@@ -59,89 +79,77 @@ chrome.runtime.onMessage.addListener(
     }
 );
 
-// Check if signed in, this starts the automation
-
-if (window.location.href.includes("twitter.com/account/access?feature=two_factor_auth_sms_enrollment")) {
-    if (document.querySelector("#code") !== null) {
-        // chrome.runtime.sendMessage({
-        //     twitter_get_code: true
-        // });
-    } else if (document.querySelector("#password") != null) {
-        // chrome.runtime.sendMessage({
-        //     twitter_get_password: true
-        // });
-    } else if (document.querySelector("#phone_number") !== null) {
-        // chrome.runtime.sendMessage({
-        //     twitter_logged_in: true
-        // });
-    } else if (document.querySelector("body > div.PageContainer > div > div.ButtonCenter > form > input.EdgeButton.EdgeButton--primary.Button") != null) {
-        // document.querySelector("body > div.PageContainer > div > div.ButtonCenter > form > input.EdgeButton.EdgeButton--primary.Button").click();
-    } else {
-        // location.reload();
-    }
-} else if (window.location.href.includes("twitter.com/account/access?feature=two_factor_auth_totp_enrollment")) {
-    // if (document.querySelector("#password") != null) {
-    //     chrome.runtime.sendMessage({
-    //         twitter_get_password: true
-    //     });
-    // } else if (document.querySelector("#qrcodetext") != null) {
-    //     chrome.runtime.sendMessage({
-    //         twitter_get_code: true,
-    //         totp_otpauth_url: document.querySelector("#qrcodetext").value,
-    //     });
-    //     window.location.href = "https://twitter.com/account/access?feature=two_factor_auth_totp_enrollment&lang=en&initiated_in_iframe=true&totp_page=verify";
-    // }
-} else if (window.location.href.includes("twitter.com/i/bouncer/static?view=two_factor_sms_exit&lang=en") || window.location.href.includes("twitter.com/i/bouncer/static?view=two_factor_totp_exit")) {
-    // chrome.runtime.sendMessage({
-    //     twitter_finished: true
-    // });
-} else if (window.location.href.includes("twitter.com/login")) {
-    chrome.runtime.sendMessage({
-        twitter_logged_in: false
-    });
-} else if (window.location.href.includes("twitter.com/account/login_verification")) {
-    console.log("Looking for code")
-    if (document.querySelector("#challenge_response") != null) {
-        chrome.runtime.sendMessage({
-            twitter_get_code: true
-        })
-    }
-
-} else if (window.location.href.includes("twitter.com/settings/account/login_verification")) {
-    setTimeout(() => {
-        elem = document.querySelector("html > body > div:nth-of-type(1) > div > div > div:nth-of-type(2) > main > div > div > div > section:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(3) > div > div > label > div > div:nth-of-type(2) > input")
-        if (elem != null) {
-            console.log("elem not null")
-            if (elem.checked) {
-                console.log("elem checked")
-                elem.click()
-                if (document.querySelector("html > body > div > div > div > div:nth-of-type(1) > div:nth-of-type(2) > div > div > div > div > div > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(2)") != null) {
-                    document.querySelector("html > body > div > div > div > div:nth-of-type(1) > div:nth-of-type(2) > div > div > div > div > div > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(2)").click()
-                    console.log("popup exists and clicked once")
-                    setTimeout(() => {
-                        if (document.querySelector("html > body > div > div > div > div:nth-of-type(1) > div:nth-of-type(2) > div > div > div > div > div > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(2) > div > span > span") != null) {
-                            console.log("Second popup exists and clicked")
-                            document.querySelector("html > body > div > div > div > div:nth-of-type(1) > div:nth-of-type(2) > div > div > div > div > div > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(2) > div > span > span").click()
-                        }
-                        chrome.runtime.sendMessage({
-                            twitter_error: true,
-                            message: "Already disabled"
-                        })
-                    }, 2000)
-                }
-
-
-            } else {
-                chrome.runtime.sendMessage({
-                    twitter_totp_not_enabled: true
-                })
-            }
+(async() => {
+    if (window.location.href.includes("twitter.com/account/access?feature=two_factor_auth_sms_enrollment")) {
+        if (document.querySelector("#code") !== null) {
+            // chrome.runtime.sendMessage({
+            //     twitter_get_code: true
+            // });
+        } else if (document.querySelector("#password") != null) {
+            // chrome.runtime.sendMessage({
+            //     twitter_get_password: true
+            // });
+        } else if (document.querySelector("#phone_number") !== null) {
+            // chrome.runtime.sendMessage({
+            //     twitter_logged_in: true
+            // });
+        } else if (document.querySelector("body > div.PageContainer > div > div.ButtonCenter > form > input.EdgeButton.EdgeButton--primary.Button") != null) {
+            // document.querySelector("body > div.PageContainer > div > div.ButtonCenter > form > input.EdgeButton.EdgeButton--primary.Button").click();
         } else {
-            console.log("elem is null")
+            // location.reload();
         }
-    }, 2000);
-
-
-} else if (window.location.href.includes("twitter.com/home")) {
+    } else if (window.location.href.includes("twitter.com/account/access?feature=two_factor_auth_totp_enrollment")) {
+        // if (document.querySelector("#password") != null) {
+        //     chrome.runtime.sendMessage({
+        //         twitter_get_password: true
+        //     });
+        // } else if (document.querySelector("#qrcodetext") != null) {
+        //     chrome.runtime.sendMessage({
+        //         twitter_get_code: true,
+        //         totp_otpauth_url: document.querySelector("#qrcodetext").value,
+        //     });
+        //     window.location.href = "https://twitter.com/account/access?feature=two_factor_auth_totp_enrollment&lang=en&initiated_in_iframe=true&totp_page=verify";
+        // }
+    } else if (window.location.href.includes("twitter.com/i/bouncer/static?view=two_factor_sms_exit&lang=en") || window.location.href.includes("twitter.com/i/bouncer/static?view=two_factor_totp_exit")) {
+        // chrome.runtime.sendMessage({
+        //     twitter_finished: true
+        // });
+    } else if (window.location.href.includes("twitter.com/login")) {
+        chrome.runtime.sendMessage({
+            twitter_get_credentials: true
+        });
+    } else if (window.location.href.includes("twitter.com/account/login_verification")) {
+        console.log("Looking for code")
+        if (document.querySelector("#challenge_response") != null) {
+            chrome.runtime.sendMessage({
+                twitter_get_code: true
+            })
+        }
+    
+    } else if (window.location.href.includes("twitter.com/settings/account/login_verification")) {
+    
+        if(await waitUntilElementLoad(document, "input[type='checkbox']", 2)){
+            let checkboxes = document.querySelectorAll("input[type='checkbox']")
+            if(checkboxes.length < 3){
+                location.reload()
+            } else {
+                for(let i = 0; i < 3; i++){
+                    if(checkboxes[i].checked){
+                        checkboxes[i].click();
+                        if(await waitUntilElementLoad(document, "div[role='dialog']", 2)){
+                            document.querySelector("div[data-testid='confirmationSheetConfirm']").click();
+                            if(await waitUntilElementLoad(document, "div[role='dialog']", 2)){
+                                document.querySelector("div[data-testid='confirmationSheetConfirm']").click(); 
+                            } 
+                        }
+                    } 
+                }
+                chrome.runtime.sendMessage({
+                    twitter_finished: true
+                });
+            } 
+        } 
+    } else if (window.location.href.includes("twitter.com/home")) {}
     // window.location.href = "https://twitter.com/settings/account/login_verification/enrollment";
-}
+})();
+

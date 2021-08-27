@@ -617,7 +617,7 @@ class AutomationSiteUI {
         document.querySelector(`#website_progress_bar`).setAttribute("style", "width:100%")
         document.querySelector(`#website_progress_bar`).setAttribute("aria-valuenow", "100")
         context.controller.disable_injection(context.identity_prefix);
-        context.close_window();
+        //context.close_window();
         $(`#${context.identity_prefix}_ui_div`).append($(`#next_site_automation`));
         $(`#next_site_automation`).show();
         }
@@ -638,7 +638,7 @@ class AutomationSiteUI {
             `
         );
         this.controller.disable_injection(this.identity_prefix);
-        this.close_window();
+        //this.close_window();
         $(`#next_site_automation`).show();
     }
 
@@ -1125,7 +1125,7 @@ class AutomationSiteUI {
                     </div>
                     <div class="row m-0 pl-5 pr-5 pb-0 pt-0">
                         <div class="col">
-                            <p> Google just sent you a text message with a verification code to your phone. Enter the code below. </p>
+                            <p> ${context.name} just sent you a text message with a verification code to your phone. Enter the code below. </p>
                         </div>
                     </div>
                     <div class="row m-0 p-0">
@@ -1162,7 +1162,7 @@ class AutomationSiteUI {
                     </div>
                     <div class="row m-0 pl-5 pr-5 pb-0 pt-0">
                         <div class="col">
-                            <p> Google just sent you a text message with a verification code to your phone. Enter the code below. </p>
+                            <p> ${context.name}  just sent you a text message with a verification code to your phone. Enter the code below. </p>
                         </div>
                     </div>
                     <div class="row m-0 p-0">
