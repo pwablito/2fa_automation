@@ -346,17 +346,17 @@ class AutomationUI {
                 );
             }
 
-        } 
+        } else {
+            this.current_site = this.sites.pop();
+            // console.log(this.sites.length());
+            this.enable_injection(this.current_site.identity_prefix);
+            this.current_site.initialize("site_automation_div");
+        }
 
         let percentage_completed = ((this.total_number_of_sites - this.sites.length) * this.percentage_increment)-10;
         document.querySelector("#system_progress_bar").setAttribute("style", "width: " + percentage_completed.toString() + "%;");
         document.querySelector("#system_progress_bar").setAttribute("aria-valuenow", percentage_completed.toString());
 
-        
-
-        this.current_site = this.sites.pop();
-        this.enable_injection(this.current_site.identity_prefix);
-        this.current_site.initialize("site_automation_div");
     }
 
     stop() {

@@ -45,7 +45,7 @@ function exitScriptWithError() {
 
 async function handleReceivedMessage(request) {
     if (request.reddit_credentials) {
-        document.querySelector("#[name=username]").value = request.login;
+        document.querySelector("[name=username]").value = request.login;
         document.querySelector("[type=password]").value = request.password;
         getElementByXpath(document, "//button[contains(text(),'Log In')]").click();
         setTimeout(() => {
@@ -55,8 +55,15 @@ async function handleReceivedMessage(request) {
                     message: "Invalid credentials",
                     type: "username"
                 });
-            }
+            } 
         }, 2000);
+        if (await waitUntilElementLoad(document, "[id=otp]", 2)) {
+            chrome.runtime.sendMessage({
+                reddit_get_code: true,
+                type: 'totp',
+                login_challenge:true,
+            })
+        }
     } else if (request.reddit_password) {
         change(document.querySelector('[type=password]'), request.password);
         document.querySelector("[type=submit]").click();
@@ -77,6 +84,27 @@ async function handleReceivedMessage(request) {
                 chrome.runtime.sendMessage({
                     reddit_finished: true
                 });
+            }
+        }, 2000);
+    } else if (request.reddit_code) {
+        change(document.querySelector("#otp"), request.code);
+        if (getElementByXpath(document, "//button[contains(text(),'Complete setup')]")) {
+            getElementByXpath(document, "//button[contains(text(),'Complete setup')]").click();
+        } else if (getElementByXpath(document, "//button[contains(text(),'Check code')]")) {
+            getElementByXpath(document, "//button[contains(text(),'Check code')]").click();
+        }
+        
+        setTimeout(() => {
+            if (document.querySelector("[class$=errorMessage][data-for=otp]") && document.querySelector("[class$=errorMessage][data-for=otp]").textContent !== "") {
+                document.querySelector("[class$=errorMessage][data-for=otp]").textContent = "";
+                chrome.runtime.sendMessage({
+                    reddit_get_code: true,
+                    type: "totp",
+                    totp_seed: document.querySelector("#canvas-fallback-content").textContent,
+                    message: "Invalid code"
+                })
+            } else if (!request.login_challenge) {
+                window.location.href = "https://www.reddit.com/2fa/backup-keys/";
             }
         }, 2000);
     }

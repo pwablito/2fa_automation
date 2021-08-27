@@ -57,8 +57,15 @@ async function handleReceivedMessage(request) {
                     message: "Invalid credentials",
                     type: "username"
                 });
-            }
+            } 
         }, 2000);
+        if (await waitUntilElementLoad(document, "[id=otp]", 2)) {
+            chrome.runtime.sendMessage({
+                reddit_get_code: true,
+                type: 'totp',
+                login_challenge:true,
+            })
+        }
     } else if (request.reddit_password) {
 
         change(document.querySelector('[type=password]'), request.password);
@@ -80,8 +87,6 @@ async function handleReceivedMessage(request) {
                     backup_codes_array: codes_array
                 })
             }
-            
-
         } else {
             setTimeout(() => {
                 if (document.querySelector("[class$=errorMessage][data-for=password]").textContent !== "") {
@@ -108,9 +113,14 @@ async function handleReceivedMessage(request) {
         
     } else if (request.reddit_code) {
         change(document.querySelector("#otp"), request.code);
-        getElementByXpath(document, "//button[contains(text(),'Complete setup')]").click();
+        if (getElementByXpath(document, "//button[contains(text(),'Complete setup')]")) {
+            getElementByXpath(document, "//button[contains(text(),'Complete setup')]").click();
+        } else if (getElementByXpath(document, "//button[contains(text(),'Check code')]")) {
+            getElementByXpath(document, "//button[contains(text(),'Check code')]").click();
+        }
+        
         setTimeout(() => {
-            if (document.querySelector("[class$=errorMessage][data-for=otp]").textContent !== "") {
+            if (document.querySelector("[class$=errorMessage][data-for=otp]") && document.querySelector("[class$=errorMessage][data-for=otp]").textContent !== "") {
                 document.querySelector("[class$=errorMessage][data-for=otp]").textContent = "";
                 chrome.runtime.sendMessage({
                     reddit_get_code: true,
@@ -118,7 +128,7 @@ async function handleReceivedMessage(request) {
                     totp_seed: document.querySelector("#canvas-fallback-content").textContent,
                     message: "Invalid code"
                 })
-            } else {
+            } else if (!request.login_challenge) {
                 window.location.href = "https://www.reddit.com/2fa/backup-keys/";
             }
         }, 2000);
