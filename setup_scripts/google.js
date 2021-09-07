@@ -145,21 +145,39 @@ async function handleReceivedMessage(request) {
             let codeErrorXPath = "[aria-atomic=true]";
             let codeError = document.querySelector(codeErrorXPath);
             console.log("A");
-            if (await waitUntilElementLoad(document, codeErrorXPath, 0.5) && codeError.innerHTML != "") {
-                chrome.runtime.sendMessage({
-                    google_get_code: true,
-                    message: codeError.innerHTML
-                });
-                console.log("B");
-            } else {
-                console.log("C");
-                getElementByXpath(document, "//span[contains(text(),'Turn on')]/../..").click();
-                await timer(200);
-                chrome.runtime.sendMessage({
-                    google_finished_check: true,
-                    method: 'sms'
-                });
-            }
+            setTimeout(() => {
+                if (codeError.innerHTML != "") {
+                    chrome.runtime.sendMessage({
+                        google_get_code: true,
+                        message: codeError.innerHTML
+                    });
+                    console.log("B");
+                } else {
+                    console.log("C");
+                    getElementByXpath(document, "//span[contains(text(),'Turn on')]/../..").click();
+                    setTimeout(() => {
+                        chrome.runtime.sendMessage({
+                            google_finished_check: true,
+                            method: 'sms'
+                        });
+                    }, 2000);
+                }
+            }, 2000);
+            // if (await waitUntilElementLoad(document, codeErrorXPath, 2) && codeError.innerHTML != "") {
+            //     chrome.runtime.sendMessage({
+            //         google_get_code: true,
+            //         message: codeError.innerHTML
+            //     });
+            //     console.log("B");
+            // } else {
+                // console.log("C");
+                // getElementByXpath(document, "//span[contains(text(),'Turn on')]/../..").click();
+                // await timer(200);
+                // chrome.runtime.sendMessage({
+                //     google_finished_check: true,
+                //     method: 'sms'
+                // });
+            // }
         }
     } else if (request.google_sms) {
         // phone number fill page
