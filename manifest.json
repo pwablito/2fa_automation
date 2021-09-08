@@ -1,16 +1,21 @@
 {
     "manifest_version": 2,
     "name": "2FA Automator",
-    "version": "1.0",
+    "version": "0.0.1",
     "browser_action": {
         "default_icon": "icon.png",
         "default_title": "Automate 2FA activation and deactivation"
     },
     "content_security_policy": "script-src 'self' https://ajax.googleapis.com https://stackpath.bootstrapcdn.com https://code.jquery.com https://cdnjs.cloudflare.com; object-src 'self';",
     "permissions": [
-        "*://*/*", "tabs", "webNavigation", "storage", "windows"
+        "*://*.google.com/*", "*://*.facebook.com/*", "*://*.twitter.com/*", "*://*.dropbox.com/*", "*://*.linkedin.com/*","*://*.amazon.com/*","*://*.yahoo.com/*", "*://*.github.com/*", "*://*.reddit.com/*","tabs", "windows"
     ],
     "background": {
         "scripts": ["background.js"]
-    }
+    },
+    "icons" :{
+        "128": "icon.png"
+    }, 
+    "description": "2FA Automator helps you protect your online accounts by automating the setup process for Two-Factor Authentication."
+    
 }
