@@ -137,9 +137,12 @@ async function handleReceievedMessage(request) {
                     message: "Invalid code"
                 });
             } else {
-                for (let index = 0; index < 6; index++) {
-                    change(document.querySelector("[data-key='" + index + "']"), request.code[index]);
-                }
+                // for (let index = 0; index < 6; index++) {
+                
+                //     document.querySelector("[data-key='" + index + "']").value =  request.code[index];
+                //     change(document.querySelector("[data-key='" + index + "']"), request.code[index]);
+                // }
+                change(document.querySelector("input"), request.code)
                 getElementByXpath(document, "//*[contains(text(),'Continue')]/../..").click();
                 await timer(500);
                 if (document.querySelector("[data-key='0']")) {
