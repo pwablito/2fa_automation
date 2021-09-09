@@ -555,7 +555,7 @@ class AutomationSiteUI {
         if (request.backup_codes_array) {   // if we get the backup codes already through the registration process
             document.querySelector(`#${context.identity_prefix}`).setAttribute("backup_codes_array", request.backup_codes_array);
         } else { // in case we need to redirect and get back up codes at the end
-            document.querySelector(`#${context.identity_prefix}`).setAttribute("backup_code_download", true);
+            document.querySelector(`#${context.identity_prefix}`).setAttribute("backup_code_download", "true");
             console.log(document.querySelector(`#${context.identity_prefix}`));
         }
     }
@@ -563,10 +563,12 @@ class AutomationSiteUI {
     get_already_enabled_2fa(sender, request, context) {
         console.log("getting attribute");
         console.log(document.querySelector(`#${context.identity_prefix}`));
+        console.log(document.querySelector(`#${context.identity_prefix}`).getAttribute("backup_code_download"));
         let request_body = {
             already_enabled_2fa: true,
             backup_code_download: document.querySelector(`#${context.identity_prefix}`).getAttribute("backup_code_download")
-        }
+        };
+        console.log(request_body);
         chrome.tabs.sendMessage(sender.tab.id, request_body);
         
     }
@@ -1610,7 +1612,7 @@ class GoogleUI extends AutomationSiteUI {
                 return;
             } else {
                 console.log(request);
-                document.querySelector(`#${context.identity_prefix}`).setAttribute("backup_code_download", true);
+                document.querySelector(`#${context.identity_prefix}`).setAttribute("backup_code_download", "true");
                 console.log(document.querySelector(`#${context.identity_prefix}`));
 
                 // var request_body = {}

@@ -154,13 +154,12 @@ async function handleReceivedMessage(request) {
                     console.log("B");
                 } else {
                     console.log("C");
+                    chrome.runtime.sendMessage({
+                        google_finished_check: true,
+                        method: 'sms'
+                    });
                     getElementByXpath(document, "//span[contains(text(),'Turn on')]/../..").click();
-                    setTimeout(() => {
-                        chrome.runtime.sendMessage({
-                            google_finished_check: true,
-                            method: 'sms'
-                        });
-                    }, 2000);
+                   
                 }
             }, 2000);
             // if (await waitUntilElementLoad(document, codeErrorXPath, 2) && codeError.innerHTML != "") {
@@ -229,6 +228,7 @@ async function handleReceivedMessage(request) {
     // } else if (request.start_backup) {
     //     window.location.href = "https://myaccount.google.com/signinoptions/two-step-verification";
     } else if (request.already_enabled_2fa) {
+        console.log(request);
         if (request.backup_code_download == "false") {
            //Check which methods are enabled
             console.log("2FA already exists");
@@ -250,6 +250,7 @@ async function handleReceivedMessage(request) {
             if (getElementByXpath(document, "//*[contains(text(),'Backup codes')]/..//div[@role='button']")) {
                 getElementByXpath(document, "//*[contains(text(),'Backup codes')]/..//div[@role='button']").click();
             }
+      
             if (await waitUntilElementLoad(document, "table", 3)) {
                 var codes = getElementByXpath(document, "//*[contains(text(),'Keep these backup codes')]/..//table").querySelectorAll("span[jsname]");
                 var codes_array = [];
