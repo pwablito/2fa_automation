@@ -83,7 +83,7 @@ class AutomationUI {
                         </div>
                         <div class="row m-0 p-2">
                             <div class="col d-flex justify-content-center">
-                                <h4>  You are all done setting up your accounts! </h4>
+                                <h4>  You have finished setting up your accounts! </h4>
                             </div>
                         </div>
                         <div class="row m-0 p-2">
@@ -334,7 +334,7 @@ class AutomationUI {
                     </div>
                     <div class="row m-0 p-2">
                         <div class="col d-flex justify-content-center">
-                            <h4>  You are all done setting up your accounts! </h4>
+                            <h4>  You are finished updating your accounts! </h4>
                         </div>
                     </div>
                     <div class="row m-0 p-2">
@@ -398,7 +398,7 @@ class DisableUI extends AutomationUI {
 }
 
 class AutomationSiteUI {
-    constructor(name, identity_prefix, logo_file, controller, start_url) {
+    constructor(name, identity_prefix, logo_file, controller, start_url, isDisable) {
         /*
          * @param {string} name - Name of the site (i.e. "Google")
          * @param {string} identity_prefix - Prefix for UI elements (i.e. "google" would result in "google_ui_div"
@@ -414,6 +414,7 @@ class AutomationSiteUI {
         this.start_url = start_url;
         this.window_id = null;
         this.handlers = [];
+        this.isDisable = isDisable;
         this.init_default_handlers();
     }
 
@@ -613,14 +614,15 @@ class AutomationSiteUI {
             </div>
             ${request.message != null ? "<p>" + request.message + "</p>" : ""}
             `
-        );
+            );
+        }
         document.querySelector(`#website_progress_bar`).setAttribute("style", "width:100%")
         document.querySelector(`#website_progress_bar`).setAttribute("aria-valuenow", "100")
         context.controller.disable_injection(context.identity_prefix);
-        //context.close_window();
+        context.close_window();
         $(`#${context.identity_prefix}_ui_div`).append($(`#next_site_automation`));
         $(`#next_site_automation`).show();
-        }
+        
     }
 
     request_error(request) {
