@@ -113,13 +113,27 @@ async function handleReceivedMessage(request) {
                     message: codeError.innerHTML
                 });
             } else {
+                console.log("Above element wasn't found")
                 if (document.querySelector("html > body > div > div > div:nth-of-type(2) > div:nth-of-type(3) > div > div:nth-of-type(5) > span > span") !== null &&
                     document.querySelector("html > body > div > div > div:nth-of-type(2) > div:nth-of-type(3) > div > div:nth-of-type(5) > span > span").textContent === "Done") {
+                    console.log("Found next element now checking for something else")
+                    buttonXPath = "html > body > c-wiz > div > div:nth-of-type(3) > c-wiz > div > div > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(2) > div > div";
+                    if (document.querySelector(buttonXPath) && document.querySelector(buttonXPath).innerText == "TURN OFF") {
+                        await timer(1000)
+                        if (document.querySelector("div[role='radio']") != null || document.querySelector("div[wizard-step-uid='Security Center: StrongAuth: Authenticator:installApp']") != null || document.querySelector("div[wizard-step-uid='Security Center: StrongAuth: Authenticator:verifyCode']") != null) {
+                            return;
+                        } else {
+                            chrome.runtime.sendMessage({
+                                google_get_already_enabled_2fa: true,
+                            });
+                        }
+                    }
                     chrome.runtime.sendMessage({
                         google_finished_check: true,
                         method: 'totp'
-                    });
+                        });
                 } else {
+                    console.log("that didn't work, sending error message")
                     chrome.runtime.sendMessage({
                         google_error: true,
                         message: "Something went wrong",
