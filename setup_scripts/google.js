@@ -46,6 +46,7 @@ function exitScriptWithError() {
 
 async function handleReceivedMessage(request) {
     console.log(request);
+    console.log(Date.now())
     if (request.google_email) {
         document.querySelector("[type=email]").value = request.email;
         document.querySelector("#identifierNext > div > button").click();
@@ -282,99 +283,116 @@ async function handleReceivedMessage(request) {
     }
 }
 
+var isRunning;
+function onlyRunOnce(){
+    if(!isRunning){
+        isRunning = true;
+        chrome.runtime.onMessage.addListener(
+            function(request, _) {
+                handleReceivedMessage(request).then();
+            }
+        );
 
-chrome.runtime.onMessage.addListener(
-    function(request, _) {
-        handleReceivedMessage(request).then();
-    }
-);
-
-(async() => {
-    try {
-        if (window.location.href.includes("https://myaccount.google.com/")) {
-            console.log("Signed in");
-            await waitUntilPageLoad(document, 3);
-            if (window.location.href.includes("myaccount.google.com/signinoptions/two-step-verification")) {
-                // 2FA is already enabled
-                console.log("1");
-                await timer(2000);
-                buttonXPath = "html > body > c-wiz > div > div:nth-of-type(3) > c-wiz > div > div > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(2) > div > div";
-                if (document.querySelector(buttonXPath) && document.querySelector(buttonXPath).innerText == "TURN OFF") {
-                    if (document.querySelector("div[role='radio']") != null || document.querySelector("div[wizard-step-uid='Security Center: StrongAuth: Authenticator:installApp']") != null || document.querySelector("div[wizard-step-uid='Security Center: StrongAuth: Authenticator:verifyCode']") != null) {
-                        return;
+        (async() => {
+            if(isRunning){
+                
+            }
+            try {
+                if (window.location.href.includes("https://myaccount.google.com/")) {
+                    console.log("Signed in");
+                    await waitUntilPageLoad(document, 3);
+                    if (window.location.href.includes("myaccount.google.com/signinoptions/two-step-verification")) {
+                        // 2FA is already enabled
+                        console.log("1");
+                        await timer(2000);
+                        buttonXPath = "html > body > c-wiz > div > div:nth-of-type(3) > c-wiz > div > div > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(2) > div > div";
+                        if (document.querySelector(buttonXPath) && document.querySelector(buttonXPath).innerText == "TURN OFF") {
+                            if (document.querySelector("div[role='radio']") != null || document.querySelector("div[wizard-step-uid='Security Center: StrongAuth: Authenticator:installApp']") != null || document.querySelector("div[wizard-step-uid='Security Center: StrongAuth: Authenticator:verifyCode']") != null) {
+                                return;
+                            } else {
+                                chrome.runtime.sendMessage({
+                                    google_get_already_enabled_2fa: true,
+                                });
+                               
+                            }
+                        } else if (document.querySelector(buttonXPath) && document.querySelector(buttonXPath).innerText == "TURN ON") {
+                            console.log("2");
+                            document.querySelector(buttonXPath).click();
+                            let msg = {
+                                "google_get_method": true,
+                                "sms_already_setup": true,
+                                "message": "2FA turned on. Phone number for SMS 2FA already exists."
+                            };
+                            chrome.runtime.sendMessage(msg);
+                        }
+                        // Get started page
+                        else if (getElementByXpath(document, "//*[contains(text(),'Get started')]/../..")) {
+                            console.log("3");
+                            getElementByXpath(document, "//*[contains(text(),'Get started')]/../..").click();
+                        }
+                        console.log("4");
+                        if (await waitUntilElementLoad(document, "[type=tel]", 2)) {
+                            chrome.runtime.sendMessage({ "google_get_method": true });
+                        }
+                    } else {
+                        window.location.href = "https://myaccount.google.com/signinoptions/two-step-verification/enroll-welcome";
+                    }
+                } else if (window.location.href.includes("google.com/signin/v2/challenge")) {
+                    if (await waitUntilElementLoad(document, "#idvPin", 2)) {
+        
+                        chrome.runtime.sendMessage({
+                            google_get_code: true,
+                            type: 'sms',
+                            login_challenge: true,
+                        });
+        
+                    } else if (await waitUntilElementLoad(document, "#totpPin", 2)) {
+                        chrome.runtime.sendMessage({
+                            google_get_code: true,
+                            type: 'totp',
+                            login_challenge: true,
+                        });
+                    } else if (await waitUntilElementLoad(document, "input[type='password']", 2)) {
+                        chrome.runtime.sendMessage({
+                            google_get_password: true,
+                        });
+                    }
+                } else if (window.location.href.includes("signinchooser")) {
+                    await waitUntilPageLoad(document, 3);
+                    // In case all the accounts are logged out and google redirects to choose account. We redirect to select a new account always. 
+                    // let UseAnotherAccountButtonXPath = "html > body > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div > div:nth-of-type(2) > div > div > div:nth-of-type(2) > div > div:nth-of-type(1) > div > form > span > section > div > div > div > div:nth-of-type(1) > ul > li:nth-of-type(2) > div > div > div:nth-of-type(2)";
+                    if (getElementByXpath(document, "//*[contains(text(),'Use another account')]/../..")) {
+                        getElementByXpath(document, "//*[contains(text(),'Use another account')]/../..").click();
+                    }
+                } else if (window.location.href.includes("/signin/") || window.location.href.includes("/identifier")) {
+                    if (document.querySelector("[type=email]") && document.querySelector("[type=email]").value == "") {
+                        chrome.runtime.sendMessage({
+                            "google_get_email": true
+                        });
+                    } else if (document.querySelector("[type=password]")) {
+                        chrome.runtime.sendMessage({
+                            "google_get_password": true
+                        });
                     } else {
                         chrome.runtime.sendMessage({
-                            google_get_already_enabled_2fa: true,
+                            google_error: true,
+                            message: "Something went wrong",
+                            message_for_dev: window.location.href
                         });
-                       
                     }
-                } else if (document.querySelector(buttonXPath) && document.querySelector(buttonXPath).innerText == "TURN ON") {
-                    console.log("2");
-                    document.querySelector(buttonXPath).click();
-                    let msg = {
-                        "google_get_method": true,
-                        "sms_already_setup": true,
-                        "message": "2FA turned on. Phone number for SMS 2FA already exists."
-                    };
-                    chrome.runtime.sendMessage(msg);
                 }
-                // Get started page
-                else if (getElementByXpath(document, "//*[contains(text(),'Get started')]/../..")) {
-                    console.log("3");
-                    getElementByXpath(document, "//*[contains(text(),'Get started')]/../..").click();
-                }
-                console.log("4");
-                if (await waitUntilElementLoad(document, "[type=tel]", 2)) {
-                    chrome.runtime.sendMessage({ "google_get_method": true });
-                }
-            } else {
-                window.location.href = "https://myaccount.google.com/signinoptions/two-step-verification/enroll-welcome";
+            } catch (e) {
+                // Deal with the fact the chain failed
             }
-        } else if (window.location.href.includes("google.com/signin/v2/challenge")) {
-            if (await waitUntilElementLoad(document, "#idvPin", 2)) {
-
-                chrome.runtime.sendMessage({
-                    google_get_code: true,
-                    type: 'sms',
-                    login_challenge: true,
-                });
-
-            } else if (await waitUntilElementLoad(document, "#totpPin", 2)) {
-                chrome.runtime.sendMessage({
-                    google_get_code: true,
-                    type: 'totp',
-                    login_challenge: true,
-                });
-            } else if (await waitUntilElementLoad(document, "input[type='password']", 2)) {
-                chrome.runtime.sendMessage({
-                    google_get_password: true,
-                });
-            }
-        } else if (window.location.href.includes("signinchooser")) {
-            await waitUntilPageLoad(document, 3);
-            // In case all the accounts are logged out and google redirects to choose account. We redirect to select a new account always. 
-            // let UseAnotherAccountButtonXPath = "html > body > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div > div:nth-of-type(2) > div > div > div:nth-of-type(2) > div > div:nth-of-type(1) > div > form > span > section > div > div > div > div:nth-of-type(1) > ul > li:nth-of-type(2) > div > div > div:nth-of-type(2)";
-            if (getElementByXpath(document, "//*[contains(text(),'Use another account')]/../..")) {
-                getElementByXpath(document, "//*[contains(text(),'Use another account')]/../..").click();
-            }
-        } else if (window.location.href.includes("/signin/") || window.location.href.includes("/identifier")) {
-            if (document.querySelector("[type=email]") && document.querySelector("[type=email]").value == "") {
-                chrome.runtime.sendMessage({
-                    "google_get_email": true
-                });
-            } else if (document.querySelector("[type=password]")) {
-                chrome.runtime.sendMessage({
-                    "google_get_password": true
-                });
-            } else {
-                chrome.runtime.sendMessage({
-                    google_error: true,
-                    message: "Something went wrong",
-                    message_for_dev: window.location.href
-                });
-            }
-        }
-    } catch (e) {
-        // Deal with the fact the chain failed
+        })();
     }
-})();
+}
+
+onlyRunOnce();
+
+// chrome.runtime.onMessage.addListener(
+//     function(request, _) {
+//         handleReceivedMessage(request).then();
+//     }
+// );
+

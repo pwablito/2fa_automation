@@ -33,6 +33,7 @@ class AutomationUI {
             (request, _) => {
                 // For debug purposes in the UI only
                 console.log(request);
+                console.log(Date.now)
             }
         );
     }
@@ -569,7 +570,6 @@ class AutomationSiteUI {
             already_enabled_2fa: true,
             backup_code_download: document.querySelector(`#${context.identity_prefix}`).getAttribute("backup_code_download")
         };
-        console.log(request_body);
         chrome.tabs.sendMessage(sender.tab.id, request_body);
         
     }
@@ -986,53 +986,8 @@ class AutomationSiteUI {
                     totp_url = `otpauth://totp/${context.name}?secret=${request.totp_seed}`;
                     console.log(totp_url);
                 }
-                $(`#${context.identity_prefix}_ui_div`).html(
-                    `
-
-                    <div class="row m-0 pt-3">
-                        <div class="col">
-                            <img src="images/authapp.png" style="height: 100px; width:100px;">
-                        </div>
-                    </div>
-                    <div class="row m-0 pl-5 pr-5 pb-1 pt-1">
-                        <div class="col">
-                            <h4> Set Up Authenticator</h4>
-                        </div>
-                    </div>
-                    <div class="row m-0 pl-5 pr-5 pb-0 pt-0">
-                        <div class="col">
-                            <ul class="text-left mb-0">
-                                <li> Install authenticator app</li>
-                                <li> Select <strong> Set up account</strong></li>
-                                <li> Choose <strong> Scan a barcode app</strong></li>
-                            </ul>
-                        </div>
-                    </div>
-                    <div class="row m-0 center-text">
-                        <div class="col">
-                            <div class="qrcode" id="${context.identity_prefix}_qr_div" style="width: 100%;">
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="row m-0 p-1 justify-content-center">
-                        <button class="btn-lg btn-success" id="${context.identity_prefix}_next_button">Next</button>
-                    </div>
-                    
-                    `
-                );
-
-                if(context.identity_prefix == "google" && document.querySelector(`#${context.identity_prefix}`).getAttribute("method")=="totp"){
-                    document.querySelector(`#website_progress_bar`).setAttribute("style", "width:80%")
-                    document.querySelector(`#website_progress_bar`).setAttribute("aria-valuenow", "800")
-                } else {
-                    document.querySelector(`#website_progress_bar`).setAttribute("style", "width:60%")
-                    document.querySelector(`#website_progress_bar`).setAttribute("aria-valuenow", "60")
-                }
-                
-                let elm = new QRCode(document.getElementById(`${context.identity_prefix}_qr_div`), totp_url);
-
-                $(`#${context.identity_prefix}_next_button`).click(() => {
+                console.log(request.message)
+                if(request.message){
                     $(`#${context.identity_prefix}_ui_div`).html(
                         `
                         <div class="row m-0 pt-0">
@@ -1047,13 +1002,8 @@ class AutomationSiteUI {
                         </div>
                         <div class="row m-0 pl-5 pr-5 pb-0 pt-0">
                             <div class="col">
-                                <p> Enter the 6-digit code you see in the app. </p>
+                                <p style='color:#dc3545;'> That code didn't work. Please try entering the code again. </p>
                             </div>
-                        </div>
-                        <div class="row m-0 p-0">
-                            <div class="col d-flex justify-content-center">
-                                ${request.message != null ? "<p style='color:#dc3545;'>" + request.message + "</p>" : ""}
-                           </div>
                         </div>
                             
                         
@@ -1069,19 +1019,12 @@ class AutomationSiteUI {
                         </form>
                         <div class="row m-0 p-0">
                             <div class="col">
-                            <a href="#" id="${context.identity_prefix}_view_qrcode"> <small>  Need to scan barcode again? </small> </a>
+                            <a href="#" id="${context.identity_prefix}_view_qrcode"> <small>  Need to scan QR code again? </small> </a>
                             </div>
                         </div>         
                         `
                     );
-
-                    if(context.identity_prefix == "google" && document.querySelector(`#${context.identity_prefix}`).getAttribute("method")=="totp"){
-                        document.querySelector(`#website_progress_bar`).setAttribute("style", "width:90%")
-                        document.querySelector(`#website_progress_bar`).setAttribute("aria-valuenow", "90")
-                    } else {
-                        document.querySelector(`#website_progress_bar`).setAttribute("style", "width:80%")
-                        document.querySelector(`#website_progress_bar`).setAttribute("aria-valuenow", "80")
-                    }
+                    
                     $(`#${context.identity_prefix}_view_qrcode`).click(() => {
                         document.getElementById(`${context.identity_prefix}_qrcode_placeholder`).innerHTML = "";
                         new QRCode(document.getElementById(`${context.identity_prefix}_qrcode_placeholder`), totp_url);
@@ -1108,7 +1051,135 @@ class AutomationSiteUI {
                             context.loading();
                         }
                     });
-                });
+
+
+                } else {
+                    $(`#${context.identity_prefix}_ui_div`).html(
+                        `
+    
+                        <div class="row m-0 pt-3">
+                            <div class="col">
+                                <img src="images/authapp.png" style="height: 100px; width:100px;">
+                            </div>
+                        </div>
+                        <div class="row m-0 pl-5 pr-5 pb-1 pt-1">
+                            <div class="col">
+                                <h4> Set Up Authenticator</h4>
+                            </div>
+                        </div>
+                        <div class="row m-0 pl-5 pr-5 pb-0 pt-0">
+                            <div class="col">
+                                <ul class="text-left mb-0">
+                                    <li> Install authenticator app</li>
+                                    <li> Select <strong> Set up account</strong></li>
+                                    <li> Choose <strong> Scan a QR code </strong></li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="row m-0 center-text">
+                            <div class="col">
+                                <div class="qrcode" id="${context.identity_prefix}_qr_div" style="width: 100%;">
+                                </div>
+                            </div>
+                        </div>
+    
+                        <div class="row m-0 p-1 justify-content-center">
+                            <button class="btn-lg btn-success" id="${context.identity_prefix}_next_button">Next</button>
+                        </div>
+                        
+                        `
+                    );
+    
+                    if(context.identity_prefix == "google" && document.querySelector(`#${context.identity_prefix}`).getAttribute("method")=="totp"){
+                        document.querySelector(`#website_progress_bar`).setAttribute("style", "width:80%")
+                        document.querySelector(`#website_progress_bar`).setAttribute("aria-valuenow", "800")
+                    } else {
+                        document.querySelector(`#website_progress_bar`).setAttribute("style", "width:60%")
+                        document.querySelector(`#website_progress_bar`).setAttribute("aria-valuenow", "60")
+                    }
+                    
+                    let elm = new QRCode(document.getElementById(`${context.identity_prefix}_qr_div`), totp_url);
+    
+                    $(`#${context.identity_prefix}_next_button`).click(() => {
+                        $(`#${context.identity_prefix}_ui_div`).html(
+                            `
+                            <div class="row m-0 pt-0">
+                                <div class="col qr_code_placeholder" id="${context.identity_prefix}_qrcode_placeholder">
+                                    <img src="images/authcode.svg" style="height: 150px; width:150px;">
+                                </div>
+                            </div>
+                            <div class="row m-0 pl-5 pr-5 pb-1 pt-1">
+                                <div class="col">
+                                    <h4> Set Up Authenticator</h4>
+                                </div>
+                            </div>
+                            <div class="row m-0 pl-5 pr-5 pb-0 pt-0">
+                                <div class="col">
+                                    <p> Enter the 6-digit code you see in the app. </p>
+                                </div>
+                            </div>
+                            <div class="row m-0 p-0">
+                                <div class="col d-flex justify-content-center">
+                                    ${request.message != null ? "<p style='color:#dc3545;'>" + request.message + "</p>" : ""}
+                               </div>
+                            </div>
+                                
+                            
+                            <form id="${context.identity_prefix}_code_form" class="mb-0">
+                                <div class="row m-0 pt-1 pb-1 pr-4 pl-4 justify-content-center">
+                                    <div class="input-group input-group-lg">
+                                        <input type="text" class="form-control" aria-label="Large" aria-describedby="inputGroup-sizing-sm" id="${context.identity_prefix}_code_input" placeholder="Code" required>
+                                    </div>
+                                </div>
+                                <div class="row m-0 p-2 justify-content-center">
+                                    <button class="btn-lg btn-success" type="submit">Submit</button>
+                                </div>
+                            </form>
+                            <div class="row m-0 p-0">
+                                <div class="col">
+                                <a href="#" id="${context.identity_prefix}_view_qrcode"> <small>  Need to scan QR code again? </small> </a>
+                                </div>
+                            </div>         
+                            `
+                        );
+    
+                        if(context.identity_prefix == "google" && document.querySelector(`#${context.identity_prefix}`).getAttribute("method")=="totp"){
+                            document.querySelector(`#website_progress_bar`).setAttribute("style", "width:90%")
+                            document.querySelector(`#website_progress_bar`).setAttribute("aria-valuenow", "90")
+                        } else {
+                            document.querySelector(`#website_progress_bar`).setAttribute("style", "width:80%")
+                            document.querySelector(`#website_progress_bar`).setAttribute("aria-valuenow", "80")
+                        }
+                        $(`#${context.identity_prefix}_view_qrcode`).click(() => {
+                            document.getElementById(`${context.identity_prefix}_qrcode_placeholder`).innerHTML = "";
+                            new QRCode(document.getElementById(`${context.identity_prefix}_qrcode_placeholder`), totp_url);
+                        });
+    
+                        $(`#${context.identity_prefix}_code_form`).submit((e) => {
+                            e.preventDefault();
+                            let code = $(`#${context.identity_prefix}_code_input`).val();
+                
+                            if (code) {
+                                let request_body = {
+                                    code: code
+                                }
+                
+                                if (request.totp_seed) {
+                                    request_body["totp_seed"] = request.totp_seed;
+                                }
+                
+                                if (request.login_challenge) {
+                                    request_body['login_challenge'] = true;
+                                }
+                                request_body[`${context.identity_prefix}_code`] = true;
+                                chrome.tabs.sendMessage(sender.tab.id, request_body);
+                                context.loading();
+                            }
+                        });
+                    });
+                }
+
+                
             }
 
         } else if (request.type === "sms") {
@@ -1202,6 +1273,7 @@ class AutomationSiteUI {
         }
         $(`#${context.identity_prefix}_code_form`).submit((e) => {
             e.preventDefault();
+            e.stopImmediatePropagation();
             let code = $(`#${context.identity_prefix}_code_input`).val();
             if (code) {
                 let request_body = {
@@ -1484,32 +1556,42 @@ class GoogleUI extends AutomationSiteUI {
         console.log(document.querySelector(`#${context.identity_prefix}`).getAttribute("method"));
         if((request.method != document.querySelector(`#${context.identity_prefix}`).getAttribute("method") )&& (document.querySelector(`#${context.identity_prefix}`).getAttribute("method")!= "")){
             console.log("either methods are the same or method is not null")
-            $(`#${context.identity_prefix}_ui_div`).html(
-                `
-                    <div class="row m-0 pt-4">
-                        <div class="col">
-                            <img src="images/authapp.png" style="height: 200px; width:189px;">
-                        </div>
-                    </div>
-        
-                    <div class="row m-0 pl-5 pr-5 pb-0 pt-4">
-                        <div class="col">
-                            <p> That worked! Ready to enable your authenticator app now? </p>
-                        </div>
-                    </div>
-                        
-                    <div class="row m-0 p-2 justify-content-center">
-                        <button class="btn-lg btn-success" id="${context.identity_prefix}_continue_button">Continue</button>
-                    </div>
-
-                `
-            );
-            $(`#${context.identity_prefix}_continue_button`).click(() => {
+            if(request.sms_already_setup == true){
+              
                 let request_body = {}
                 request_body[`${context.identity_prefix}_totp`] = true;
                 chrome.tabs.sendMessage(sender.tab.id, request_body);
                 context.loading();
-            });
+                
+            } else {
+                $(`#${context.identity_prefix}_ui_div`).html(
+                    `
+                        <div class="row m-0 pt-4">
+                            <div class="col">
+                                <img src="images/authapp.png" style="height: 200px; width:189px;">
+                            </div>
+                        </div>
+            
+                        <div class="row m-0 pl-5 pr-5 pb-0 pt-4">
+                            <div class="col">
+                                <p> That worked! Ready to enable your authenticator app now? </p>
+                            </div>
+                        </div>
+                            
+                        <div class="row m-0 p-2 justify-content-center">
+                            <button class="btn-lg btn-success" id="${context.identity_prefix}_continue_button">Continue</button>
+                        </div>
+    
+                    `
+                );
+                $(`#${context.identity_prefix}_continue_button`).click(() => {
+                    let request_body = {}
+                    request_body[`${context.identity_prefix}_totp`] = true;
+                    chrome.tabs.sendMessage(sender.tab.id, request_body);
+                    context.loading();
+                });
+            }
+            
             
 
         
@@ -1616,6 +1698,12 @@ class GoogleUI extends AutomationSiteUI {
                 console.log(request);
                 document.querySelector(`#${context.identity_prefix}`).setAttribute("backup_code_download", "true");
                 console.log(document.querySelector(`#${context.identity_prefix}`));
+                console.log(document.querySelector(`#${context.identity_prefix}`).getAttribute("backup_code_download"));
+                let request_body = {
+                    already_enabled_2fa: true,
+                    backup_code_download: document.querySelector(`#${context.identity_prefix}`).getAttribute("backup_code_download")
+                };
+                chrome.tabs.sendMessage(sender.tab.id, request_body);
 
                 // var request_body = {}
                 // request_body[`start_backup`] = true;
