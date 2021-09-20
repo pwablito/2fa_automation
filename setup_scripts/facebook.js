@@ -261,97 +261,111 @@ async function handleReceievedMessage(request) {
     }
 }
 
+var isRunning;
 
-chrome.runtime.onMessage.addListener(
-    function(request, _) {
-        handleReceievedMessage(request).then();
+function onlyRunOnce(){
+    if(!isRunning){
+        isRunning = true;
+        chrome.runtime.onMessage.addListener(
+            function(request, _) {
+                handleReceievedMessage(request).then();
+            }
+        );
+
+        (async() => {
+            try {
+                if (window.location.href.includes("compat")) {
+                    await timer(2000)
+                    window.location.href = "https://www.facebook.com/security/2fac/settings";
+                } else if (window.location.href.includes("facebook.com/security/2fac/settings")) {
+                    await waitUntilPageLoad(document, 3);
+                    console.log("2FA enabled");
+        
+                    let iFrameXPath = "iframe[src*='https://www.facebook.com/security/2fac/']";
+                    if (window.location.href.includes("?cquick=")) {
+                        // Inside iframe
+                        if (getElementByXpath(document, "//*[contains(text(),'Turn Off')]")) {
+                            console.log("2FA in");
+                            chrome.runtime.sendMessage({
+                                facebook_get_already_enabled_2fa: true,
+                            });
+                        }
+                    } else if (await waitUntilElementLoad(document, iFrameXPath, 2)) {
+                        console.log("to go xframe");
+                        window.location.href = document.querySelector(iFrameXPath).src;
+                    }
+        
+                } else if (window.location.href.includes("facebook.com/security/2fac/setup/intro")) {
+                    await waitUntilPageLoad(document, 3);
+                    console.log("In setup/intro");
+                    let iFrameXPath = "iframe[src*='https://www.facebook.com/security/2fac/']";
+                    if (window.location.href.includes("?cquick=")) {
+                        // Inside iframe
+                        chrome.runtime.sendMessage({
+                            facebook_get_method: true,
+                        });
+                    } else if (await waitUntilElementLoad(document, iFrameXPath, 2)) {
+                        console.log("to go xframe");
+                        window.location.href = document.querySelector(iFrameXPath).src;
+                    }
+                } else if (window.location.href.includes("facebook.com/checkpoint")) {
+                    if (document.querySelector("input[aria-label='Login code']")) {
+                        if (document.querySelectorAll("strong").length > 1) {
+                            chrome.runtime.sendMessage({
+                                facebook_get_code: true,
+                                login_challenge: true,
+                                type: 'totp'
+                            })
+                        } else {
+                            chrome.runtime.sendMessage({
+                                facebook_get_code: true,
+                                login_challenge: true,
+                                type: 'sms'
+                            })
+                        }
+        
+                    } else if (document.querySelector("input[value='dont_save']")) {
+                        document.querySelector("input[value='dont_save']").click()
+                        document.querySelector("#checkpointSubmitButton").click()
+                    } else if (document.querySelector("#checkpointSubmitButton")) {
+                        document.querySelector("#checkpointSubmitButton").click()
+                    }
+                } else if (window.location.href.includes("facebook.com/login/reauth.php")) {
+                    console.log("In reauth");
+                    await waitUntilPageLoad(document, 2);
+                    if (await waitUntilElementLoad(document, "[type=password]", 2)) {
+                        console.log("In reauth 2");
+                        chrome.runtime.sendMessage({
+                            facebook_get_password: true
+                        });
+                    } else if (document.querySelector("iframe[src*='https://www.facebook.com/login/reauth.php']")) {
+                        console.log("In reauth 1");
+                        window.location.href = document.querySelector("iframe[src*='https://www.facebook.com/login/reauth.php']").src;
+                    } else { exitScriptWithError(); }
+                } else if (window.location.href === "https://www.facebook.com/" || window.location.href === "https://www.facebook.com/?sk=welcome") {
+                    await waitUntilElementLoad(document, 2);
+                    if (document.querySelector("#email")) {
+                        // Sign in, then redirect to the security page
+                        chrome.runtime.sendMessage({
+                            facebook_get_credentials: true,
+                            type: "email"
+                        });
+                    } else {
+                        window.location.href = "https://www.facebook.com/security/2fac/setup/intro";
+                    }
+                } else { exitScriptWithError(); }
+            } catch (e) {
+                console.log(e);
+                // Deal with the fact the chain failed
+            }
+        })();
+
+
     }
-);
+}
+
+onlyRunOnce();
 
 
-(async() => {
-    try {
-        if (window.location.href.includes("compat")) {
-            window.location.href = "https://www.facebook.com/security/2fac/settings";
-        } else if (window.location.href.includes("facebook.com/security/2fac/settings")) {
-            await waitUntilPageLoad(document, 3);
-            console.log("2FA enabled");
 
-            let iFrameXPath = "iframe[src*='https://www.facebook.com/security/2fac/']";
-            if (window.location.href.includes("?cquick=")) {
-                // Inside iframe
-                if (getElementByXpath(document, "//*[contains(text(),'Turn Off')]")) {
-                    console.log("2FA in");
-                    chrome.runtime.sendMessage({
-                        facebook_get_already_enabled_2fa: true,
-                    });
-                }
-            } else if (await waitUntilElementLoad(document, iFrameXPath, 2)) {
-                console.log("to go xframe");
-                window.location.href = document.querySelector(iFrameXPath).src;
-            }
 
-        } else if (window.location.href.includes("facebook.com/security/2fac/setup/intro")) {
-            await waitUntilPageLoad(document, 3);
-            console.log("In setup/intro");
-            let iFrameXPath = "iframe[src*='https://www.facebook.com/security/2fac/']";
-            if (window.location.href.includes("?cquick=")) {
-                // Inside iframe
-                chrome.runtime.sendMessage({
-                    facebook_get_method: true,
-                });
-            } else if (await waitUntilElementLoad(document, iFrameXPath, 2)) {
-                console.log("to go xframe");
-                window.location.href = document.querySelector(iFrameXPath).src;
-            }
-        } else if (window.location.href.includes("facebook.com/checkpoint")) {
-            if (document.querySelector("input[aria-label='Login code']")) {
-                if (document.querySelectorAll("strong").length > 1) {
-                    chrome.runtime.sendMessage({
-                        facebook_get_code: true,
-                        login_challenge: true,
-                        type: 'totp'
-                    })
-                } else {
-                    chrome.runtime.sendMessage({
-                        facebook_get_code: true,
-                        login_challenge: true,
-                        type: 'sms'
-                    })
-                }
-
-            } else if (document.querySelector("input[value='dont_save']")) {
-                document.querySelector("input[value='dont_save']").click()
-                document.querySelector("#checkpointSubmitButton").click()
-            } else if (document.querySelector("#checkpointSubmitButton")) {
-                document.querySelector("#checkpointSubmitButton").click()
-            }
-        } else if (window.location.href.includes("facebook.com/login/reauth.php")) {
-            console.log("In reauth");
-            await waitUntilPageLoad(document, 2);
-            if (await waitUntilElementLoad(document, "[type=password]", 2)) {
-                console.log("In reauth 2");
-                chrome.runtime.sendMessage({
-                    facebook_get_password: true
-                });
-            } else if (document.querySelector("iframe[src*='https://www.facebook.com/login/reauth.php']")) {
-                console.log("In reauth 1");
-                window.location.href = document.querySelector("iframe[src*='https://www.facebook.com/login/reauth.php']").src;
-            } else { exitScriptWithError(); }
-        } else if (window.location.href === "https://www.facebook.com/" || window.location.href === "https://www.facebook.com/?sk=welcome") {
-            await waitUntilElementLoad(document, 2);
-            if (document.querySelector("#email")) {
-                // Sign in, then redirect to the security page
-                chrome.runtime.sendMessage({
-                    facebook_get_credentials: true,
-                    type: "email"
-                });
-            } else {
-                window.location.href = "https://www.facebook.com/security/2fac/setup/intro";
-            }
-        } else { exitScriptWithError(); }
-    } catch (e) {
-        console.log(e);
-        // Deal with the fact the chain failed
-    }
-})();
