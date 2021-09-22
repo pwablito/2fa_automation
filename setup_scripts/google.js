@@ -303,6 +303,7 @@ function onlyRunOnce(){
                 
             }
             try {
+                console.log(window.location.href);
                 if (window.location.href.includes("https://myaccount.google.com/")) {
                     console.log("Signed in");
                     await waitUntilPageLoad(document, 3);
@@ -369,7 +370,9 @@ function onlyRunOnce(){
                     if (getElementByXpath(document, "//*[contains(text(),'Use another account')]/../..")) {
                         getElementByXpath(document, "//*[contains(text(),'Use another account')]/../..").click();
                     }
-                } else if (window.location.href.includes("/signin/") || window.location.href.includes("/identifier")) {
+                } else if (window.location.href.includes("accounts.google.com/signin") || window.location.href.includes("/identifier")) {
+                    console.log("on Signin page");
+                    await waitUntilPageLoad(document, 2);
                     if (document.querySelector("[type=email]") && document.querySelector("[type=email]").value == "") {
                         chrome.runtime.sendMessage({
                             "google_get_email": true
