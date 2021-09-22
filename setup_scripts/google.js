@@ -225,7 +225,12 @@ async function handleReceivedMessage(request) {
             }
             await timer(100); // 100 ms delay. Waiting for the button to be clickable
         }
-        document.querySelector(popUpElemNextButtonXPath).click();
+        if(document.querySelector(popUpElemNextButtonXPath)){
+            document.querySelector(popUpElemNextButtonXPath).click();
+        } else {
+            window.location.reload()
+        }
+        
         chrome.runtime.sendMessage({
             google_get_code: true,
             type: "totp",

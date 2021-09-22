@@ -14,6 +14,13 @@ function getElementByXpath(doc, xpath) {
     return doc.evaluate(xpath, doc, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
 }
 
+function getSecondElementByXpath(doc, xpath) {
+    let elms = doc.evaluate(xpath, doc);
+    elms.iterateNext()
+    return elms.iterateNext()
+}
+
+
 function timer(ms) { return new Promise(res => setTimeout(res, ms)); }
 
 // maxWait is in seconds
@@ -116,6 +123,10 @@ chrome.runtime.onMessage.addListener(
                     turnOffButtXPath = "html > body > div:nth-of-type(11) > div > div:nth-of-type(2) > div:nth-of-type(3) > div > div:nth-of-type(2)";
                     if (await waitUntilElementLoad(document, turnOffButtXPath, 2)) {
                         document.querySelector(turnOffButtXPath).click();
+                    } else {
+                        if(getSecondElementByXpath(document, "//*[contains(text(),'Turn off')]/../..")){
+                            getSecondElementByXpath(document, "//*[contains(text(),'Turn off')]/../..").click()
+                        }
                     }
 
                 }
