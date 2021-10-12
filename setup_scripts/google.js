@@ -299,20 +299,27 @@ function onlyRunOnce(){
         );
 
         (async() => {
-            if(isRunning){
-                
-            }
             try {
                 console.log(window.location.href);
                 if (window.location.href.includes("https://myaccount.google.com/")) {
                     console.log("Signed in");
                     await waitUntilPageLoad(document, 3);
-                    if (window.location.href.includes("myaccount.google.com/signinoptions/two-step-verification")) {
+                    if (!window.location.href.includes("myaccount.google.com/signinoptions/two-step-verification")) {
+                        window.location.href = "https://myaccount.google.com/signinoptions/two-step-verification/enroll-welcome";
+                    } else {
                         // 2FA is already enabled
                         console.log("1");
-                        await timer(2000);
+
+                        await waitUntilPageLoad(document, 3);
                         buttonXPath = "html > body > c-wiz > div > div:nth-of-type(3) > c-wiz > div > div > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(2) > div > div";
-                        if (document.querySelector(buttonXPath) && document.querySelector(buttonXPath).innerText == "TURN OFF") {
+
+                        if (getElementByXpath(document, "//*[contains(text(),'Get started')]/../..")) {
+                            console.log("3");
+                            getElementByXpath(document, "//*[contains(text(),'Get started')]/../..").click();
+                        } 
+
+                        // await timer(2000);
+                        else if (document.querySelector(buttonXPath) && document.querySelector(buttonXPath).innerText == "TURN OFF") {
                             if (document.querySelector("div[role='radio']") != null || document.querySelector("div[wizard-step-uid='Security Center: StrongAuth: Authenticator:installApp']") != null || document.querySelector("div[wizard-step-uid='Security Center: StrongAuth: Authenticator:verifyCode']") != null) {
                                 return;
                             } else {
@@ -332,19 +339,21 @@ function onlyRunOnce(){
                             chrome.runtime.sendMessage(msg);
                         }
                         // Get started page
-                        else if (getElementByXpath(document, "//*[contains(text(),'Get started')]/../..")) {
-                            console.log("3");
-                            getElementByXpath(document, "//*[contains(text(),'Get started')]/../..").click();
-                        }
+                        
                         console.log("4");
                         if (await waitUntilElementLoad(document, "[type=tel]", 2)) {
                             chrome.runtime.sendMessage({ "google_get_method": true });
                         }
-                    } else {
-                        window.location.href = "https://myaccount.google.com/signinoptions/two-step-verification/enroll-welcome";
+                        
                     }
                 } else if (window.location.href.includes("google.com/signin/v2/challenge")) {
-                    if (await waitUntilElementLoad(document, "#idvPin", 2)) {
+                    
+                    if (await waitUntilElementLoad(document, "input[type='password']", 2)) {
+                        chrome.runtime.sendMessage({
+                            google_get_password: true,
+                        });
+                    }
+                    else if (await waitUntilElementLoad(document, "#idvPin", 2)) {
         
                         chrome.runtime.sendMessage({
                             google_get_code: true,
@@ -358,11 +367,7 @@ function onlyRunOnce(){
                             type: 'totp',
                             login_challenge: true,
                         });
-                    } else if (await waitUntilElementLoad(document, "input[type='password']", 2)) {
-                        chrome.runtime.sendMessage({
-                            google_get_password: true,
-                        });
-                    }
+                    } 
                 } else if (window.location.href.includes("signinchooser")) {
                     await waitUntilPageLoad(document, 3);
                     // In case all the accounts are logged out and google redirects to choose account. We redirect to select a new account always. 

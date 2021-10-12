@@ -34,6 +34,15 @@ async function waitUntilElementLoad(document, elemXPath, maxWait) {
     return false;
 }
 
+async function waitUntilElementDoesNotExist(document, elemXPath, maxWait) {
+    for (let i = 0; i < maxWait * 10; i++) {
+        if (!document.querySelector(elemXPath) ) { return true; }
+        console.log(i);
+        await timer(100); // then the created Promise can be awaited
+    }
+    return false;
+}
+
 function exitScriptWithError() {
     // When debugging comment out code of this function. This will stop closing of background pages.
     chrome.runtime.sendMessage({
@@ -78,21 +87,28 @@ async function handleReceivedMessage(request) {
             getElementByXpath(document, "//*[contains(text(),'Next')]/..").click()
         } else { exitScriptWithError(); }
         let errorMsgXPath = "div[id*=error-message]";
-        if (await waitUntilElementLoad(document, errorMsgXPath, 2) && document.querySelector(errorMsgXPath).innerText != "") {
-            console.log("In Error");
-            chrome.runtime.sendMessage({
-                dropbox_get_password: true,
-                message: document.querySelector(errorMsgXPath).textContent
-            });
-        } else {
-            console.log("In final ");
-            await timer(2000);
-            getElementByXpath(document, "//*[contains(text(),'Next')]/..").click();
-            setTimeout(() => {
+        if(await waitUntilElementDoesNotExist(document, ".dig-Button--isLoading", 2)){
+            if(document.querySelector(errorMsgXPath)) {
+              if(document.querySelector(errorMsgXPath).textContent != ''){
+                console.log("In Error");
                 chrome.runtime.sendMessage({
-                    dropbox_finished: true,
+                    dropbox_get_password: true,
+                    message: document.querySelector(errorMsgXPath).textContent
                 });
-            }, 2000);
+              }
+            } else {
+              console.log("In final ");
+              await timer(2000);
+              getElementByXpath(document, "//*[contains(text(),'Next')]/..").click();
+              setTimeout(() => {
+                  chrome.runtime.sendMessage({
+                      dropbox_finished: true,
+                  });
+              }, 2000);
+            }
+
+        } else {
+            console.log("isLoading button won't disapear");
         }
 
 
