@@ -206,7 +206,10 @@ async function handleReceivedMessage(request, sendResponse) {
         });
     } else if (request.google_totp) {
         console.log("in TOTP");
-        getElementByXpath(document, "//*[contains(text(),'Authenticator app')]/..//div[@role='button']").click();
+        if(getElementByXpath(document, "//*[contains(text(),'Authenticator app')]/..//div[@role='button']")){
+            getElementByXpath(document, "//*[contains(text(),'Authenticator app')]/..//div[@role='button']").click();
+        }
+        
         let popUpElemNextButtonXPath = "html > body > div > div > div:nth-of-type(2) > div:nth-of-type(3) > div > div:nth-of-type(3)";
         if (await waitUntilElementLoad(document, popUpElemNextButtonXPath, 2)) {
             for (let i = 0; i < 20; i++) {
