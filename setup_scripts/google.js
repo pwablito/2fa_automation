@@ -44,9 +44,14 @@ function exitScriptWithError() {
 }
 
 
-async function handleReceivedMessage(request) {
+async function handleReceivedMessage(request, sendResponse) {
     console.log(request);
     console.log(Date.now())
+
+    if (request.text === 'are_you_there_content_script?') {
+        sendResponse({status: "yes"});
+    }
+    
     if (request.google_email) {
         document.querySelector("[type=email]").value = request.email;
         document.querySelector("#identifierNext > div > button").click();
@@ -127,6 +132,7 @@ async function handleReceivedMessage(request) {
                             chrome.runtime.sendMessage({
                                 google_get_already_enabled_2fa: true,
                             });
+                            return;
                         }
                     }
                     chrome.runtime.sendMessage({
@@ -231,11 +237,16 @@ async function handleReceivedMessage(request) {
             window.location.reload()
         }
         
-        chrome.runtime.sendMessage({
-            google_get_code: true,
-            type: "totp",
-            totp_seed: getElementByXpath(document, "//*[contains(text(),'spaces don')]/div").innerText
-        });
+        if(getElementByXpath(document, "//*[contains(text(),'spaces don')]/div")){
+            chrome.runtime.sendMessage({
+                google_get_code: true,
+                type: "totp",
+                totp_seed: getElementByXpath(document, "//*[contains(text(),'spaces don')]/div").innerText
+            });
+        } else {
+            window.location.reload()
+        }
+       
 
         if (await waitUntilElementLoad(document, "html > body > div > div > div:nth-of-type(2) > div:nth-of-type(3) > div > div:nth-of-type(3)", 2)) {
             for (let i = 0; i < 20; i++) {
@@ -267,8 +278,13 @@ async function handleReceivedMessage(request) {
               
         } else {
             await waitUntilPageLoad(document, 3);
+            
             if (getElementByXpath(document, "//*[contains(text(),'Backup codes')]/..//div[@role='button']")) {
                 getElementByXpath(document, "//*[contains(text(),'Backup codes')]/..//div[@role='button']").click();
+            } else {
+                chrome.runtime.sendMessage({
+                    google_finished: true,
+                });
             }
       
             if (await waitUntilElementLoad(document, "table", 3)) {
@@ -293,8 +309,8 @@ function onlyRunOnce(){
     if(!isRunning){
         isRunning = true;
         chrome.runtime.onMessage.addListener(
-            function(request, _) {
-                handleReceivedMessage(request).then();
+            function(request, sender, sendResponse) {
+                handleReceivedMessage(request, sendResponse).then();
             }
         );
 

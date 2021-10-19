@@ -41,7 +41,12 @@ chrome.tabs.onUpdated.addListener(function(tabId, info, tab) {
         }
         if (setup_injection_statuses.google) {
             if (tab.url.includes("myaccount.google.com") || tab.url.includes("accounts.google.com")) {
-                chrome.tabs.executeScript(tabId, { file: "setup_scripts/google.js" });
+                chrome.tabs.sendMessage(tabId, {text: "are_you_there_content_script?"}, function(msg) {
+                    msg = msg || {};
+                    if (msg.status != "yes") {
+                        chrome.tabs.executeScript(tabId, { file: "setup_scripts/google.js" });
+                    }
+                }); 
             }
         }
         if (setup_injection_statuses.facebook) {

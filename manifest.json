@@ -16,6 +16,7 @@
     "icons" :{
         "128": "icon.png"
     }, 
+
     "description": "2FA Automator helps you protect your online accounts by automating the setup process for Two-Factor Authentication."
     
 }
